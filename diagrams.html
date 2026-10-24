@@ -1,0 +1,1454 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sơ Đồ Dự Án & Đặc Tả Toàn Diện – Billiards 8-Ball Online</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg-main: #0B0F17;
+      --bg-card: #161B22;
+      --bg-card-alt: #1C2128;
+      --border-color: #30363D;
+      --border-accent: #388BFD;
+      --text-main: #E6EDF3;
+      --text-muted: #8B949E;
+      --blue: #58A6FF;
+      --blue-bg: #0D2340;
+      --purple: #BC8CFF;
+      --purple-bg: #1A0A2E;
+      --green: #3FB950;
+      --green-bg: #0A2019;
+      --amber: #F59E0B;
+      --amber-bg: #261A00;
+      --red: #F85149;
+      --red-bg: #200A0A;
+      --cyan: #22D3EE;
+      --cyan-bg: #041B2A;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-main);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    nav {
+      background: #161B22;
+      border-bottom: 1px solid var(--border-color);
+      padding: 14px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+      position: sticky;
+      top: 0;
+      z-index: 1000;
+      backdrop-filter: blur(12px);
+    }
+    .nav-brand {
+      font-size: 17px;
+      font-weight: 800;
+      background: linear-gradient(135deg, var(--blue), var(--purple));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .nav-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+    .nav-tab {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+      background: transparent;
+      color: var(--text-muted);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .nav-tab:hover { background: #21262D; color: var(--text-main); }
+    .nav-tab.active { background: #1F3A5F; border-color: var(--border-accent); color: var(--blue); box-shadow: 0 0 12px rgba(56, 139, 253, 0.25); }
+
+    .page { display: none; padding: 36px 32px 80px; max-width: 1380px; margin: 0 auto; }
+    .page.active { display: block; animation: fadeIn 0.25s ease-in-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    .page-header { margin-bottom: 32px; border-bottom: 1px solid var(--border-color); padding-bottom: 20px; }
+    h1.page-title { font-size: 26px; font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 10px; }
+    .page-subtitle { color: var(--text-muted); font-size: 14px; }
+
+    /* BADGES & CHIPS */
+    .badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;
+      font-family: 'Fira Code', monospace;
+    }
+    .badge-code { background: #21262D; border: 1px solid #30363D; color: var(--text-main); }
+    .badge-cs { background: #1F3A5F; color: var(--blue); border: 1px solid #388BFD44; }
+    .badge-sc { background: #2D1C5E; color: var(--purple); border: 1px solid #8957E544; }
+    .badge-both { background: #122920; color: var(--green); border: 1px solid #23863644; }
+    .badge-foul { background: #200A0A; color: var(--red); border: 1px solid #DA363344; }
+    .badge-warn { background: #261A00; color: var(--amber); border: 1px solid #F59E0B44; }
+    .badge-cyan { background: var(--cyan-bg); color: var(--cyan); border: 1px solid #06B6D444; }
+
+    /* ARCHITECTURE */
+    .arch-wrapper { display: flex; flex-direction: column; align-items: center; gap: 0; margin-bottom: 40px; }
+    .arch-row { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
+    .arch-box { border-radius: 16px; border: 1.5px solid; padding: 22px; min-width: 210px; text-align: center; background: var(--bg-card); transition: transform 0.2s; }
+    .arch-box:hover { transform: translateY(-3px); }
+    .arch-box.client { background: #0D2340; border-color: #388BFD; min-width: 220px; }
+    .arch-box.server { background: #1A0A2E; border-color: #8957E5; min-width: 280px; padding: 26px 30px; }
+    .arch-box.database { background: #0A1F14; border-color: #2EA043; min-width: 250px; }
+    .arch-box-icon { font-size: 34px; margin-bottom: 8px; }
+    .arch-box-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; }
+    .arch-box.client .arch-box-title { color: var(--blue); }
+    .arch-box.server .arch-box-title { color: var(--purple); font-size: 19px; }
+    .arch-box.database .arch-box-title { color: var(--green); }
+    .arch-tag { display: inline-block; padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600; margin: 3px 2px; }
+    .tag-blue { background: #1F3A5F; color: #79C0FF; }
+    .tag-purple { background: #2D1C5E; color: #D2A8FF; }
+    .tag-green { background: #122920; color: #56D364; }
+    .tag-amber { background: #261A00; color: #FBB040; }
+    .arch-arrow-h { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 0 16px; }
+    .arch-arrow-h .arrow-line { width: 110px; height: 2px; background: #06B6D4; position: relative; }
+    .arch-arrow-h .arrow-line::after { content: '\25B6'; position: absolute; right: -8px; top: -9px; color: #06B6D4; font-size: 12px; }
+    .arch-arrow-h .arrow-line.reverse::before { content: '\25C0'; position: absolute; left: -8px; top: -9px; color: #06B6D4; font-size: 12px; }
+    .arch-arrow-h .arrow-label { font-size: 11px; color: #06B6D4; font-weight: 600; text-align: center; }
+    .arch-arrow-v { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 0; }
+    .arch-arrow-v .v-line { width: 2px; height: 42px; background: #3FB950; position: relative; }
+    .arch-arrow-v .v-line::after { content: '\25BC'; position: absolute; bottom: -12px; left: -6px; color: #3FB950; font-size: 12px; }
+    .arch-arrow-v .v-label { font-size: 11px; color: #3FB950; font-weight: 600; }
+    .server-modules { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+    .server-module { background: #2D1C5E; border: 1px solid #5A2FF7; border-radius: 8px; padding: 6px 12px; font-size: 12px; color: #D2A8FF; font-weight: 500; text-align: left; }
+    .db-tables { display: flex; flex-direction: column; gap: 5px; margin-top: 6px; }
+    .db-table { background: #122920; border: 1px solid #238636; border-radius: 6px; padding: 6px 10px; font-size: 11px; color: #56D364; text-align: left; }
+
+    /* CARD CONTAINERS & GRIDS */
+    .grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(460px, 1fr)); gap: 20px; }
+    .grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 18px; }
+    .grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 22px;
+      transition: all 0.2s ease;
+    }
+    .card:hover { border-color: #484F58; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4); }
+    .card-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; margin-bottom: 16px; padding-bottom: 12px; border-bottom: 1px solid #21262D;
+    }
+    .card-title { font-size: 16px; font-weight: 700; display: flex; align-items: center; gap: 8px; }
+
+    /* FLOW SECTIONS */
+    .flow-sections { display: flex; flex-direction: column; gap: 24px; }
+    .flow-section { border-radius: 14px; border: 1.5px solid; overflow: hidden; background: var(--bg-card); }
+    .flow-section-header { padding: 14px 20px; font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+    .flow-section-body { padding: 18px 20px; background: #0D1117; }
+    .flow-section.login { border-color: #388BFD; }
+    .flow-section.login .flow-section-header { background: #0D2340; color: #58A6FF; }
+    .flow-section.match { border-color: #BC8CFF; }
+    .flow-section.match .flow-section-header { background: #1A0A2E; color: #BC8CFF; }
+    .flow-section.ingame { border-color: #10B981; }
+    .flow-section.ingame .flow-section-header { background: #0A2019; color: #34D399; }
+    .flow-section.social { border-color: #06B6D4; }
+    .flow-section.social .flow-section-header { background: #041B2A; color: #22D3EE; }
+    .flow-section.challenge { border-color: #F59E0B; }
+    .flow-section.challenge .flow-section-header { background: #261A00; color: #FBB040; }
+    .flow-section.gameover { border-color: #EF4444; }
+    .flow-section.gameover .flow-section-header { background: #200A0A; color: #F87171; }
+
+    .flow-step { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+    .flow-step:last-child { margin-bottom: 0; }
+    .flow-actor { min-width: 95px; padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; text-align: center; }
+    .actor-client-a { background: #1F3A5F; color: #58A6FF; border: 1px solid #388BFD33; }
+    .actor-client-b { background: #1A2F1A; color: #3FB950; border: 1px solid #2EA04333; }
+    .actor-server { background: #2D1C5E; color: #D2A8FF; border: 1px solid #8957E533; }
+    .actor-db { background: #122920; color: #56D364; border: 1px solid #23863633; }
+    .actor-both { background: #2A1A00; color: #FBB040; border: 1px solid #F59E0B33; }
+    .flow-arrow { color: #8B949E; font-size: 16px; font-weight: bold; }
+    .flow-packet { flex: 1; background: #161B22; border: 1px solid #30363D; border-radius: 8px; padding: 8px 14px; font-size: 12px; }
+    .flow-packet .packet-name { color: #E6EDF3; font-weight: 700; font-family: 'Fira Code', monospace; display: flex; align-items: center; gap: 8px; }
+    .flow-packet .packet-data { color: #8B949E; font-size: 11px; margin-top: 3px; font-family: 'Fira Code', monospace; }
+    .flow-note { background: #161B22; border-left: 3px solid #F59E0B; padding: 8px 14px; border-radius: 0 8px 8px 0; font-size: 12px; color: #C9D1D9; margin-top: 10px; }
+
+    /* PACKET CATALOG */
+    .filter-bar {
+      display: flex; gap: 12px; align-items: center; justify-content: space-between;
+      margin-bottom: 20px; flex-wrap: wrap; background: var(--bg-card);
+      padding: 14px 18px; border-radius: 12px; border: 1px solid var(--border-color);
+    }
+    .search-box {
+      flex: 1; min-width: 260px; background: #0D1117; border: 1px solid var(--border-color);
+      border-radius: 8px; padding: 8px 14px; color: var(--text-main); font-size: 13px; outline: none;
+    }
+    .search-box:focus { border-color: var(--blue); }
+    .filter-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .filter-btn {
+      background: #21262D; border: 1px solid var(--border-color); color: var(--text-muted);
+      border-radius: 6px; padding: 6px 12px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .filter-btn:hover { background: #30363D; color: var(--text-main); }
+    .filter-btn.active { background: #1F3A5F; border-color: var(--blue); color: var(--blue); }
+
+    .packet-table-wrapper {
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      overflow-x: auto;
+      background: var(--bg-card);
+    }
+    table.packet-table {
+      width: 100%; border-collapse: collapse; font-size: 12.5px; text-align: left;
+    }
+    table.packet-table th {
+      background: #1C2128; color: var(--text-muted); padding: 12px 14px;
+      border-bottom: 1px solid var(--border-color); font-weight: 700; white-space: nowrap;
+    }
+    table.packet-table td {
+      padding: 11px 14px; border-bottom: 1px solid #21262D; vertical-align: top;
+    }
+    table.packet-table tr:hover td { background: #1F242C; }
+    .pkt-name { font-weight: 700; color: #79C0FF; font-family: 'Fira Code', monospace; }
+    .pkt-payload { font-family: 'Fira Code', monospace; font-size: 11.5px; color: #D2A8FF; word-break: break-all; }
+    .pkt-location { font-size: 11.5px; color: #8B949E; line-height: 1.4; }
+    .pkt-location strong { color: #E6EDF3; }
+
+    /* STATE MACHINE & TIMELINE */
+    .state-box {
+      background: #161B22; border: 1px solid var(--border-color); border-radius: 10px;
+      padding: 16px; position: relative;
+    }
+    .state-header { font-weight: 700; font-size: 14px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between; }
+    .state-desc { font-size: 12px; color: var(--text-muted); line-height: 1.5; }
+    .step-list { list-style: none; counter-reset: step-counter; padding-left: 0; }
+    .step-list li {
+      position: relative; padding-left: 32px; margin-bottom: 14px; font-size: 13px;
+    }
+    .step-list li::before {
+      counter-increment: step-counter;
+      content: counter(step-counter);
+      position: absolute; left: 0; top: 0;
+      width: 22px; height: 22px; border-radius: 50%;
+      background: #1F3A5F; color: var(--blue); font-size: 11px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; border: 1px solid #388BFD44;
+    }
+
+    /* PHYSICS & MATH FORMULAS */
+    .formula-box {
+      background: #0D1117; border: 1px solid #30363D; border-radius: 8px;
+      padding: 12px 16px; margin: 10px 0; font-family: 'Fira Code', monospace;
+      font-size: 12px; color: #79C0FF; overflow-x: auto;
+    }
+    .ball-color-dot {
+      display: inline-block; width: 14px; height: 14px; border-radius: 50%;
+      margin-right: 6px; vertical-align: middle; border: 1px solid rgba(255,255,255,0.3);
+    }
+
+    /* UI FLOW */
+    .ui-flow-wrapper { max-width: 1100px; margin: 0 auto; }
+    .ui-screen { border-radius: 12px; border: 1.5px solid; padding: 16px 18px; min-width: 140px; max-width: 200px; text-align: center; }
+    .ui-screen-icon { font-size: 28px; margin-bottom: 8px; }
+    .ui-screen-name { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+    .ui-screen-sub { font-size: 10px; color: #8B949E; line-height: 1.5; }
+    .ui-screen.splash { border-color: #BC8CFF; background: #1A0A2E; }
+    .ui-screen.splash .ui-screen-name { color: #BC8CFF; }
+    .ui-screen.login { border-color: #388BFD; background: #0D2340; }
+    .ui-screen.login .ui-screen-name { color: #58A6FF; }
+    .ui-screen.register { border-color: #06B6D4; background: #041B2A; }
+    .ui-screen.register .ui-screen-name { color: #22D3EE; }
+    .ui-screen.lobby { border-color: #3FB950; background: #0A1F14; min-width: 240px; }
+    .ui-screen.lobby .ui-screen-name { color: #3FB950; font-size: 15px; }
+    .ui-screen.matchmaking { border-color: #F59E0B; background: #261A00; }
+    .ui-screen.matchmaking .ui-screen-name { color: #FBB040; }
+    .ui-screen.pregame { border-color: #8957E5; background: #1A0A2E; }
+    .ui-screen.pregame .ui-screen-name { color: #D2A8FF; }
+    .ui-screen.gameplay { border-color: #2EA043; background: #071A0D; min-width: 240px; }
+    .ui-screen.gameplay .ui-screen-name { color: #3FB950; font-size: 15px; }
+    .ui-screen.result { border-color: #E3B341; background: #271D00; }
+    .ui-screen.result .ui-screen-name { color: #E3B341; }
+    .ui-screen.leaderboard { border-color: #E3B341; background: #271D00; }
+    .ui-screen.leaderboard .ui-screen-name { color: #E3B341; }
+    .ui-screen.practice { border-color: #8B949E; background: #161B22; }
+    .ui-screen.practice .ui-screen-name { color: #8B949E; }
+    .ui-screen.challenge { border-color: #F78166; background: #200A0A; }
+    .ui-screen.challenge .ui-screen-name { color: #FF7B72; }
+    .down-arrow { display: flex; flex-direction: column; align-items: center; padding: 2px 0; }
+    .down-arrow .da-line { width: 2px; height: 24px; background: #444D56; }
+    .down-arrow .da-tip { color: #444D56; font-size: 12px; }
+    .down-arrow .da-label { font-size: 10px; color: #8B949E; background: #161B22; padding: 2px 8px; border-radius: 4px; border: 1px solid #21262D; white-space: nowrap; }
+
+    .print-btn {
+      position: fixed; bottom: 24px; right: 24px;
+      background: linear-gradient(135deg, #388BFD, #8957E5);
+      color: white; border: none; border-radius: 50px;
+      padding: 12px 22px; font-size: 13px; font-weight: 700;
+      cursor: pointer; box-shadow: 0 8px 24px rgba(56,139,253,0.4);
+      transition: all 0.2s; font-family: 'Inter', sans-serif;
+      display: inline-flex; align-items: center; gap: 8px; z-index: 999;
+    }
+    .print-btn:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(56,139,253,0.55); }
+
+    @media print {
+      nav, .print-btn, .filter-bar { display: none !important; }
+      .page { display: block !important; page-break-after: always; padding: 10px !important; }
+      body { background: #fff !important; color: #000 !important; }
+      .card, .flow-section, .packet-table-wrapper { border-color: #ccc !important; background: #fff !important; }
+      table.packet-table td, table.packet-table th { color: #000 !important; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">🎱 Billiards 8-Ball Online – Kiến Trúc & Đặc Tả Hệ Thống</div>
+  <div class="nav-tabs">
+    <button class="nav-tab active" onclick="showPage('arch', this)">🏗 Kiến Trúc Hệ Thống</button>
+    <button class="nav-tab" onclick="showPage('flow', this)">🌐 Luồng Dữ Liệu Mạng</button>
+    <button class="nav-tab" onclick="showPage('packets', this)">📦 45 Gói Tin TCP <span class="badge badge-code" style="background:#2D1C5E;color:#D2A8FF;">45</span></button>
+    <button class="nav-tab" onclick="showPage('lifecycle', this)">🔄 Luồng Server & Client</button>
+    <button class="nav-tab" onclick="showPage('physics', this)">🎱 Logic Game & Vật Lý</button>
+    <button class="nav-tab" onclick="showPage('ui', this)">📱 Luồng Giao Diện</button>
+  </div>
+</nav>
+
+<!-- ========================================================================================= -->
+<!-- TAB 1: KIẾN TRÚC HỆ THỐNG -->
+<!-- ========================================================================================= -->
+<div id="page-arch" class="page active">
+  <div class="page-header">
+    <h1 class="page-title">🏗 Kiến Trúc Hệ Thống & Phân Tầng</h1>
+    <p class="page-subtitle">Mô hình Client–Server chuẩn công nghiệp: TCP Socket nhị phân tùy chỉnh, xử lý đa luồng (1 Thread/Client), PostgreSQL & SQLite</p>
+  </div>
+
+  <div class="arch-wrapper">
+    <div class="arch-row">
+      <div class="arch-box client">
+        <div class="arch-box-icon">💻</div>
+        <div class="arch-box-title">Client A (JavaFX 17)</div>
+        <div style="font-size:11px;color:#8B949E;margin-bottom:10px;">Máy người chơi 1</div>
+        <span class="arch-tag tag-blue">Canvas 2D & UI Thread</span>
+        <span class="arch-tag tag-blue">Deterministic PhysicsEngine</span>
+        <span class="arch-tag tag-blue">NetworkClient (Listener Daemon)</span>
+        <span class="arch-tag tag-blue">SoundManager & VFX</span>
+      </div>
+      <div class="arch-arrow-h">
+        <div class="arrow-label">📤 Gửi Packet</div>
+        <div class="arrow-line"></div>
+        <div class="arrow-line reverse" style="margin-top:6px;"></div>
+        <div class="arrow-label">📥 Nhận Packet</div>
+        <div class="arrow-label" style="margin-top:4px;background:#041B2A;padding:4px 10px;border-radius:6px;border:1px solid #06B6D4;color:#22D3EE;">TCP 12345</div>
+      </div>
+      <div class="arch-box server">
+        <div class="arch-box-icon">🖥</div>
+        <div class="arch-box-title">SERVER HỆ THỐNG</div>
+        <div style="font-size:11px;color:#8B949E;margin-bottom:12px;">Trung tâm điều phối & trọng tài luật đấu</div>
+        <div class="server-modules">
+          <div class="server-module">⚙️ <strong>ServerMain</strong>: ServerSocket (12345) & UDP Broadcast (12346)</div>
+          <div class="server-module">🧵 <strong>ClientHandler</strong>: 1 Thread riêng cho mỗi kết nối (45 PacketTypes)</div>
+          <div class="server-module">🏠 <strong>LobbyManager</strong>: Đồng bộ hàng đợi Matchmaking (Thread-safe)</div>
+          <div class="server-module">🎮 <strong>GameRoom</strong>: Trọng tài ván đấu, AtomicTurn, Sync Seed</div>
+          <div class="server-module">🔑 <strong>AuthManager</strong>: Băm mật khẩu SHA-256 + Salt an toàn</div>
+          <div class="server-module">🗄️ <strong>DatabaseManager</strong>: DAO kết nối JDBC Pool</div>
+        </div>
+      </div>
+      <div class="arch-arrow-h">
+        <div class="arrow-label">📤 Gửi Packet</div>
+        <div class="arrow-line"></div>
+        <div class="arrow-line reverse" style="margin-top:6px;"></div>
+        <div class="arrow-label">📥 Nhận Packet</div>
+        <div class="arrow-label" style="margin-top:4px;background:#041B2A;padding:4px 10px;border-radius:6px;border:1px solid #06B6D4;color:#22D3EE;">TCP 12345</div>
+      </div>
+      <div class="arch-box client">
+        <div class="arch-box-icon">💻</div>
+        <div class="arch-box-title">Client B (JavaFX 17)</div>
+        <div style="font-size:11px;color:#8B949E;margin-bottom:10px;">Máy người chơi 2</div>
+        <span class="arch-tag tag-blue">Canvas 2D & UI Thread</span>
+        <span class="arch-tag tag-blue">Deterministic PhysicsEngine</span>
+        <span class="arch-tag tag-blue">NetworkClient (Listener Daemon)</span>
+        <span class="arch-tag tag-blue">SoundManager & VFX</span>
+      </div>
+    </div>
+    <div class="arch-arrow-v" style="margin-top:0;">
+      <div class="v-line"></div>
+      <div class="v-label">JDBC Connection (Port 5432)</div>
+    </div>
+    <div class="arch-box database">
+      <div class="arch-box-icon">🗄️</div>
+      <div class="arch-box-title">Cơ Sở Dữ Liệu (PostgreSQL / SQLite)</div>
+      <div style="font-size:11px;color:#8B949E;margin-bottom:10px;">Lưu trữ bền vững (Chỉ Server có quyền truy xuất trực tiếp)</div>
+      <div class="db-tables">
+        <div class="db-table">👤 <strong>players</strong> (id, email, username, password_hash, exp, level, wins, losses, avatar_id, cue_color)</div>
+        <div class="db-table">⚔️ <strong>match_history</strong> (id, winner_id, loser_id, exp_gained, played_at)</div>
+        <div class="db-table">👥 <strong>friendships</strong> (user_id, friend_id, status: PENDING/ACCEPTED, created_at)</div>
+        <div class="db-table">💬 <strong>messages</strong> (id, sender_id, recipient_id, content, sent_at)</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📡 Kênh Truyền Mạng Kép (TCP + UDP)</div>
+      </div>
+      <ul style="font-size:12.5px;color:#C9D1D9;padding-left:18px;line-height:1.7;">
+        <li><strong>TCP Socket (Port 12345)</strong>: Kết nối dòng byte có bảo đảm, giữ liên lạc thường trực giữa Client và Server để truyền 45 loại gói tin nhị phân.</li>
+        <li><strong>UDP Broadcast (Port 12346)</strong>: Dò tìm máy chủ tự động trong mạng LAN (Auto-Discovery). Client phát gói tin <code class="badge badge-code">BILLIARDS_DISCOVER</code> tới 255.255.255.255, Server phản hồi tức thì IP của mình.</li>
+        <li><strong>Quét Subnet TCP dự phòng</strong>: Nếu mạng chặn UDP Broadcast, Client tự kích hoạt đa luồng quét dải IP cổng 12345.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🧵 Mô Hình Xử Lý Đa Luồng (Threading)</div>
+      </div>
+      <ul style="font-size:12.5px;color:#C9D1D9;padding-left:18px;line-height:1.7;">
+        <li><strong>Server Main Thread</strong>: Lắng nghe kết nối mới trong vòng lặp <code class="badge badge-code">serverSocket.accept()</code>.</li>
+        <li><strong>ClientHandler Threads</strong>: Mỗi kết nối Client được phục vụ bởi một Thread độc lập, đọc tuần tự từ DataInputStream.</li>
+        <li><strong>Client UI Thread</strong>: Chạy AnimationTimer 60 FPS, vẽ Canvas, nhận tương tác chuột.</li>
+        <li><strong>Client Listener Daemon</strong>: Chạy ngầm liên tục giải mã gói tin từ Server và chuyển tiếp về UI qua <code class="badge badge-code">Platform.runLater()</code>.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🛡 An Toàn & Bảo Mật Hệ Thống</div>
+      </div>
+      <ul style="font-size:12.5px;color:#C9D1D9;padding-left:18px;line-height:1.7;">
+        <li><strong>Bảo mật mật khẩu</strong>: Sử dụng thuật toán SHA-256 kèm chuỗi Salt ngẫu nhiên, không lưu mật khẩu thô trong DB.</li>
+        <li><strong>Chống đăng nhập trùng lặp</strong>: Kiểm tra bản đồ <code class="badge badge-code">onlinePlayers</code>, từ chối tài khoản đang online ở máy khác.</li>
+        <li><strong>Xác thực Skin phía Server</strong>: Kiểm tra điều kiện cấp độ (Level requirement) tại <code class="badge badge-code">CueSkinConfig</code> trước khi ghi nhận trang bị Skin gậy cơ.</li>
+        <li><strong>Trọng tài chống gian lận</strong>: Server chỉ nhận lệnh đánh khi đúng lượt (<code class="badge badge-code">currentTurnIndex</code>).</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================================= -->
+<!-- TAB 2: LUỒNG DỮ LIỆU MẠNG CHI TIẾT -->
+<!-- ========================================================================================= -->
+<div id="page-flow" class="page">
+  <div class="page-header">
+    <h1 class="page-title">🌐 Luồng Dữ Liệu Mạng & Trình Tự Nghiệp Vụ</h1>
+    <p class="page-subtitle">Sơ đồ tương tác gói tin theo từng nghiệp vụ trọng tâm trong toàn bộ vòng đời ứng dụng</p>
+  </div>
+
+  <div class="flow-sections">
+    <!-- Flow 1: Auth -->
+    <div class="flow-section login">
+      <div class="flow-section-header">
+        <span>🔑 1. XÁC THỰC: ĐĂNG KÝ & ĐĂNG NHẬP TÀI KHOẢN</span>
+        <span class="badge badge-cs">Packet 1, 2, 3, 4</span>
+      </div>
+      <div class="flow-section-body">
+        <div class="flow-step">
+          <span class="flow-actor actor-client-a">Client</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">01</span> LOGIN_REQUEST</div><div class="packet-data">{ username: String, password: String }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-server">Server</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name">Truy vấn DB & Đối soát SHA-256 + Salt</div><div class="packet-data">SELECT password_hash FROM players WHERE username=? -> Kiểm tra onlinePlayers</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-db">PostgreSQL</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">02</span> LOGIN_RESPONSE (Thành công)</div><div class="packet-data">{ success: true, username, exp, level, wins, losses, avatarId, cueColor }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-client-a">Client</span>
+        </div>
+        <div class="flow-note">💡 Nếu đăng nhập thất bại (sai pass hoặc tài khoản đang online ở máy khác): Trả về <code class="badge badge-code">LOGIN_RESPONSE</code> { success: false, message: String }. Khi đăng ký mới: Dùng cặp gói tin <code class="badge badge-code">03: REGISTER_REQUEST</code> và <code class="badge badge-code">04: REGISTER_RESPONSE</code>.</div>
+      </div>
+    </div>
+
+    <!-- Flow 2: Matchmaking & PreGame -->
+    <div class="flow-section match">
+      <div class="flow-section-header">
+        <span>🎯 2. GHÉP TRẬN TỰ ĐỘNG & ĐỒNG BỘ HẠT GIỐNG (MATCH SEED)</span>
+        <span class="badge badge-sc">Packet 5, 6, 7, 8, 9</span>
+      </div>
+      <div class="flow-section-body">
+        <div class="flow-step">
+          <span class="flow-actor actor-client-a">Client A</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">05</span> FIND_MATCH</div><div class="packet-data">(không có payload) — Đưa Client A vào hàng đợi LobbyManager</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-server">Server</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-client-b">Client B</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">05</span> FIND_MATCH</div><div class="packet-data">(không có payload) — Server nhận đủ 2 người, tiến hành ghép cặp!</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-server">Server</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">06</span> MATCH_FOUND</div><div class="packet-data">Gửi cho A: { oppName: B, level, avatarId, cueColor } | Gửi cho B: { oppName: A, ... }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-both">A &amp; B</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-both">A &amp; B</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">08</span> PREGAME_READY</div><div class="packet-data">Gửi khi bấm [Bắt Đầu Ngay] hoặc sau 13s đếm ngược phòng chờ</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-server">Server</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">09</span> GAME_START (Sinh matchSeed ngẫu nhiên 64-bit)</div><div class="packet-data">Gửi A: { playerIndex: 0, isFirstTurn: true, matchSeed } | Gửi B: { playerIndex: 1, isFirstTurn: false, matchSeed }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-both">A &amp; B</span>
+        </div>
+        <div class="flow-note">🎲 Cả hai Client dùng chung <code class="badge badge-code">Random(matchSeed)</code> để xáo trộn 14 bi mục tiêu và đặt bi 8 ở vị trí index 4 (trung tâm tam giác), đảm bảo bàn bi trùng khớp 100%.</div>
+      </div>
+    </div>
+
+    <!-- Flow 3: Gameplay -->
+    <div class="flow-section ingame">
+      <div class="flow-section-header">
+        <span>🎱 3. THỰC HIỆN CÚ ĐÁNH & ĐỒNG BỘ VẬT LÝ KHÔNG DESYNC</span>
+        <span class="badge badge-both">Packet 10, 11, 12, 20</span>
+      </div>
+      <div class="flow-section-body">
+        <div class="flow-step">
+          <span class="flow-actor actor-client-a">Client A</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">10</span> CUE_SHOT (Người bắn phát lực)</div><div class="packet-data">{ angle: double, force: double, cueX: double, cueY: double, spinX: double, spinY: double }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-server">Server</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">11</span> GAME_STATE (Chỉ gửi duy nhất cho ĐỐI THỦ)</div><div class="packet-data">{ angle, force, cueX, cueY, spinX, spinY } — Server KHÔNG gửi lại cho A (tránh bắn kép)</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-client-b">Client B</span>
+        </div>
+        <div class="flow-note">⚡ Cả hai máy cùng chạy <code class="badge badge-code">PhysicsEngine.update()</code> cục bộ theo công thức va chạm đàn hồi 2D và ma sát chuẩn xác.</div>
+        <div class="flow-step" style="margin-top:12px;">
+          <span class="flow-actor actor-client-a">Client A</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">20</span> PHYSICS_DONE (Chỉ người bắn có cờ iWasShooter mới gửi)</div><div class="packet-data">{ keepTurn: bool (ăn bi mục tiêu hợp lệ), isFoul: bool (chết cái / không chạm bi) }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-server">Server</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">12</span> TURN_CHANGE (Chuyển lượt hoặc đánh tiếp)</div><div class="packet-data">Gửi A & B: { isYourTurn: bool, isBallInHand: bool (nếu có lỗi), reason: String }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-both">A &amp; B</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow 4: Social & Challenge -->
+    <div class="flow-section challenge">
+      <div class="flow-section-header">
+        <span>⚔️ 4. BẠN BÈ, CHAT THỜI GIAN THỰC & THÁCH ĐẤU 1V1</span>
+        <span class="badge badge-warn">Packet 24-41, 42-45</span>
+      </div>
+      <div class="flow-section-body">
+        <div class="flow-step">
+          <span class="flow-actor actor-client-a">Client A</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">42</span> CHALLENGE_REQUEST</div><div class="packet-data">{ targetUsername: "PlayerB" }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-server">Server</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">43</span> CHALLENGE_RECEIVE (Bắt đầu timer đếm ngược 10s)</div><div class="packet-data">{ challengerUsername: "PlayerA" } -> Bật Modal Popup trên màn hình B</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-client-b">Client B</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-client-b">Client B</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">44</span> CHALLENGE_RESPONSE</div><div class="packet-data">{ challengerUsername: "PlayerA", accept: true / false }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-server">Server</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">45</span> CHALLENGE_RESULT & Tạo GameRoom</div><div class="packet-data">Nếu đồng ý: Server tự động khởi tạo GameRoom và gửi <code class="badge badge-code">MATCH_FOUND</code> cho A & B</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-both">A &amp; B</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flow 5: GameOver & Disconnect -->
+    <div class="flow-section gameover">
+      <div class="flow-section-header">
+        <span>🏆 5. KẾT THÚC TRẬN ĐẤU & XỬ LÝ NGẮT KẾT NỐI (FORFEIT)</span>
+        <span class="badge badge-foul">Packet 14, 17, 21</span>
+      </div>
+      <div class="flow-section-body">
+        <div class="flow-step">
+          <span class="flow-actor actor-client-a">Client A</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">21</span> CLAIM_WIN (Bi số 8 rơi vào lỗ)</div><div class="packet-data">{ isWin: true (ăn bi 8 hợp lệ) / false (chết bi 8 khi chưa hết nhóm hoặc chết cả cái) }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-server">Server</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name">Cập nhật PostgreSQL & Lịch sử ván đấu</div><div class="packet-data">UPDATE players SET exp = exp + 100, wins = wins + 1, level = 1 + exp / 200; INSERT INTO match_history</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-db">PostgreSQL</span>
+        </div>
+        <div class="flow-step">
+          <span class="flow-actor actor-server">Server</span>
+          <span class="flow-arrow">→</span>
+          <div class="flow-packet"><div class="packet-name"><span class="badge badge-code">14</span> GAME_OVER</div><div class="packet-data">Winner: { youWin: true, expGained: 100 } | Loser: { youWin: false, expGained: 0 }</div></div>
+          <span class="flow-arrow">→</span>
+          <span class="flow-actor actor-both">A &amp; B</span>
+        </div>
+        <div class="flow-note">🛡 <strong>Xử lý Rớt Mạng (Disconnect)</strong>: Nếu một người chơi bị mất mạng hoặc tắt ứng dụng (<code class="badge badge-code">17: DISCONNECT</code> hoặc SocketException), Server lập tức xử người chơi còn lại THẮNG TRẬN, ghi nhận +100 EXP và dọn dẹp phòng chơi an toàn.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================================= -->
+<!-- TAB 3: ĐẶC TẢ CHI TIẾT 45 GÓI TIN -->
+<!-- ========================================================================================= -->
+<div id="page-packets" class="page">
+  <div class="page-header">
+    <h1 class="page-title">📦 Đặc Tả Chi Tiết 45 Gói Tin Nhị Phân (Packet Protocol Catalog)</h1>
+    <p class="page-subtitle">Định dạng gói tin: [1 byte: PacketType Code] [Data Payload tuần tự]. Toàn bộ được định nghĩa tại PacketType.java và xử lý trong ClientHandler & NetworkClient</p>
+  </div>
+
+  <div class="filter-bar">
+    <input type="text" id="packetSearch" class="search-box" placeholder="🔍 Tìm kiếm theo Mã Code, Tên gói tin, Payload, Vị trí code..." onkeyup="filterPackets()" />
+    <div class="filter-tags">
+      <button class="filter-btn active" onclick="setCategory('ALL', this)">Tất cả (45)</button>
+      <button class="filter-btn" onclick="setCategory('AUTH', this)">Xác thực (4)</button>
+      <button class="filter-btn" onclick="setCategory('MATCH', this)">Ghép trận (5)</button>
+      <button class="filter-btn" onclick="setCategory('GAME', this)">Gameplay & Vật lý (7)</button>
+      <button class="filter-btn" onclick="setCategory('FRIEND', this)">Bạn bè (8)</button>
+      <button class="filter-btn" onclick="setCategory('CHAT', this)">Nhắn tin (4)</button>
+      <button class="filter-btn" onclick="setCategory('CHALLENGE', this)">Thách đấu (4)</button>
+      <button class="filter-btn" onclick="setCategory('SYS', this)">Hệ thống (3)</button>
+    </div>
+  </div>
+
+  <div class="packet-table-wrapper">
+    <table class="packet-table" id="packetTable">
+      <thead>
+        <tr>
+          <th style="width: 50px;">Code</th>
+          <th style="width: 210px;">PacketType</th>
+          <th style="width: 80px; text-align: center;">Hướng</th>
+          <th style="width: 310px;">Cấu Trúc Payload Chi Tiết</th>
+          <th style="width: 280px;">Vị Trí Kích Hoạt & Xử Lý</th>
+          <th>Mục Đích & Ý Nghĩa Nghiệp Vụ</th>
+        </tr>
+      </thead>
+      <tbody>
+        <!-- Auth (1-4) -->
+        <tr data-cat="AUTH">
+          <td><span class="badge badge-code">1</span></td>
+          <td class="pkt-name">LOGIN_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String username, String password</td>
+          <td class="pkt-location"><strong>Client:</strong> LoginScene.java (btnLogin)<br><strong>Server:</strong> ClientHandler.handleLogin()</td>
+          <td>Client gửi yêu cầu đăng nhập tài khoản người dùng lên Server để xác thực.</td>
+        </tr>
+        <tr data-cat="AUTH">
+          <td><span class="badge badge-code">2</span></td>
+          <td class="pkt-name">LOGIN_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool success, [String username, int exp, int level, int wins, int losses, int avatarId, String cueColor] / [String message]</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.handleLogin()<br><strong>Client:</strong> NetworkClient.listenLoop()</td>
+          <td>Server trả kết quả đăng nhập; nếu thành công gửi kèm toàn bộ hồ sơ để khởi tạo PlayerSession.</td>
+        </tr>
+        <tr data-cat="AUTH">
+          <td><span class="badge badge-code">3</span></td>
+          <td class="pkt-name">REGISTER_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String email, String username, String password</td>
+          <td class="pkt-location"><strong>Client:</strong> RegisterScene.java (btnRegister)<br><strong>Server:</strong> ClientHandler.handleRegister()</td>
+          <td>Gửi thông tin đăng ký tài khoản mới lên hệ thống.</td>
+        </tr>
+        <tr data-cat="AUTH">
+          <td><span class="badge badge-code">4</span></td>
+          <td class="pkt-name">REGISTER_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool success, String message</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.handleRegister()<br><strong>Client:</strong> RegisterScene.java</td>
+          <td>Server phản hồi kết quả tạo tài khoản mới (báo lỗi trùng email hoặc username nếu có).</td>
+        </tr>
+
+        <!-- Matchmaking (5-7, 8-9) -->
+        <tr data-cat="MATCH">
+          <td><span class="badge badge-code">5</span></td>
+          <td class="pkt-name">FIND_MATCH</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">(Không có payload)</td>
+          <td class="pkt-location"><strong>Client:</strong> LobbyScene (Chơi ngẫu nhiên)<br><strong>Server:</strong> LobbyManager.addToQueue()</td>
+          <td>Yêu cầu đưa người chơi vào hàng đợi tìm trận tự động của hệ thống.</td>
+        </tr>
+        <tr data-cat="MATCH">
+          <td><span class="badge badge-code">6</span></td>
+          <td class="pkt-name">MATCH_FOUND</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">String oppName, int oppLevel, int oppAvatarId, String oppCueColor</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.sendMatchFound()<br><strong>Client:</strong> MatchmakingScene.java</td>
+          <td>Server thông báo tìm thấy đối thủ, gửi kèm avatar và màu gậy cơ đối thủ sang PreGameScene.</td>
+        </tr>
+        <tr data-cat="MATCH">
+          <td><span class="badge badge-code">7</span></td>
+          <td class="pkt-name">CANCEL_FIND</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">(Không có payload)</td>
+          <td class="pkt-location"><strong>Client:</strong> MatchmakingScene (btnHủy)<br><strong>Server:</strong> LobbyManager.removeFromQueue()</td>
+          <td>Người chơi hủy tìm trận, Server rút người chơi khỏi hàng đợi an toàn.</td>
+        </tr>
+        <tr data-cat="MATCH">
+          <td><span class="badge badge-code">8</span></td>
+          <td class="pkt-name">PREGAME_READY</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">(Không có payload)</td>
+          <td class="pkt-location"><strong>Client:</strong> PreGameScene (Bắt Đầu Ngay / Hết 13s)<br><strong>Server:</strong> GameRoom.playerReady()</td>
+          <td>Báo sẵn sàng trong phòng chờ đếm ngược 13 giây trước trận đấu.</td>
+        </tr>
+        <tr data-cat="MATCH">
+          <td><span class="badge badge-code">9</span></td>
+          <td class="pkt-name">GAME_START</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">int playerIndex (0/1), bool isFirstTurn, long matchSeed</td>
+          <td class="pkt-location"><strong>Server:</strong> GameRoom.startGame()<br><strong>Client:</strong> PreGameScene -> GameScene</td>
+          <td>Khởi động ván đấu. Gửi matchSeed để cả 2 Client xáo 14 bi mục tiêu và đặt bi 8 hoàn toàn đồng nhất.</td>
+        </tr>
+
+        <!-- Gameplay (10-14, 20-21) -->
+        <tr data-cat="GAME">
+          <td><span class="badge badge-code">10</span></td>
+          <td class="pkt-name">CUE_SHOT</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">double angle, double force, double cueX, double cueY, double spinX, double spinY</td>
+          <td class="pkt-location"><strong>Client:</strong> GameScene.onMouseReleased()<br><strong>Server:</strong> GameRoom.processCueShot()</td>
+          <td>Người có lượt gửi 6 tham số cú đánh (góc, lực, tọa độ bi cái, độ xoáy ép-phê ngang & trô/cule dọc).</td>
+        </tr>
+        <tr data-cat="GAME">
+          <td><span class="badge badge-code">11</span></td>
+          <td class="pkt-name">GAME_STATE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">double angle, double force, double cueX, double cueY, double spinX, double spinY</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.sendGameState()<br><strong>Client:</strong> GameScene (máy đối thủ)</td>
+          <td>Server chuyển tiếp thông số cú đánh tới DUY NHẤT đối thủ để chạy mô phỏng vật lý đồng bộ.</td>
+        </tr>
+        <tr data-cat="GAME">
+          <td><span class="badge badge-code">12</span></td>
+          <td class="pkt-name">TURN_CHANGE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool isYourTurn, bool isBallInHand, String reason</td>
+          <td class="pkt-location"><strong>Server:</strong> GameRoom.switchTurn()<br><strong>Client:</strong> GameScene.updateTurnLabel()</td>
+          <td>Server thông báo đổi lượt đánh; cấp quyền đặt bi tự do (Ball-in-hand) nếu đối thủ phạm lỗi.</td>
+        </tr>
+        <tr data-cat="GAME">
+          <td><span class="badge badge-code">13</span></td>
+          <td class="pkt-name">BALL_POCKETED</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">int ballIndex</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.sendBallPocketed()<br><strong>Client:</strong> GameScene.java</td>
+          <td>Server gửi thông báo sự kiện bi rơi vào lỗ cho các máy khách.</td>
+        </tr>
+        <tr data-cat="GAME">
+          <td><span class="badge badge-code">14</span></td>
+          <td class="pkt-name">GAME_OVER</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool youWin, int expGained</td>
+          <td class="pkt-location"><strong>Server:</strong> GameRoom.endGame()<br><strong>Client:</strong> GameScene -> ResultScene</td>
+          <td>Thông báo kết thúc ván đấu, hiển thị thắng/thua và cộng +100 điểm kinh nghiệm EXP vào hồ sơ.</td>
+        </tr>
+        <tr data-cat="GAME">
+          <td><span class="badge badge-code">20</span></td>
+          <td class="pkt-name">PHYSICS_DONE</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">bool keepTurn, bool isFoul</td>
+          <td class="pkt-location"><strong>Client:</strong> GameScene.onPhysicsComplete()<br><strong>Server:</strong> GameRoom.onPhysicsDone()</td>
+          <td>CHỈ người vừa đánh (có cờ iWasShooter) mới gửi khi dừng bi hẳn, báo cáo tình trạng ăn bi hoặc lỗi.</td>
+        </tr>
+        <tr data-cat="GAME">
+          <td><span class="badge badge-code">21</span></td>
+          <td class="pkt-name">CLAIM_WIN</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">bool isWin</td>
+          <td class="pkt-location"><strong>Client:</strong> GameScene (khi bi 8 vào lỗ)<br><strong>Server:</strong> GameRoom.endGame()</td>
+          <td>Báo kết quả khi bi số 8 rơi lỗ (thắng nếu đã dọn sạch nhóm; thua nếu chết sớm hoặc scratch bi cái).</td>
+        </tr>
+
+        <!-- Leaderboard & Settings (15-16, 22-23) -->
+        <tr data-cat="SYS">
+          <td><span class="badge badge-code">15</span></td>
+          <td class="pkt-name">LEADERBOARD_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">(Không có payload)</td>
+          <td class="pkt-location"><strong>Client:</strong> LeaderboardScene.java<br><strong>Server:</strong> ClientHandler.handleLeaderboard()</td>
+          <td>Client yêu cầu nạp dữ liệu Bảng xếp hạng Top người chơi từ máy chủ.</td>
+        </tr>
+        <tr data-cat="SYS">
+          <td><span class="badge badge-code">16</span></td>
+          <td class="pkt-name">LEADERBOARD_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">String "rank|username|level|exp|wins|losses;..."</td>
+          <td class="pkt-location"><strong>Server:</strong> DatabaseManager.getLeaderboard()<br><strong>Client:</strong> NetworkClient.cachedLeaderboard</td>
+          <td>Server trả về danh sách Top 10 người chơi có EXP/Level cao nhất kèm tỉ lệ chiến thắng.</td>
+        </tr>
+        <tr data-cat="SYS">
+          <td><span class="badge badge-code">22</span></td>
+          <td class="pkt-name">SETTINGS_UPDATE</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">int avatarId, String cueColor</td>
+          <td class="pkt-location"><strong>Client:</strong> SettingsDialog.java (btnSave)<br><strong>Server:</strong> ClientHandler.handleSettingsUpdate()</td>
+          <td>Client gửi yêu cầu thay đổi Avatar và trang bị Skin gậy cơ đã mở khóa.</td>
+        </tr>
+        <tr data-cat="SYS">
+          <td><span class="badge badge-code">23</span></td>
+          <td class="pkt-name">SETTINGS_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool success</td>
+          <td class="pkt-location"><strong>Server:</strong> CueSkinConfig.isSkinUnlocked()<br><strong>Client:</strong> SettingsDialog.java</td>
+          <td>Server trả kết quả cập nhật (từ chối nếu phát hiện hack/chưa đủ cấp độ yêu cầu của skin).</td>
+        </tr>
+
+        <!-- Friends (24-37) -->
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">24</span></td>
+          <td class="pkt-name">SEARCH_PLAYERS_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String keyword</td>
+          <td class="pkt-location"><strong>Client:</strong> FriendSearchDialog.java<br><strong>Server:</strong> DatabaseManager.searchPlayers()</td>
+          <td>Tìm kiếm người chơi theo từ khóa tên người dùng (username).</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">25</span></td>
+          <td class="pkt-name">SEARCH_PLAYERS_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">String "username|level|avatarId;..."</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.handleSearchPlayers()<br><strong>Client:</strong> FriendSearchDialog.java</td>
+          <td>Server trả về danh sách người chơi phù hợp kèm cấp độ và avatar để kết bạn.</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">26</span></td>
+          <td class="pkt-name">ADD_FRIEND_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String friendUsername</td>
+          <td class="pkt-location"><strong>Client:</strong> FriendSearchDialog.java<br><strong>Server:</strong> DatabaseManager.addFriend()</td>
+          <td>Gửi lời mời kết bạn tới người chơi mục tiêu (tạo bản ghi PENDING trong DB).</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">27</span></td>
+          <td class="pkt-name">ADD_FRIEND_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool success, String message</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.handleAddFriend()<br><strong>Client:</strong> FriendSearchDialog.java</td>
+          <td>Server phản hồi trạng thái gửi lời mời kết bạn (thành công hoặc đã là bạn bè).</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">28</span></td>
+          <td class="pkt-name">FRIEND_LIST_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">(Không có payload)</td>
+          <td class="pkt-location"><strong>Client:</strong> LobbyScene (Nạp danh bạ bạn bè)<br><strong>Server:</strong> ClientHandler.handleFriendList()</td>
+          <td>Client yêu cầu nạp toàn bộ danh sách bạn bè chính thức của người chơi.</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">29</span></td>
+          <td class="pkt-name">FRIEND_LIST_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">String "username|level|avatarId|isOnline;..."</td>
+          <td class="pkt-location"><strong>Server:</strong> ServerMain.onlinePlayers<br><strong>Client:</strong> LobbyScene.java</td>
+          <td>Server trả danh sách bạn bè kèm trạng thái Online/Offline thời gian thực.</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">30</span></td>
+          <td class="pkt-name">FRIEND_ACCEPT_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String senderUsername</td>
+          <td class="pkt-location"><strong>Client:</strong> PendingRequestsDialog.java<br><strong>Server:</strong> DatabaseManager.acceptFriend()</td>
+          <td>Chấp thuận lời mời kết bạn đang chờ phê duyệt (đổi trạng thái thành ACCEPTED).</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">31</span></td>
+          <td class="pkt-name">FRIEND_ACCEPT_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool success, String message</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.handleAcceptFriend()<br><strong>Client:</strong> PendingRequestsDialog.java</td>
+          <td>Server báo kết quả xử lý đồng ý kết bạn thành công.</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">32</span></td>
+          <td class="pkt-name">FRIEND_DECLINE_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String senderUsername</td>
+          <td class="pkt-location"><strong>Client:</strong> PendingRequestsDialog.java<br><strong>Server:</strong> DatabaseManager.declineFriend()</td>
+          <td>Từ chối lời mời kết bạn từ người gửi.</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">33</span></td>
+          <td class="pkt-name">FRIEND_DECLINE_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool success, String message</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.handleDeclineFriend()<br><strong>Client:</strong> PendingRequestsDialog.java</td>
+          <td>Server báo kết quả từ chối lời mời kết bạn.</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">34</span></td>
+          <td class="pkt-name">PENDING_REQUESTS_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">(Không có payload)</td>
+          <td class="pkt-location"><strong>Client:</strong> PendingRequestsDialog.java<br><strong>Server:</strong> DatabaseManager.getPendingRequests()</td>
+          <td>Yêu cầu danh sách các lời mời kết bạn đang chờ người chơi này phê duyệt.</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">35</span></td>
+          <td class="pkt-name">PENDING_REQUESTS_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">String "username|level|avatarId;..."</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.handlePendingRequests()<br><strong>Client:</strong> PendingRequestsDialog.java</td>
+          <td>Server trả về danh sách các lời mời kết bạn đang chờ phê duyệt.</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">36</span></td>
+          <td class="pkt-name">REMOVE_FRIEND_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String friendUsername</td>
+          <td class="pkt-location"><strong>Client:</strong> LobbyScene (Menu ngữ cảnh bạn bè)<br><strong>Server:</strong> DatabaseManager.removeFriend()</td>
+          <td>Gửi yêu cầu xóa một người bạn khỏi danh bạ quan hệ.</td>
+        </tr>
+        <tr data-cat="FRIEND">
+          <td><span class="badge badge-code">37</span></td>
+          <td class="pkt-name">REMOVE_FRIEND_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool success, String message</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.handleRemoveFriend()<br><strong>Client:</strong> LobbyScene.java</td>
+          <td>Server trả kết quả xử lý hủy kết bạn.</td>
+        </tr>
+
+        <!-- Chat (38-41) -->
+        <tr data-cat="CHAT">
+          <td><span class="badge badge-code">38</span></td>
+          <td class="pkt-name">CHAT_MESSAGE_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String recipientUsername, String message</td>
+          <td class="pkt-location"><strong>Client:</strong> LobbyScene (Ô nhập tin nhắn chat)<br><strong>Server:</strong> ClientHandler.handleChatMessage()</td>
+          <td>Gửi tin nhắn riêng tới một người bạn cụ thể trong danh bạ.</td>
+        </tr>
+        <tr data-cat="CHAT">
+          <td><span class="badge badge-code">39</span></td>
+          <td class="pkt-name">CHAT_MESSAGE_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">String senderUsername, String message</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.sendChatMessage()<br><strong>Client:</strong> LobbyScene (Hộp thoại chat)</td>
+          <td>Server chuyển tiếp tin nhắn thời gian thực tới người nhận và lưu vào DB.</td>
+        </tr>
+        <tr data-cat="CHAT">
+          <td><span class="badge badge-code">40</span></td>
+          <td class="pkt-name">CHAT_HISTORY_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String friendUsername</td>
+          <td class="pkt-location"><strong>Client:</strong> LobbyScene (Chọn mở hội thoại bạn)<br><strong>Server:</strong> DatabaseManager.getChatHistory()</td>
+          <td>Yêu cầu tải toàn bộ lịch sử trò chuyện cũ với người bạn được chọn.</td>
+        </tr>
+        <tr data-cat="CHAT">
+          <td><span class="badge badge-code">41</span></td>
+          <td class="pkt-name">CHAT_HISTORY_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">String "sender|message;sender|message;..."</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.handleChatHistory()<br><strong>Client:</strong> LobbyScene (Vẽ bong bóng chat)</td>
+          <td>Server trả về danh sách lịch sử tin nhắn lưu trong bảng messages.</td>
+        </tr>
+
+        <!-- Challenge (42-45) -->
+        <tr data-cat="CHALLENGE">
+          <td><span class="badge badge-code">42</span></td>
+          <td class="pkt-name">CHALLENGE_REQUEST</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String targetUsername</td>
+          <td class="pkt-location"><strong>Client:</strong> LobbyScene (Nút Thách Đấu bên bạn bè)<br><strong>Server:</strong> ClientHandler.handleChallengeRequest()</td>
+          <td>Client A gửi lời mời thách đấu 1v1 trực tiếp tới người bạn đang Online.</td>
+        </tr>
+        <tr data-cat="CHALLENGE">
+          <td><span class="badge badge-code">43</span></td>
+          <td class="pkt-name">CHALLENGE_RECEIVE</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">String challengerUsername</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.receiveChallenge()<br><strong>Client:</strong> LobbyScene (Bật Popup Thách Đấu)</td>
+          <td>Server chuyển lời mời tới Client B, kích hoạt Popup đếm ngược 10 giây.</td>
+        </tr>
+        <tr data-cat="CHALLENGE">
+          <td><span class="badge badge-code">44</span></td>
+          <td class="pkt-name">CHALLENGE_RESPONSE</td>
+          <td style="text-align: center;"><span class="badge badge-cs">C ➔ S</span></td>
+          <td class="pkt-payload">String challengerUsername, bool accept</td>
+          <td class="pkt-location"><strong>Client:</strong> LobbyScene (Popup: Chấp nhận/Từ chối)<br><strong>Server:</strong> ClientHandler.handleChallengeResponse()</td>
+          <td>Client B phản hồi đồng ý hoặc từ chối lời mời thách đấu.</td>
+        </tr>
+        <tr data-cat="CHALLENGE">
+          <td><span class="badge badge-code">45</span></td>
+          <td class="pkt-name">CHALLENGE_RESULT</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">bool success, String message</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler.sendChallengeResult()<br><strong>Client:</strong> LobbyScene (Toast thông báo)</td>
+          <td>Server thông báo kết quả thách đấu; nếu đồng ý tự động khởi tạo GameRoom cho cả 2.</td>
+        </tr>
+
+        <!-- System (17-19) -->
+        <tr data-cat="SYS">
+          <td><span class="badge badge-code">17</span></td>
+          <td class="pkt-name">DISCONNECT</td>
+          <td style="text-align: center;"><span class="badge badge-both">C ⇄ S</span></td>
+          <td class="pkt-payload">(Không có payload)</td>
+          <td class="pkt-location"><strong>Client:</strong> NetworkClient.disconnect()<br><strong>Server:</strong> ClientHandler.onDisconnect()</td>
+          <td>Gói tin thông báo chủ động ngắt kết nối an toàn hoặc đóng Socket TCP.</td>
+        </tr>
+        <tr data-cat="SYS">
+          <td><span class="badge badge-code">18</span></td>
+          <td class="pkt-name">PING</td>
+          <td style="text-align: center;"><span class="badge badge-both">C ⇄ S</span></td>
+          <td class="pkt-payload">(Không có payload)</td>
+          <td class="pkt-location"><strong>Client/Server:</strong> Network Keep-alive check</td>
+          <td>Kiểm tra độ trễ (latency/ping) và đảm bảo kết nối TCP không bị ngắt bất ngờ.</td>
+        </tr>
+        <tr data-cat="SYS">
+          <td><span class="badge badge-code">19</span></td>
+          <td class="pkt-name">ERROR</td>
+          <td style="text-align: center;"><span class="badge badge-sc">S ➔ C</span></td>
+          <td class="pkt-payload">String errorMessage</td>
+          <td class="pkt-location"><strong>Server:</strong> ClientHandler (Catch ngoại lệ)<br><strong>Client:</strong> NetworkClient.listenLoop()</td>
+          <td>Server gửi mã lỗi cảnh báo ngoại lệ hoặc gói tin không hợp lệ cho Client.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ========================================================================================= -->
+<!-- TAB 4: LUỒNG HOẠT ĐỘNG SERVER & CLIENT -->
+<!-- ========================================================================================= -->
+<div id="page-lifecycle" class="page">
+  <div class="page-header">
+    <h1 class="page-title">🔄 Luồng Hoạt Động & Máy Trạng Thái (Server & Client Lifecycle)</h1>
+    <p class="page-subtitle">Kiến trúc luồng xử lý chi tiết từ khởi động, đồng bộ hạt giống tới chuyển lượt và dọn dẹp tài nguyên</p>
+  </div>
+
+  <div class="grid-2">
+    <!-- Server Lifecycle -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">🖥 Luồng Hoạt Động Của Server (ServerMain & GameRoom)</div>
+        <span class="badge badge-sc">Multi-threaded Server</span>
+      </div>
+      <ol class="step-list">
+        <li>
+          <strong>Khởi tạo Socket & Lắng nghe:</strong>
+          <div class="state-desc">ServerMain khởi động <code class="badge badge-code">ServerSocket(12345)</code> cho TCP và <code class="badge badge-code">DatagramSocket(12346)</code> cho UDP Auto-Discovery. Khởi tạo kết nối DB JDBC PostgreSQL/SQLite.</div>
+        </li>
+        <li>
+          <strong>Chấp nhận kết nối & Cấp phát luồng:</strong>
+          <div class="state-desc">Khi có Client kết nối, gọi <code class="badge badge-code">accept()</code> và tạo mới thực thể <code class="badge badge-code">ClientHandler</code> chạy trên một Thread riêng biệt.</div>
+        </li>
+        <li>
+          <strong>Vòng lặp đọc gói tin (Reader Loop):</strong>
+          <div class="state-desc">Thread của ClientHandler liên tục gọi <code class="badge badge-code">Packet.readType(in)</code>, ánh xạ sang switch-case xử lý đúng 45 loại gói tin.</div>
+        </li>
+        <li>
+          <strong>Xác thực & Quản lý Online:</strong>
+          <div class="state-desc">Khi đăng nhập thành công, đăng ký đối tượng vào bản đồ <code class="badge badge-code">ServerMain.onlinePlayers</code> để phục vụ định tuyến tin nhắn chat và thách đấu.</div>
+        </li>
+        <li>
+          <strong>Điều phối trận đấu với GameRoom:</strong>
+          <div class="state-desc">LobbyManager ghép 2 người chơi vào một thực thể <code class="badge badge-code">GameRoom</code>. GameRoom sinh <code class="badge badge-code">matchSeed</code>, kiểm soát lượt qua biến nguyên tử <code class="badge badge-code">AtomicInteger currentTurnIndex</code>.</div>
+        </li>
+        <li>
+          <strong>Trọng tài cú đánh & Chuyển lượt:</strong>
+          <div class="state-desc">Nhận <code class="badge badge-code">CUE_SHOT</code>, kiểm tra đúng lượt, chỉ forward <code class="badge badge-code">GAME_STATE</code> sang đối thủ. Khi nhận <code class="badge badge-code">PHYSICS_DONE</code> từ người bắn, kiểm tra cờ keepTurn để tiếp tục hoặc switchTurn kèm quyền Ball-in-hand nếu có lỗi.</div>
+        </li>
+        <li>
+          <strong>Kết thúc trận & Ghi nhận DB:</strong>
+          <div class="state-desc">Nhận <code class="badge badge-code">CLAIM_WIN</code> hoặc phát hiện ngắt kết nối: gọi <code class="badge badge-code">endGame()</code>, lưu match_history, cộng 100 EXP vào DB, gửi <code class="badge badge-code">GAME_OVER</code> và xóa tham chiếu phòng.</div>
+        </li>
+      </ol>
+    </div>
+
+    <!-- Client Lifecycle -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">💻 Luồng Hoạt Động Của Client (ClientMain & GameScene)</div>
+        <span class="badge badge-cs">JavaFX 60 FPS</span>
+      </div>
+      <ol class="step-list">
+        <li>
+          <strong>Khởi động & Cấu hình IP:</strong>
+          <div class="state-desc">Đọc cấu hình <code class="badge badge-code">server_ip.txt</code>. Tự động kích hoạt UDP Broadcast dò tìm Server trên cổng 12346 hoặc quét TCP subnet. Kết nối Socket với timeout 2.5s.</div>
+        </li>
+        <li>
+          <strong>Khởi tạo luồng mạng (Listener Thread):</strong>
+          <div class="state-desc">Tạo luồng Daemon <code class="badge badge-code">Client-Packet-Listener</code> chạy ngầm, liên tục đọc packet từ DataInputStream và dispatch sự kiện về JavaFX qua <code class="badge badge-code">Platform.runLater()</code>.</div>
+        </li>
+        <li>
+          <strong>Điều hướng giao diện (SceneManager):</strong>
+          <div class="state-desc">Chuyển đổi mượt mà giữa các cảnh: LoginScene ➔ LobbyScene ➔ Matchmaking / Challenge ➔ PreGameScene ➔ GameScene ➔ ResultScene.</div>
+        </li>
+        <li>
+          <strong>Khởi tạo ván đấu & Xáo bi đồng bộ:</strong>
+          <div class="state-desc">Khi nhận <code class="badge badge-code">GAME_START</code>, nạp hạt giống <code class="badge badge-code">matchSeed</code> vào <code class="badge badge-code">Random</code> để xếp bi 100% trùng khớp với đối thủ.</div>
+        </li>
+        <li>
+          <strong>Vòng lặp đồ họa & Vật lý (Game Loop 60 FPS):</strong>
+          <div class="state-desc"><code class="badge badge-code">AnimationTimer</code> chạy 60 lần/giây: cập nhật vật lý (<code class="badge badge-code">PhysicsEngine.update</code>), cập nhật hiệu ứng hạt VFX, vẽ Canvas bàn bi 3D, đường ngắm và điểm trô bi.</div>
+        </li>
+        <li>
+          <strong>Thực hiện cú đánh (Kéo & Thả chuột):</strong>
+          <div class="state-desc">Người chơi kéo chuột ngắm lực và góc, thả chuột phát lực: Client tự áp dụng vận tốc ngay lập tức (zero-lag), gửi <code class="badge badge-code">CUE_SHOT</code> lên Server và đặt cờ <code class="badge badge-code">iWasShooterThisTurn = true</code>.</div>
+        </li>
+        <li>
+          <strong>Báo cáo kết thúc vật lý:</strong>
+          <div class="state-desc">Khi toàn bộ bi dừng hẳn (<code class="badge badge-code">allBallsStopped</code>), chỉ người bắn gửi <code class="badge badge-code">PHYSICS_DONE(keepTurn, isFoul)</code>. Người xem chỉ cập nhật kết quả và chờ lệnh <code class="badge badge-code">TURN_CHANGE</code> từ Server.</div>
+        </li>
+      </ol>
+    </div>
+  </div>
+
+  <!-- State Machine Box -->
+  <div class="card" style="margin-top: 24px;">
+    <div class="card-header">
+      <div class="card-title">🔄 Máy Trạng Thái Ván Đấu 8-Ball (In-Game State Machine)</div>
+      <span class="badge badge-code">State Transitions</span>
+    </div>
+    <div class="grid-4" style="margin-top: 10px;">
+      <div class="state-box">
+        <div class="state-header"><span style="color:#BC8CFF;">1. PRE_GAME (13s)</span><span class="badge badge-sc">Seed Sync</span></div>
+        <div class="state-desc">Hiển thị avatar đối thủ, đếm ngược 13 giây. Cả hai gửi PREGAME_READY ➔ Server gửi GAME_START kèm matchSeed để đồng bộ bi.</div>
+      </div>
+      <div class="state-box">
+        <div class="state-header"><span style="color:#58A6FF;">2. PLAYER_AIMING (60s)</span><span class="badge badge-cs">Your Turn</span></div>
+        <div class="state-desc">Người có lượt được nhắm hướng, chỉnh lực kéo và điểm xoáy Trô/Cule/Ép-phê. Đồng hồ đếm ngược 60 giây. Nếu có cờ ballInHand, được kéo bi cái đặt tự do.</div>
+      </div>
+      <div class="state-box">
+        <div class="state-header"><span style="color:#3FB950;">3. PHYSICS_SIMULATION</span><span class="badge badge-both">Deterministic</span></div>
+        <div class="state-desc">Bi chuyển động theo Euler integration, ma sát nỉ 0.985, va chạm đàn hồi 0.96 và nảy băng 0.78. Cả hai máy tính toán độc lập không gửi tọa độ qua mạng.</div>
+      </div>
+      <div class="state-box">
+        <div class="state-header"><span style="color:#F85149;">4. TURN_RESOLVE / END</span><span class="badge badge-foul">Foul / Win</span></div>
+        <div class="state-desc">Bi dừng: nếu bi 8 vào lỗ ➔ CLAIM_WIN ➔ GAME_OVER. Nếu không: kiểm tra keepTurn và isFoul ➔ chuyển lượt (TURN_CHANGE) hoặc cho đánh tiếp.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================================= -->
+<!-- TAB 5: LOGIC GAME & ĐỘNG CƠ VẬT LÝ -->
+<!-- ========================================================================================= -->
+<div id="page-physics" class="page">
+  <div class="page-header">
+    <h1 class="page-title">🎱 Logic Luật Chơi 8-Ball & Động Cơ Vật Lý 2D Chi Tiết</h1>
+    <p class="page-subtitle">Bộ quy tắc chuẩn 8-Ball Pool quốc tế và mô hình toán học tất định (Deterministic 2D Physics Engine) trong Ball.java & PhysicsEngine.java</p>
+  </div>
+
+  <div class="grid-2">
+    <!-- Game Rules -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">📜 Quy Tắc & Luật Chơi 8-Ball Pool</div>
+        <span class="badge badge-both">Official 8-Ball Rules</span>
+      </div>
+      <ul style="font-size:12.5px;color:#C9D1D9;padding-left:18px;line-height:1.8;">
+        <li>
+          <strong>Bộ bi chuẩn 16 viên:</strong>
+          <div>• 1 Bi cái (Cue ball - Trắng, <code class="badge badge-code">#FFFFFF</code>, index 0).</div>
+          <div>• 7 Bi trơn (Solids, index 1-7: <span class="ball-color-dot" style="background:#F5C518;"></span>1-Vàng, <span class="ball-color-dot" style="background:#1E88E5;"></span>2-Xanh, <span class="ball-color-dot" style="background:#E53935;"></span>3-Đỏ, <span class="ball-color-dot" style="background:#8E24AA;"></span>4-Tím, <span class="ball-color-dot" style="background:#FB8C00;"></span>5-Cam, <span class="ball-color-dot" style="background:#2E7D32;"></span>6-Lục, <span class="ball-color-dot" style="background:#6D4C41;"></span>7-Nâu).</div>
+          <div>• 1 Bi số 8 huyền bí (Black 8-Ball, <code class="badge badge-code">#1E1E24</code>, index 8).</div>
+          <div>• 7 Bi khoang (Stripes, index 9-15: viền trắng phối màu tương ứng 1-7).</div>
+        </li>
+        <li>
+          <strong>Xếp bi tam giác & Hạt giống (matchSeed):</strong>
+          <div>Bi số 8 luôn được đặt tại vị trí trung tâm tam giác (hàng thứ 3, index 4 của 15 bi). 14 bi còn lại được xáo ngẫu nhiên bằng <code class="badge badge-code">Collections.shuffle(balls, new Random(seed))</code>.</div>
+        </li>
+        <li>
+          <strong>Phân chia nhóm bi mục tiêu:</strong>
+          <div>Khi bắt đầu trận, dựa trên seed cả hai người chơi được gán nhóm bi mục tiêu (7 bi trơn hoặc 7 bi khoang). Bảng HUD hiển thị trực quan các bi cần ăn của mỗi người.</div>
+        </li>
+        <li>
+          <strong>Quy tắc ăn bi & Giữ lượt:</strong>
+          <div>Nếu người chơi đánh rơi bi thuộc nhóm mục tiêu của mình vào lỗ một cách hợp lệ và không phạm lỗi, người đó được tiếp tục lượt đánh (<code class="badge badge-code">keepTurn = true</code>).</div>
+        </li>
+        <li>
+          <strong>Các lỗi phạm quy (Fouls):</strong>
+          <div>1. Bi cái rơi vào bất kỳ lỗ nào (Scratch).</div>
+          <div>2. Cú đánh không chạm vào bất kỳ viên bi nào trên bàn.</div>
+          <div>3. Hết thời gian suy nghĩ (60 giây cho mỗi lượt).</div>
+          <div>⚠️ <em>Khi phạm quy:</em> Lượt đánh chuyển sang đối thủ, và đối thủ nhận quyền <strong>Đặt bi tự do (Ball-in-Hand)</strong> — có thể kéo thả bi cái đến bất kỳ điểm trống nào trên bàn.</div>
+        </li>
+        <li>
+          <strong>Cập nhật luật ăn bi khi Scratch:</strong>
+          <div>Nếu người chơi ăn được bi mục tiêu nhưng bi cái cũng rơi vào lỗ: Bi mục tiêu vẫn nằm trong lỗ (vẫn tính ăn bi), nhưng người chơi bị mất lượt và đối thủ nhận quyền Ball-in-Hand.</div>
+        </li>
+        <li>
+          <strong>Điều kiện THẮNG CUỘC:</strong>
+          <div>Ăn toàn bộ 7 bi mục tiêu của nhóm mình, sau đó đánh bi số 8 vào lỗ một cách hợp lệ.</div>
+        </li>
+        <li>
+          <strong>Điều kiện THUA NGAY LẬP TỨC:</strong>
+          <div>💀 Đánh bi số 8 vào lỗ khi chưa dọn sạch 7 bi mục tiêu của mình.</div>
+          <div>💀 Đánh chết cả bi cái và bi số 8 trong cùng một lượt đánh!</div>
+          <div>💀 Làm bi số 8 rơi vào lỗ khi phạm bất kỳ lỗi quy định nào.</div>
+        </li>
+      </ul>
+    </div>
+
+    <!-- Physics Engine Details -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-title">⚙️ Động Cơ Vật Lý 2D Tất Định (PhysicsEngine)</div>
+        <span class="badge badge-cyan">Deterministic Simulation</span>
+      </div>
+      
+      <div style="font-size:12.5px;color:#C9D1D9;line-height:1.7;">
+        <p><strong>1. Tích Phân Chuyển Động & Ma Sát Vải Nỉ:</strong></p>
+        <div class="formula-box">
+x(t+1) = x(t) + vx;   y(t+1) = y(t) + vy;
+vx = vx * FRICTION;   vy = vy * FRICTION; // FRICTION = 0.985 (giảm 1.5%/frame)
+if (|vx| < 0.04) vx = 0; if (|vy| < 0.04) vy = 0; // Ngưỡng dừng hẳn
+        </div>
+
+        <p><strong>2. Va Chạm Đàn Hồi 2D Bi - Bi (Elastic Collision):</strong></p>
+        <p>Khoảng cách giữa hai tâm bi: <code class="badge badge-code">dist = sqrt(dx² + dy²)</code>. Va chạm xảy ra khi <code class="badge badge-code">dist &lt; 2 * RADIUS (28.0 px)</code>.</p>
+        <div class="formula-box">
+// Tách chồng lấn chống xuyên thấu (Anti-tunneling separation)
+overlap = (2 * RADIUS - dist) / 2.0;
+a.pos -= normal * overlap;  b.pos += normal * overlap;
+
+// Xung lực va chạm (BALL_RESTITUTION = 0.96)
+relVel = a.vel - b.vel;
+dot = relVel · normal;
+if (dot > 0) {
+    impulse = dot * 0.96;
+    a.vel -= impulse * normal;
+    b.vel += impulse * normal;
+}
+        </div>
+
+        <p><strong>3. Kỹ Thuật Chọc Cơ: Trô Bi (Draw shot) & Cule & Ép-phê:</strong></p>
+        <div class="formula-box">
+// spinY > 0: Trô bi (Backspin) kéo lùi bi cái sau cú chạm
+if (a.isCue && a.spinY != 0) {
+    double drawImpulse = a.spinY * 3.6;
+    a.vx -= nx * drawImpulse; a.vy -= ny * drawImpulse;
+    a.spinY *= 0.15; // Giảm xoáy sau va chạm chính
+}
+// spinX: Ép-phê ngang làm thay đổi góc nảy khi đập vào băng cao su (vy += spinX * 1.5)
+        </div>
+
+        <p><strong>4. Va Chạm Băng Cao Su (Cushion Bounce):</strong></p>
+        <p>Hệ số phục hồi thành bàn <code class="badge badge-code">WALL_RESTITUTION = 0.78</code>. Khi chạm băng mép bàn, vận tốc pháp tuyến đổi chiều kèm âm thanh nảy băng nén hơi chân thực.</p>
+
+        <p><strong>5. Hiệu Ứng Hút Vào Lỗ 3D (Pocket Suction & Sinking):</strong></p>
+        <p>6 lỗ (4 góc, 2 giữa). Bán kính kích hoạt lỗ là 30px. Khi bi đi vào vùng hút, chuyển sang trạng thái <code class="badge badge-code">isSinking</code> trong 12 frames (~0.2s): kích thước co nhỏ <code class="badge badge-code">scale: 1.0 ➔ 0.05</code>, độ trong suốt mờ dần <code class="badge badge-code">opacity: 1.0 ➔ 0.0</code> và hút mạnh vào tâm lỗ.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ========================================================================================= -->
+<!-- TAB 6: LUỒNG GIAO DIỆN (UI FLOW) -->
+<!-- ========================================================================================= -->
+<div id="page-ui" class="page">
+  <div class="page-header">
+    <h1 class="page-title">📱 Luồng Giao Diện Người Dùng & Chuyển Cảnh</h1>
+    <p class="page-subtitle">Sơ đồ tương tác và điều hướng người dùng qua các màn hình JavaFX của ứng dụng</p>
+  </div>
+
+  <div class="ui-flow-wrapper">
+    <div style="display:flex;justify-content:center;margin-bottom:0;">
+      <div class="ui-screen splash">
+        <div class="ui-screen-icon">🎱</div>
+        <div class="ui-screen-name">Màn Hình Khởi Động</div>
+        <div class="ui-screen-sub">Splash / Auto Connect<br>[Đăng Nhập] [Đăng Ký]</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;align-items:flex-start;gap:120px;margin-top:0;">
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Nhấn "Đăng Nhập"</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Nhấn "Đăng Ký"</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:120px;margin-bottom:0;">
+      <div class="ui-screen login">
+        <div class="ui-screen-icon">🔑</div>
+        <div class="ui-screen-name">Đăng Nhập</div>
+        <div class="ui-screen-sub">Username + Password<br>[🌐 Đổi IP Server]</div>
+      </div>
+      <div class="ui-screen register">
+        <div class="ui-screen-icon">📝</div>
+        <div class="ui-screen-name">Đăng Ký</div>
+        <div class="ui-screen-sub">Email + Username<br>+ Mật khẩu x2</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;align-items:flex-start;gap:120px;">
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">LOGIN_SUCCESS</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">REGISTER_SUCCESS</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+    </div>
+
+    <div style="display:flex;justify-content:center;margin-bottom:0;">
+      <div class="ui-screen lobby" style="max-width:320px;">
+        <div class="ui-screen-icon">🏠</div>
+        <div class="ui-screen-name">LOBBY (Sảnh Chính Trò Chơi)</div>
+        <div class="ui-screen-sub" style="text-align:left;margin-top:6px;">
+          👤 Hồ sơ: Tên, Level, EXP Bar, Thắng/Thua<br>
+          👥 Danh bạ: Bạn bè online & Chat thời gian thực<br><br>
+          [🎱 Chơi Ngẫu Nhiên] [🎯 Luyện Tập]<br>
+          [🏆 Bảng Xếp Hạng] [🔍 Tìm Bạn Mới]<br>
+          [⚙ Cài Đặt Gậy/Avatar] [🚪 Đăng Xuất]
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;align-items:flex-start;gap:14px;margin-top:0;">
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Chơi Ngẫu Nhiên</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Thách Đấu Bạn</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Bảng Xếp Hạng</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Luyện Tập</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:14px;margin-bottom:0;">
+      <div class="ui-screen matchmaking">
+        <div class="ui-screen-icon">⏳</div>
+        <div class="ui-screen-name">Phòng Chờ Ghép</div>
+        <div class="ui-screen-sub">Hàng đợi Matchmaking<br>"Đang tìm đối thủ..."<br>[Hủy]</div>
+      </div>
+      <div class="ui-screen challenge">
+        <div class="ui-screen-icon">📨</div>
+        <div class="ui-screen-name">Popup Thách Đấu</div>
+        <div class="ui-screen-sub">Mời bạn bè 1v1 (10s)<br>[✅ Chấp Nhận] [❌ Từ Chối]</div>
+      </div>
+      <div class="ui-screen leaderboard">
+        <div class="ui-screen-icon">🏆</div>
+        <div class="ui-screen-name">Bảng Xếp Hạng</div>
+        <div class="ui-screen-sub">Top 10 người chơi cao điểm<br>Hạng | Tên | Cấp | Thắng</div>
+      </div>
+      <div class="ui-screen practice">
+        <div class="ui-screen-icon">🤖</div>
+        <div class="ui-screen-name">Bàn Luyện Tập</div>
+        <div class="ui-screen-sub">Chơi offline tự do<br>Thử nghiệm Trô bi & Cule</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;align-items:flex-start;gap:14px;">
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">MATCH_FOUND</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Đồng Ý Đấu</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+      <div style="min-width:140px;"></div>
+      <div style="min-width:140px;"></div>
+    </div>
+
+    <div style="display:flex;justify-content:center;margin-left:-154px;">
+      <div class="ui-screen pregame" style="max-width:260px;">
+        <div class="ui-screen-icon">⏱</div>
+        <div class="ui-screen-name">Màn Hình Chuẩn Bị (PreGame)</div>
+        <div class="ui-screen-sub">Hiển thị Avatar 2 bên & Gậy cơ<br>Đếm ngược 13 giây<br>[Bắt Đầu Ngay]</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;margin-left:-154px;">
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Cả 2 sẵn sàng ➔ GAME_START (matchSeed)</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+    </div>
+
+    <div style="display:flex;justify-content:center;margin-left:-154px;">
+      <div class="ui-screen gameplay" style="max-width:320px;">
+        <div class="ui-screen-icon">🎱</div>
+        <div class="ui-screen-name">GAMEPLAY (Bàn Bi-a Luxury 3D)</div>
+        <div class="ui-screen-sub" style="text-align:left;margin-top:6px;">
+          • Kéo &amp; Thả chuột để nhắm góc &amp; lực<br>
+          • Bảng chỉnh điểm đặt cơ (Trô bi / Cule / Ép-phê)<br>
+          • Đồng hồ 60 giây / Đặt bi tự do (Ball-in-hand)<br>
+          • Mô phỏng vật lý đồng bộ 2 máy không desync
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;margin-left:-154px;">
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Bi 8 vào lỗ ➔ CLAIM_WIN ➔ GAME_OVER</div><div class="da-line"></div><div class="da-tip">▼</div></div>
+    </div>
+
+    <div style="display:flex;justify-content:center;margin-left:-154px;margin-bottom:0;">
+      <div class="ui-screen result" style="max-width:240px;">
+        <div class="ui-screen-icon">🏅</div>
+        <div class="ui-screen-name">Kết Quả Trận Đấu</div>
+        <div class="ui-screen-sub">🎉 Chiến Thắng / 💀 Thất Bại<br>+100 EXP nhận được &amp; Cấp mới<br>[Chơi Lại] [Về Sảnh Lobby]</div>
+      </div>
+    </div>
+
+    <div style="display:flex;justify-content:center;gap:90px;margin-left:-154px;">
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Chơi Lại</div><div class="da-tip" style="color:#F59E0B;">↩ Matchmaking</div></div>
+      <div class="down-arrow"><div class="da-line"></div><div class="da-label">Về Lobby</div><div class="da-tip" style="color:#3FB950;">↩ Lobby</div></div>
+    </div>
+  </div>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ In / Xuất PDF Báo Cáo</button>
+
+<script>
+  function showPage(id, btn) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    const target = document.getElementById('page-' + id);
+    if (target) target.classList.add('active');
+    if (btn) btn.classList.add('active');
+  }
+
+  let currentCategory = 'ALL';
+
+  function setCategory(cat, btn) {
+    currentCategory = cat;
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    filterPackets();
+  }
+
+  function filterPackets() {
+    const q = document.getElementById('packetSearch').value.toLowerCase().trim();
+    const rows = document.querySelectorAll('#packetTable tbody tr');
+
+    rows.forEach(row => {
+      const cat = row.getAttribute('data-cat');
+      const text = row.innerText.toLowerCase();
+      const matchCat = (currentCategory === 'ALL' || cat === currentCategory);
+      const matchQuery = (q === '' || text.includes(q));
+
+      if (matchCat && matchQuery) {
+        row.style.display = '';
+      } else {
+        row.style.display = 'none';
+      }
+    });
+  }
+</script>
+</body>
+</html>

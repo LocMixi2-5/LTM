@@ -1,0 +1,42 @@
+# Compiled class files
+*.class
+
+# Build and output directories
+out/
+dist/
+target/
+bin/
+client/out/
+client/dist/
+server/out/
+
+# Executables and large binaries (GitHub blocks files > 100MB)
+*.exe
+8BallPool_Game.exe
+client/dist/
+
+# Large JavaFX SDKs & Zip archives
+client/lib/javafx-sdk-*/
+client/lib/*.zip
+*.zip
+*.tar.gz
+*.rar
+*.7z
+
+# IDE and Editor files
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+.project
+.classpath
+.settings/
+
+# OS generated files
+Thumbs.db
+[Dd]esktop.ini
+.DS_Store
+
+# Logs
+*.log
