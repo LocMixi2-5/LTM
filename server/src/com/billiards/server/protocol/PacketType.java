@@ -69,8 +69,9 @@ public enum PacketType {
     CHALLENGE_RESPONSE(44),       // Client B gửi: String challengerUsername, boolean accept
     CHALLENGE_RESULT(45),         // Server gửi cho A và B: boolean success, String message
 
-    // Placement
+    // Placement & Aiming
     CUE_BALL_PLACED(46),          // Client gửi: double cueX, double cueY - Server chuyển tiếp đối thủ
+    CUE_AIM(47),                  // Client gửi: boolean isAiming, double angle, double forceRatio, double spinX, double spinY
 
     // System
     DISCONNECT(17),

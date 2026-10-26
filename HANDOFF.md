@@ -113,6 +113,7 @@ billiards-game/
 | **38-41** | `CHAT_MESSAGE / CHAT_HISTORY` | C ⇄ S | `String recipient/sender`, `String message` | Nhắn tin riêng thời gian thực & lịch sử chat |
 | **42-45** | `CHALLENGE_REQUEST / RECEIVE / RESPONSE / RESULT` | C ⇄ S | `String challenger`, `bool accept`, `bool success` | Thách đấu 1v1 trực tiếp từ danh sách bạn bè |
 | **46** | `CUE_BALL_PLACED` | C ➔ S ➔ C | `double cueX`, `double cueY` | Gửi tọa độ bi cái vừa đặt (khi thả bi cái lúc phá bi hoặc sau lỗi) để đối thủ thấy trước khi bắn |
+| **47** | `CUE_AIM` | C ➔ S ➔ C | `bool isAiming`, `double angle`, `double forceRatio`, `double spinX`, `double spinY` | Đồng bộ thời gian thực góc ngắm, lực thụt lùi gậy và điểm trô bi của đối thủ (Throttle 30Hz & 60 FPS LERP) |
 
 ---
 
@@ -167,6 +168,22 @@ billiards-game/
      - Nút `🔍 Dò Server LAN`: Tự động gửi gói UDP Broadcast (cổng 12346) và quét subnet TCP (cổng 12345) để tự động phát hiện IP Server trong mạng Wi-Fi/LAN mà không cần gõ tay.
      - Nút `🔗 KẾT NỐI & LƯU`: Thử kết nối trực tiếp với timeout 2.5s, báo kết quả tức thì và lưu file cấu hình.
 
+### D. Đồng Bộ Ngắm Cơ Thời Gian Thực (CUE_AIM) & Tối Ưu Mạng 60 FPS (v2.1)
+1. **Giao thức CUE_AIM (Packet 47)**:
+   - Client gửi: `[isAiming: bool] [angle: double] [forceRatio: double] [spinX: double] [spinY: double]`.
+   - Server (`GameRoom.processCueAim`): Kiểm tra quyền lượt bắn, chuyển tiếp tức thì sang đối thủ với độ trễ < 1ms.
+   - Throttling gửi: 30Hz (~33ms) khi di chuột hoặc ngay khi delta góc > 0.005 rad, lực > 0.01.
+2. **Nội suy LERP 60 FPS & Hiển thị gậy đối thủ**:
+   - `oppRenderAngle` và `oppRenderForceRatio` được nội suy làm mượt (`Math.sin/cos` chống wrap-around $[-\pi, \pi]$).
+   - Render Skin gậy của đối thủ (`oppCueColor`), vầng hào quang Aura neon, tia laser ngắm, bóng ảo và thanh lực đối thủ.
+   - Bảng Spin Widget cập nhật vị trí điểm chạm trô bi của đối thủ trong thời gian thực.
+3. **Đo Độ Trễ (RTT / Ping) & FPS Monitor**:
+   - Gói tin `PING (18)` echo timestamp liên tục mỗi 2s qua background thread.
+   - Nhãn hiển thị `⚡ X ms  |  🎮 60 FPS` ở góc trên màn hình, đổi màu động (Xanh < 50ms, Vàng < 100ms, Đỏ >= 100ms).
+4. **Tối ưu TCP & Giảm áp lực Garbage Collector (GC)**:
+   - Kích hoạt `socket.setTcpNoDelay(true)` trên cả client & server, triệt tiêu delay 40-200ms của Nagle.
+   - Chuyển toàn bộ các đối tượng Gradient vẽ bàn bida, nẹp gỗ, thanh lực và bi cái thành hằng số `static final`, triệt tiêu rác bộ nhớ tại 60 FPS.
+
 ---
 
 ## 5. HƯỚNG DẪN BUILD VÀ KHỞI CHẠY
@@ -179,7 +196,7 @@ run_server.bat
 ```
 *(Server tự động lắng nghe TCP 12345, UDP 12346 và in ra địa chỉ IP LAN của máy để các máy khác kết nối).*
 
-### 2. Build & Chạy Client
+### 2. Build & Chạy Client JAR
 ```cmd
 cd client
 build_no_pause.bat
@@ -187,10 +204,22 @@ run_client.bat
 ```
 *(Có thể chạy `run_client.bat` trực tiếp, hoặc truyền IP dòng lệnh `run_client.bat 192.168.1.15`. Nếu không truyền IP, client tự động dùng IP đã lưu trong `server_ip.txt` hoặc dò tìm trong GUI).*
 
+### 3. Đóng Gói 1 File .EXE Độc Lập Duy Nhất
+```cmd
+cd client
+build_single_exe.bat
+```
+- Script tự động:
+  1. Biên dịch source code client Java.
+  2. Dùng `jpackage` tạo self-contained runtime Java 17 + JavaFX 17.
+  3. Đóng gói app và assets thành `dist\BilliardsClient_Game.zip`.
+  4. Dùng C# compiler (`csc.exe`) biên dịch `StandaloneLauncher.cs` nhúng toàn bộ runtime zip thành 1 file exe duy nhất `8BallPool_Game.exe` tại thư mục gốc của project (kích thước ~107MB, không cần cài Java trên máy người dùng).
+
 ---
 
 ## 6. LƯU Ý KỸ THUẬT CHO PHIÊN LÀM VIỆC TIẾP THEO
 1. **Không sửa đổi tính tất định của vật lý**: Các hàm toán học trong `PhysicsEngine.java` không được dùng biến ngẫu nhiên trong vòng lặp va chạm.
-2. **Gói tin mở rộng**: Nếu bổ sung dữ liệu mới vào `CUE_SHOT` hoặc `GAME_STATE`, luôn đảm bảo cập nhật đồng bộ cả 4 file: `PacketType.java` (server + client), `ClientHandler.java`, `NetworkClient.java`, và `GameRoom.java`.
-3. **Môi trường Database**: Server sử dụng SQLite cục bộ `billiards.db`, không cần cài đặt thêm dịch vụ database bên ngoài.
+2. **Gói tin mở rộng**: Nếu bổ sung dữ liệu mới vào `CUE_SHOT`, `CUE_AIM` hoặc `GAME_STATE`, luôn đảm bảo cập nhật đồng bộ cả 4 file: `PacketType.java` (server + client), `ClientHandler.java`, `NetworkClient.java`, và `GameRoom.java`.
+3. **Môi trường Database**: Server kết nối cơ sở dữ liệu và tự động migrate schema.
 4. **Cấu hình mạng LAN**: Khi phát hành máy khách mới, danh sách lớp trong `build_no_pause.bat`, `compile.bat`, và `package_client.bat` đã bao gồm `ServerConfigDialog.java`.
+5. **Cập nhật file .exe**: Luôn kiểm tra tắt game trước khi chạy `build_single_exe.bat` để tránh lỗi khóa ghi file. File exe được sinh tại `client\dist\8BallPool_Game.exe` và tự động cập nhật ra thư mục gốc `8BallPool_Game.exe`.

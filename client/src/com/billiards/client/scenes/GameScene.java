@@ -106,6 +106,30 @@ public class GameScene {
     private static final double SPIN_WIDGET_Y = 270;
     private static final double SPIN_WIDGET_R = 36.0;
 
+    // ────── Caching Gradients tránh cấp phát GC (Hiệu suất 60 FPS) ──
+    private static final LinearGradient WOOD_GRADIENT = new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
+        new Stop(0.0, Color.web("#1E140E")),
+        new Stop(0.5, Color.web("#2A1C14")),
+        new Stop(1.0, Color.web("#140D09"))
+    );
+    private static final RadialGradient FELT_GRADIENT = new RadialGradient(
+        0, 0, TABLE_X + TABLE_W / 2, TABLE_Y + TABLE_H / 2, TABLE_W * 0.65, false, CycleMethod.NO_CYCLE,
+        new Stop(0.0, Color.web("#1B5E3C")),
+        new Stop(0.55, Color.web("#164E32")),
+        new Stop(1.0, Color.web("#0F3A24"))
+    );
+    private static final LinearGradient POWER_GRADIENT = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
+        new Stop(0.0, Color.web("#287A57")),
+        new Stop(0.7, Color.web("#C2A36B")),
+        new Stop(1.0, Color.web("#A83A3A"))
+    );
+    private static final RadialGradient SPIN_CUE_GRADIENT = new RadialGradient(0, 0,
+        SPIN_WIDGET_X - 10, SPIN_WIDGET_Y - 10, SPIN_WIDGET_R, false, CycleMethod.NO_CYCLE,
+        new Stop(0.0, Color.WHITE),
+        new Stop(0.75, Color.web("#EDF1E8")),
+        new Stop(1.0, Color.web("#A5B1A8"))
+    );
+
     // ────── Aiming (nhắm cú đánh) ───────────────────────────────
     private boolean  isAiming      = false;
     private double   aimStartX,    aimStartY;
@@ -114,6 +138,21 @@ public class GameScene {
     private static final double MAX_AIM_DIST = 130.0;
     private static final double MAX_FORCE    = 25.0;
     private double   cueIdleTimer  = 0.0;
+
+    // ────── Đối thủ ngắm cú đánh (Opponent Aim Sync) ──────────
+    private volatile boolean oppIsAiming = false;
+    private volatile double  oppTargetAngle = 0.0;
+    private volatile double  oppTargetForceRatio = 0.0;
+    private volatile double  oppSpinX = 0.0;
+    private volatile double  oppSpinY = 0.0;
+    private double           oppRenderAngle = 0.0;
+    private double           oppRenderForceRatio = 0.0;
+
+    // ────── Throttling gửi trạng thái ngắm ────────────────────
+    private long    lastAimSendTime = 0;
+    private double  lastSentAngle   = 0;
+    private double  lastSentForce   = 0;
+    private boolean lastSentAiming  = false;
 
     // ────── UI Nodes ────────────────────────────────────────────
     private Canvas canvas;
@@ -125,8 +164,14 @@ public class GameScene {
     private StackPane myAvatarPane;
     private StackPane oppAvatarPane;
     private Label  timerLabel;
+    private Label  pingFpsLabel;
     private Label  bgmLabel;
     private AnimationTimer gameLoop;
+
+    // ────── Đo FPS & Độ trễ (Performance Tracking) ─────────────
+    private long lastFpsCalcTime  = 0;
+    private int  renderFrameCount = 0;
+    private int  currentFps       = 60;
 
     // ────── Luật 8-Ball ─────────────────────────────────────────
     private List<Integer> myTargetBalls;
@@ -550,6 +595,13 @@ public class GameScene {
             timerLabel.setManaged(false);
         }
 
+        // Đo độ trễ (Ping RTT) và hiệu năng vẽ (FPS) thời gian thực
+        pingFpsLabel = new Label("⚡ 0 ms  |  🎮 60 FPS");
+        pingFpsLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 11));
+        pingFpsLabel.setTextFill(Color.web("#22c55e"));
+        pingFpsLabel.setStyle("-fx-background-color: #141D1A; -fx-border-color: #34443B; -fx-border-radius: 0; -fx-padding: 3 8; -fx-background-radius: 0;");
+        updatePingFpsDisplay();
+
         // Audio & Music Label (Cố định Arcade Speed)
         bgmLabel = new Label("🎵 " + SoundManager.getCurrentBgmName());
         bgmLabel.setMaxWidth(160);
@@ -586,7 +638,7 @@ public class GameScene {
 
         topBar.getChildren().addAll(myBox, sp1, vsBadge, sp2, oppBox, 
                                     new Separator(javafx.geometry.Orientation.VERTICAL),
-                                    new VBox(2, statusLabel, timerLabel),
+                                    new VBox(2, statusLabel, new HBox(6, timerLabel, pingFpsLabel)),
                                     new Separator(javafx.geometry.Orientation.VERTICAL),
                                     bgmBox, exitBtn);
         root.setTop(topBar);
@@ -614,6 +666,17 @@ public class GameScene {
             @Override
             public void handle(long now) {
                 cueIdleTimer += 0.04;
+
+                // Tính toán FPS & Ping RTT mỗi 500ms
+                renderFrameCount++;
+                if (now - lastFpsCalcTime >= 500_000_000L) {
+                    if (lastFpsCalcTime > 0) {
+                        currentFps = (int) Math.round((renderFrameCount * 1_000_000_000.0) / (now - lastFpsCalcTime));
+                    }
+                    renderFrameCount = 0;
+                    lastFpsCalcTime = now;
+                    updatePingFpsDisplay();
+                }
 
                 // Countdown Timer Logic
                 if (!isPractice && !physicsRunning && !gameOver) {
@@ -650,9 +713,21 @@ public class GameScene {
                     timerLabel.setStyle("-fx-background-color: rgba(148, 163, 184, 0.15); -fx-padding: 4 10; -fx-background-radius: 12;");
                 }
 
+                // Nội suy góc và lực của gậy đối thủ (60 FPS LERP)
+                if (oppIsAiming && !isMyTurn && !physicsRunning) {
+                    double angleDiff = oppTargetAngle - oppRenderAngle;
+                    while (angleDiff > Math.PI)  angleDiff -= 2 * Math.PI;
+                    while (angleDiff < -Math.PI) angleDiff += 2 * Math.PI;
+                    oppRenderAngle += angleDiff * 0.35;
+                    oppRenderForceRatio += (oppTargetForceRatio - oppRenderForceRatio) * 0.4;
+                } else {
+                    oppRenderForceRatio = 0.0;
+                }
+
                 // Nhận cú đánh từ mạng (Đối thủ bắn)
                 if (pendingShot && !physicsRunning) {
                     pendingShot = false;
+                    oppIsAiming = false;
                     balls.get(0).setPosition(pendingCueX, pendingCueY);
                     applyCueShot(pendingAngle, pendingForce, pendingSpinX, pendingSpinY, false);
                 }
@@ -746,9 +821,11 @@ public class GameScene {
         // 5. Vẽ Các Hiệu Ứng Sóng Xung Kích & Hạt Phấn (VFX Particles)
         drawVFX(gc);
 
-        // 6. Vẽ Gậy & Đường Nhắm của Mình khi đang kéo ngắm
+        // 6. Vẽ Gậy & Đường Nhắm của Mình khi đang kéo ngắm, hoặc của Đối thủ
         if (isAiming && !physicsRunning) {
             drawAimLine(gc);
+        } else if (!isMyTurn && oppIsAiming && !physicsRunning) {
+            drawOpponentAimLine(gc);
         }
 
         // 7. Vẽ Điểm Chọc Cơ & Trô Bi (Spin Selector Widget)
@@ -766,13 +843,8 @@ public class GameScene {
         gc.setFill(Color.rgb(0, 0, 0, 0.5));
         gc.fillRect(TABLE_X - 26, TABLE_Y - 24, TABLE_W + 52, TABLE_H + 52);
 
-        // Thành gỗ óc chó tối sang trọng hình chữ nhật phẳng không bo tròn
-        LinearGradient woodGrad = new LinearGradient(0, 0, 1, 1, true, CycleMethod.NO_CYCLE,
-            new Stop(0.0, Color.web("#1E140E")),
-            new Stop(0.5, Color.web("#2A1C14")),
-            new Stop(1.0, Color.web("#140D09"))
-        );
-        gc.setFill(woodGrad);
+        // Thành gỗ óc chó tối sang trọng hình chữ nhật phẳng không bo tròn (Cached Gradient)
+        gc.setFill(WOOD_GRADIENT);
         gc.fillRect(TABLE_X - 24, TABLE_Y - 24, TABLE_W + 48, TABLE_H + 48);
 
         // Viền chỉ đồng kim loại
@@ -824,14 +896,8 @@ public class GameScene {
         gc.setFill(Color.web("#123824"));
         gc.fillRect(TABLE_X - 6, TABLE_Y - 6, TABLE_W + 12, TABLE_H + 12);
 
-        // Mặt vải nỉ xanh trầm sang trọng với ánh sáng rọi nhẹ tâm bàn
-        RadialGradient feltGrad = new RadialGradient(
-            0, 0, TABLE_X + TABLE_W / 2, TABLE_Y + TABLE_H / 2, TABLE_W * 0.65, false, CycleMethod.NO_CYCLE,
-            new Stop(0.0, Color.web("#1B5E3C")),
-            new Stop(0.55, Color.web("#164E32")),
-            new Stop(1.0, Color.web("#0F3A24"))
-        );
-        gc.setFill(feltGrad);
+        // Mặt vải nỉ xanh trầm sang trọng với ánh sáng rọi nhẹ tâm bàn (Cached Gradient)
+        gc.setFill(FELT_GRADIENT);
         gc.fillRect(TABLE_X, TABLE_Y, TABLE_W, TABLE_H);
 
         // Vạch xuất phát (Head string line)
@@ -1065,7 +1131,35 @@ public class GameScene {
         CueSkinManager.drawCue(gc, mySkin, cueBall.x, cueBall.y, nx, ny, cueBack, animTime, false, 0.0);
 
         // Thanh lực neon tinh xảo (chỉ hiện khi đang ngắm kéo lực)
-        drawNeonPowerMeter(gc, forceRatio);
+        drawNeonPowerMeter(gc, forceRatio, false);
+    }
+
+    private void drawOpponentAimLine(GraphicsContext gc) {
+        Ball cueBall = balls.get(0);
+        if (!cueBall.active) return;
+
+        double nx = Math.cos(oppRenderAngle);
+        double ny = Math.sin(oppRenderAngle);
+
+        double cueBack = 12 + oppRenderForceRatio * 55 + Math.sin(cueIdleTimer * 4.0) * 1.8;
+
+        // Tâm căn hướng xa áp dụng cho mọi tài khoản không điều kiện level
+        drawExtendedAim(gc, cueBall.x, cueBall.y, nx, ny);
+
+        // Vẽ cây gậy theo Skin và Animation của đối thủ đã trang bị
+        CueSkin oppSkin = CueSkinManager.getSkin(oppCueColor != null ? oppCueColor : CueSkinManager.ID_DEFAULT);
+        double nowSec = System.currentTimeMillis() / 1000.0;
+        double animTime = nowSec - (gameStartTime / 1000.0);
+
+        // Hào quang ma pháp trận / cổ ngữ hoàng gia quanh bi cái theo skin đang trang bị của đối thủ
+        CueSkinManager.drawAimAura(gc, oppSkin, cueBall.x, cueBall.y, nx, ny, animTime);
+
+        CueSkinManager.drawCue(gc, oppSkin, cueBall.x, cueBall.y, nx, ny, cueBack, animTime, false, 0.0);
+
+        // Thanh lực neon tinh xảo thể hiện lực đối thủ đang kéo
+        if (oppRenderForceRatio > 0.01) {
+            drawNeonPowerMeter(gc, oppRenderForceRatio, true);
+        }
     }
 
     private void drawExtendedAim(GraphicsContext gc, double startX, double startY, double nx, double ny) {
@@ -1185,7 +1279,7 @@ public class GameScene {
         gc.setLineDashes();
     }
 
-    private void drawNeonPowerMeter(GraphicsContext gc, double forceRatio) {
+    private void drawNeonPowerMeter(GraphicsContext gc, double forceRatio, boolean isOpponent) {
         double barW = 260;
         double barH = 12;
         double barX = TABLE_X + (TABLE_W - barW) / 2;
@@ -1198,20 +1292,17 @@ public class GameScene {
         gc.setLineWidth(1.0);
         gc.strokeRoundRect(barX - 4, barY - 4, barW + 8, barH + 8, 8, 8);
 
-        // Power Fill: Xanh nỉ -> Đồng -> Đỏ trầm
-        LinearGradient powerGrad = new LinearGradient(0, 0, 1, 0, true, CycleMethod.NO_CYCLE,
-            new Stop(0.0, Color.web("#287A57")),
-            new Stop(0.7, Color.web("#C2A36B")),
-            new Stop(1.0, Color.web("#A83A3A"))
-        );
-        gc.setFill(powerGrad);
+        // Power Fill: Xanh nỉ -> Đồng -> Đỏ trầm (Cached Gradient)
+        gc.setFill(POWER_GRADIENT);
         gc.fillRoundRect(barX, barY, barW * forceRatio, barH, 4, 4);
 
         // Percentage Text
         gc.setFill(Color.web("#EDF1E8"));
         gc.setFont(Font.font("Segoe UI", FontWeight.BOLD, 10));
         gc.setTextAlign(javafx.scene.text.TextAlignment.CENTER);
-        gc.fillText(String.format("LỰC ĐÁNH: %d%%", (int)(forceRatio * 100)), TABLE_X + TABLE_W / 2, barY + 10);
+        String label = isOpponent ? String.format("ĐỐI THỦ KÉO LỰC: %d%%", (int)(forceRatio * 100))
+                                  : String.format("LỰC ĐÁNH: %d%%", (int)(forceRatio * 100));
+        gc.fillText(label, TABLE_X + TABLE_W / 2, barY + 10);
     }
 
     private void drawSpinSelector(GraphicsContext gc) {
@@ -1238,14 +1329,8 @@ public class GameScene {
         gc.setLineWidth(1.0);
         gc.strokeOval(SPIN_WIDGET_X - SPIN_WIDGET_R - 5, SPIN_WIDGET_Y - SPIN_WIDGET_R - 5, (SPIN_WIDGET_R + 5) * 2, (SPIN_WIDGET_R + 5) * 2);
 
-        // Bi cái 3D Realistic
-        RadialGradient cueGrad = new RadialGradient(0, 0,
-            SPIN_WIDGET_X - 10, SPIN_WIDGET_Y - 10, SPIN_WIDGET_R, false, CycleMethod.NO_CYCLE,
-            new Stop(0.0, Color.WHITE),
-            new Stop(0.75, Color.web("#EDF1E8")),
-            new Stop(1.0, Color.web("#A5B1A8"))
-        );
-        gc.setFill(cueGrad);
+        // Bi cái 3D Realistic (Cached Gradient)
+        gc.setFill(SPIN_CUE_GRADIENT);
         gc.fillOval(SPIN_WIDGET_X - SPIN_WIDGET_R, SPIN_WIDGET_Y - SPIN_WIDGET_R, SPIN_WIDGET_R * 2, SPIN_WIDGET_R * 2);
         gc.setStroke(Color.web("#34443B"));
         gc.setLineWidth(1.0);
@@ -1258,8 +1343,10 @@ public class GameScene {
         gc.strokeLine(SPIN_WIDGET_X, SPIN_WIDGET_Y - SPIN_WIDGET_R + 4, SPIN_WIDGET_X, SPIN_WIDGET_Y + SPIN_WIDGET_R - 4);
 
         // Điểm đầu cơ màu đỏ (Chalk Tip)
-        double tipX = SPIN_WIDGET_X + cueSpinX * (SPIN_WIDGET_R - 6);
-        double tipY = SPIN_WIDGET_Y + cueSpinY * (SPIN_WIDGET_R - 6);
+        double activeSpinX = (isMyTurn || isPractice) ? cueSpinX : (oppIsAiming ? oppSpinX : cueSpinX);
+        double activeSpinY = (isMyTurn || isPractice) ? cueSpinY : (oppIsAiming ? oppSpinY : cueSpinY);
+        double tipX = SPIN_WIDGET_X + activeSpinX * (SPIN_WIDGET_R - 6);
+        double tipY = SPIN_WIDGET_Y + activeSpinY * (SPIN_WIDGET_R - 6);
 
         // Chấm đỏ đầu cơ tinh tế
         gc.setFill(Color.web("#C94A4A"));
@@ -1325,6 +1412,7 @@ public class GameScene {
             isAiming  = true;
             aimStartX = e.getX();
             aimStartY = e.getY();
+            sendAimUpdateThrottled(true, aimAngle, 0.0, true);
         }
     }
 
@@ -1360,6 +1448,7 @@ public class GameScene {
         }
         double ratio = Math.min(dist / MAX_AIM_DIST, 1.0);
         aimForce = ratio * MAX_FORCE;
+        sendAimUpdateThrottled(true, aimAngle, ratio, false);
     }
 
     private void onMouseMoved(MouseEvent e) {
@@ -1418,6 +1507,7 @@ public class GameScene {
 
         if (!isAiming || !isMyTurn || physicsRunning) return;
         isAiming = false;
+        sendAimUpdateThrottled(false, 0.0, 0.0, true);
 
         Ball cueBall = balls.get(0);
         if (!cueBall.active) return;
@@ -1443,6 +1533,21 @@ public class GameScene {
             isMyTurn = false;
             updateStatusLabel();
             updateTurnLabel();
+        }
+    }
+
+    private void sendAimUpdateThrottled(boolean isAiming, double angle, double forceRatio, boolean forceSend) {
+        if (isPractice || network == null) return;
+        long now = System.currentTimeMillis();
+        double dAngle = Math.abs(angle - lastSentAngle);
+        double dForce = Math.abs(forceRatio - lastSentForce);
+
+        if (forceSend || (isAiming != lastSentAiming) || (now - lastAimSendTime >= 33 && (dAngle > 0.008 || dForce > 0.015))) {
+            lastAimSendTime = now;
+            lastSentAngle = angle;
+            lastSentForce = forceRatio;
+            lastSentAiming = isAiming;
+            network.sendCueAim(isAiming, angle, forceRatio, cueSpinX, cueSpinY);
         }
     }
 
@@ -1854,11 +1959,33 @@ public class GameScene {
                             shockwaves.add(new Shockwave(cueX, cueY, 0.35));
                         });
                     }
+                    case CUE_AIM -> {
+                        boolean isAim = pkt.readBoolean();
+                        double angle = pkt.readDouble();
+                        double forceRatio = pkt.readDouble();
+                        double sX = pkt.readDouble();
+                        double sY = pkt.readDouble();
+                        Platform.runLater(() -> {
+                            if (!isMyTurn) {
+                                if (isAim && !oppIsAiming) {
+                                    oppRenderAngle = angle;
+                                    oppRenderForceRatio = forceRatio;
+                                }
+                                oppIsAiming = isAim;
+                                oppTargetAngle = angle;
+                                oppTargetForceRatio = forceRatio;
+                                oppSpinX = sX;
+                                oppSpinY = sY;
+                            }
+                        });
+                    }
                     case TURN_CHANGE -> {
                         boolean myTurn   = pkt.readBoolean();
                         boolean biInHand = pkt.readBoolean();
                         String  reason   = pkt.readString();
                         Platform.runLater(() -> {
+                            oppIsAiming = false;
+                            oppRenderForceRatio = 0.0;
                             shotFiredThisTurn = false;
                             isMyTurn = myTurn;
                             iWasShooterThisTurn = false;
@@ -1886,6 +2013,7 @@ public class GameScene {
                         boolean youWin   = pkt.readBoolean();
                         int     expGain  = pkt.readInt();
                         Platform.runLater(() -> {
+                            oppIsAiming = false;
                             gameLoop.stop();
                             sceneManager.showResult(youWin, expGain, myName, opponentName);
                         });
@@ -2030,6 +2158,22 @@ public class GameScene {
                 myGroupLabel.setText("Ăn bi số 8 để thắng!");
             }
         });
+    }
+
+    private void updatePingFpsDisplay() {
+        if (pingFpsLabel == null) return;
+        int ping = (network != null) ? network.getPingMs() : 0;
+        String pingColor = ping < 35 ? "#22c55e" : (ping < 80 ? "#f59e0b" : "#ef4444");
+        String text = isPractice ? String.format("🎮 %d FPS", currentFps)
+                                 : String.format("⚡ %d ms  |  🎮 %d FPS", ping, currentFps);
+        pingFpsLabel.setText(text);
+        pingFpsLabel.setStyle(
+            "-fx-background-color: #141D1A; " +
+            "-fx-border-color: #34443B; " +
+            "-fx-border-radius: 0; " +
+            "-fx-padding: 3 8; " +
+            "-fx-text-fill: " + pingColor + ";"
+        );
     }
 
     private void updateTurnLabel() {

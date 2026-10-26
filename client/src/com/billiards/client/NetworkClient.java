@@ -57,6 +57,13 @@ public class NetworkClient {
     private volatile String cachedLeaderboardData = null;
     private Consumer<String> onLeaderboardUpdated;
 
+    // Đo độ trễ mạng (Ping RTT in milliseconds)
+    private volatile int currentPingMs = 0;
+    private Consumer<Integer> onPingUpdated;
+
+    public int getPingMs() { return currentPingMs; }
+    public void setOnPingUpdated(Consumer<Integer> callback) { this.onPingUpdated = callback; }
+
     public NetworkClient() {
         String sysHost = System.getProperty("server.host");
         String sysPort = System.getProperty("server.port");
@@ -102,6 +109,7 @@ public class NetworkClient {
             // Kết nối với timeout 2.5 giây tránh treo giao diện
             socket.connect(new InetSocketAddress(this.host, this.port), 2500);
             socket.setKeepAlive(true);
+            socket.setTcpNoDelay(true); // Vô hiệu hóa Nagle's algorithm để giảm thiểu tối đa độ trễ TCP
             in  = new DataInputStream(new BufferedInputStream(socket.getInputStream()));
             out = new DataOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             connected = true;
@@ -111,6 +119,24 @@ public class NetworkClient {
             listenerThread.setDaemon(true);
             listenerThread.setName("Client-Packet-Listener");
             listenerThread.start();
+
+            // Khởi động luồng ping đo RTT định kỳ mỗi 2s
+            Thread pingThread = new Thread(() -> {
+                while (connected) {
+                    try {
+                        Thread.sleep(2000);
+                        if (connected) {
+                            sendPing();
+                        }
+                    } catch (InterruptedException ignored) {
+                        break;
+                    }
+                }
+            });
+            pingThread.setDaemon(true);
+            pingThread.setName("Client-Ping-Thread");
+            pingThread.start();
+            sendPing();
 
             saveSavedHost(this.host, this.port);
             System.out.println("[Network] Kết nối Server thành công: " + this.host + ":" + this.port);
@@ -324,6 +350,20 @@ public class NetworkClient {
                     } catch (Exception ignored) {}
                 }
 
+                // Tự động tính toán độ trễ RTT khi nhận phản hồi PING
+                if (type == PacketType.PING) {
+                    try {
+                        long sentTime = Packet.readLong(new DataInputStream(new ByteArrayInputStream(payload)));
+                        long rtt = System.currentTimeMillis() - sentTime;
+                        this.currentPingMs = (int) Math.max(0, rtt);
+                        if (onPingUpdated != null) {
+                            try {
+                                onPingUpdated.accept(this.currentPingMs);
+                            } catch (Exception ignored) {}
+                        }
+                    } catch (Exception ignored) {}
+                }
+
                 if (onPacketReceived != null) {
                     ReceivedPacket pkt = new ReceivedPacket(type, payload);
                     try {
@@ -405,6 +445,13 @@ public class NetworkClient {
                 Packet.writeDouble(dos, Packet.readDouble(in)); // cueX
                 Packet.writeDouble(dos, Packet.readDouble(in)); // cueY
             }
+            case CUE_AIM -> {
+                Packet.writeBoolean(dos, Packet.readBoolean(in)); // isAiming
+                Packet.writeDouble(dos, Packet.readDouble(in));   // angle
+                Packet.writeDouble(dos, Packet.readDouble(in));   // forceRatio
+                Packet.writeDouble(dos, Packet.readDouble(in));   // spinX
+                Packet.writeDouble(dos, Packet.readDouble(in));   // spinY
+            }
             case TURN_CHANGE -> {
                 boolean isYourTurn = Packet.readBoolean(in);
                 boolean isBallInHand = Packet.readBoolean(in);
@@ -433,8 +480,11 @@ public class NetworkClient {
                 Packet.writeString(dos, sender);
                 Packet.writeString(dos, msg);
             }
+            case PING -> {
+                Packet.writeLong(dos, Packet.readLong(in));
+            }
             default -> {
-                // DISCONNECT, PING, ERROR hoặc gói không có payload
+                // DISCONNECT, ERROR hoặc gói không có payload
             }
         }
         dos.flush();
@@ -510,6 +560,29 @@ public class NetworkClient {
             Packet.writeDouble(out, cueY);
             Packet.flush(out);
         } catch (IOException e) { System.err.println("[Network] sendCueBallPlaced: " + e.getMessage()); }
+    }
+
+    /** Gửi trạng thái ngắm cơ và kéo lực thời gian thực để đối thủ nhìn thấy */
+    public synchronized void sendCueAim(boolean isAiming, double angle, double forceRatio, double spinX, double spinY) {
+        try {
+            Packet.writeType(out, PacketType.CUE_AIM);
+            Packet.writeBoolean(out, isAiming);
+            Packet.writeDouble(out, angle);
+            Packet.writeDouble(out, forceRatio);
+            Packet.writeDouble(out, spinX);
+            Packet.writeDouble(out, spinY);
+            Packet.flush(out);
+        } catch (IOException e) { System.err.println("[Network] sendCueAim: " + e.getMessage()); }
+    }
+
+    /** Gửi gói PING kèm timestamp để tính toán độ trễ Round-Trip Time (RTT) */
+    public synchronized void sendPing() {
+        if (!connected || out == null) return;
+        try {
+            Packet.writeType(out, PacketType.PING);
+            Packet.writeLong(out, System.currentTimeMillis());
+            Packet.flush(out);
+        } catch (IOException e) { System.err.println("[Network] sendPing: " + e.getMessage()); }
     }
 
     /** Gửi tín hiệu physics đã xong – server sẽ chuyển lượt hoặc giữ lượt tùy vào keepTurn và xử lý lỗi */

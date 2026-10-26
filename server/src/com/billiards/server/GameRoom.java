@@ -143,6 +143,23 @@ public class GameRoom {
         opponent.sendCueBallPlaced(cueX, cueY);
     }
 
+    /**
+     * Client gửi trạng thái ngắm cơ và kéo lực thời gian thực (CUE_AIM).
+     * Chuyển tiếp ngay lập tức tới đối thủ để render animation gậy và đường ngắm y hệt.
+     */
+    public synchronized void processCueAim(ClientHandler sender, boolean isAiming, double angle, double forceRatio, double spinX, double spinY) {
+        if (!gameStarted || gameFinished) return;
+
+        // Chỉ cho phép người đang có lượt gửi trạng thái ngắm
+        ClientHandler currentPlayer = currentTurnIndex.get() == 0 ? player1 : player2;
+        if (sender != currentPlayer) return;
+
+        ClientHandler opponent = (sender == player1) ? player2 : player1;
+        if (opponent != null) {
+            opponent.sendCueAim(isAiming, angle, forceRatio, spinX, spinY);
+        }
+    }
+
     /** Chuyen luot danh */
     private void switchTurn(boolean isFoul, String reason) {
         int newTurn = currentTurnIndex.get() == 0 ? 1 : 0;

@@ -51,6 +51,7 @@ public class ServerMain {
                 try {
                     Socket clientSocket = serverSocket.accept();
                     clientSocket.setKeepAlive(true);
+                    clientSocket.setTcpNoDelay(true);
 
                     ClientHandler handler = new ClientHandler(clientSocket, authManager, lobbyManager, db);
                     Thread thread = new Thread(handler);

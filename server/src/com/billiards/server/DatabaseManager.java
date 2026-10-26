@@ -83,9 +83,13 @@ public class DatabaseManager {
     public String register(String email, String username, String passwordHash) {
         if (!isConnected()) return "ERROR";
 
-        // Kiểm tra email tồn tại chưa
+        if (email == null || email.isBlank()) return "ERROR";
+        email = email.trim().toLowerCase();
+        username = username != null ? username.trim() : "";
+
+        // Kiểm tra email tồn tại chưa (không phân biệt chữ hoa/thường)
         try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT id FROM players WHERE email = ?")) {
+                "SELECT id FROM players WHERE LOWER(email) = LOWER(?)")) {
             stmt.setString(1, email);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return "EMAIL_EXISTS";
@@ -94,9 +98,9 @@ public class DatabaseManager {
             return "ERROR";
         }
 
-        // Kiểm tra username tồn tại chưa
+        // Kiểm tra username tồn tại chưa (không phân biệt chữ hoa/thường)
         try (PreparedStatement stmt = connection.prepareStatement(
-                "SELECT id FROM players WHERE username = ?")) {
+                "SELECT id FROM players WHERE LOWER(username) = LOWER(?)")) {
             stmt.setString(1, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) return "USERNAME_EXISTS";
@@ -114,10 +118,16 @@ public class DatabaseManager {
             stmt.setString(3, passwordHash);
             stmt.setInt(4, randomAvatar);
             stmt.executeUpdate();
-            System.out.println("[DB] Tạo tài khoản mới: " + username + " (avatar=" + randomAvatar + ")");
+            System.out.println("[DB] Tạo tài khoản mới: " + username + " (email=" + email + ", avatar=" + randomAvatar + ")");
             return "OK";
         } catch (SQLException e) {
             System.err.println("[DB] register - insert: " + e.getMessage());
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("email")) {
+                return "EMAIL_EXISTS";
+            }
+            if (e.getMessage() != null && e.getMessage().toLowerCase().contains("username")) {
+                return "USERNAME_EXISTS";
+            }
             return "ERROR";
         }
     }
@@ -127,17 +137,18 @@ public class DatabaseManager {
     // ============================================================
 
     /**
-     * Lấy password hash của username để client xác thực.
+     * Lấy password hash của username hoặc email để client xác thực.
      * @return PlayerInfo nếu tìm thấy, null nếu không tồn tại
      */
     public PlayerInfo getPlayerByUsername(String username) {
-        if (!isConnected()) return null;
+        if (!isConnected() || username == null) return null;
 
         try (PreparedStatement stmt = connection.prepareStatement(
                 "SELECT id, username, password_hash, exp, level, wins, losses, " +
                 "COALESCE(avatar_id, 0) AS avatar_id, COALESCE(cue_color, '#DEB887') AS cue_color " +
-                "FROM players WHERE username = ?")) {
+                "FROM players WHERE LOWER(username) = LOWER(?) OR LOWER(email) = LOWER(?)")) {
             stmt.setString(1, username);
+            stmt.setString(2, username);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 PlayerInfo info = new PlayerInfo();

@@ -72,6 +72,7 @@ public class ClientHandler implements Runnable {
             case PREGAME_READY    -> handlePregameReady();
             case CUE_SHOT         -> handleCueShot();
             case CUE_BALL_PLACED  -> handleCueBallPlaced();
+            case CUE_AIM          -> handleCueAim();
             case PHYSICS_DONE     -> handlePhysicsDone();
             case CLAIM_WIN        -> handleClaimWin();
             case LEADERBOARD_REQUEST -> handleLeaderboard();
@@ -87,8 +88,21 @@ public class ClientHandler implements Runnable {
             case CHAT_HISTORY_REQUEST     -> handleChatHistory();
             case CHALLENGE_REQUEST        -> handleChallengeRequest();
             case CHALLENGE_RESPONSE       -> handleChallengeResponse();
+            case PING             -> handlePing();
             case DISCONNECT       -> { running = false; }
             default -> System.out.println("[Handler] Goi tin khong xu ly: " + type);
+        }
+    }
+
+    // ============================================================
+    // KIỂM TRA ĐỘ TRỄ (PING / RTT)
+    // ============================================================
+    private void handlePing() throws IOException {
+        long timestamp = Packet.readLong(in);
+        synchronized (out) {
+            Packet.writeType(out, PacketType.PING);
+            Packet.writeLong(out, timestamp);
+            Packet.flush(out);
         }
     }
 
@@ -233,6 +247,20 @@ public class ClientHandler implements Runnable {
         double cueY = Packet.readDouble(in);
         if (currentRoom != null) {
             currentRoom.processCueBallPlaced(this, cueX, cueY);
+        }
+    }
+
+    // ============================================================
+    // TRẠNG THÁI NGẮM CƠ (CUE_AIM)
+    // ============================================================
+    private void handleCueAim() throws IOException {
+        boolean isAiming = Packet.readBoolean(in);
+        double angle = Packet.readDouble(in);
+        double forceRatio = Packet.readDouble(in);
+        double spinX = Packet.readDouble(in);
+        double spinY = Packet.readDouble(in);
+        if (currentRoom != null) {
+            currentRoom.processCueAim(this, isAiming, angle, forceRatio, spinX, spinY);
         }
     }
 
@@ -720,6 +748,21 @@ public class ClientHandler implements Runnable {
                 Packet.writeType(out, PacketType.CUE_BALL_PLACED);
                 Packet.writeDouble(out, cueX);
                 Packet.writeDouble(out, cueY);
+                Packet.flush(out);
+            }
+        } catch (IOException e) { running = false; }
+    }
+
+    /** Chuyển tiếp trạng thái ngắm cơ và kéo lực tới đối thủ */
+    public void sendCueAim(boolean isAiming, double angle, double forceRatio, double spinX, double spinY) {
+        try {
+            synchronized (out) {
+                Packet.writeType(out, PacketType.CUE_AIM);
+                Packet.writeBoolean(out, isAiming);
+                Packet.writeDouble(out, angle);
+                Packet.writeDouble(out, forceRatio);
+                Packet.writeDouble(out, spinX);
+                Packet.writeDouble(out, spinY);
                 Packet.flush(out);
             }
         } catch (IOException e) { running = false; }

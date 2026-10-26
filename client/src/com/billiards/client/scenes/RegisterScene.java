@@ -30,6 +30,10 @@ public class RegisterScene {
     private final SceneManager  sceneManager;
     private Scene scene;
 
+    private static final java.util.regex.Pattern EMAIL_PATTERN =
+        java.util.regex.Pattern.compile("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$");
+
+    private TextField     emailField;
     private TextField     usernameField;
     private PasswordField passwordField;
     private PasswordField confirmField;
@@ -49,9 +53,9 @@ public class RegisterScene {
         DragonCloudBackground bg = new DragonCloudBackground();
 
         // Card Đăng Ký Hình Vuông Tráng Bạc 4 Góc
-        VBox cardContent = new VBox(20);
+        VBox cardContent = new VBox(16);
         cardContent.setAlignment(Pos.CENTER);
-        cardContent.setPadding(new Insets(30, 36, 30, 36));
+        cardContent.setPadding(new Insets(24, 36, 24, 36));
 
         SilverCornerPane card = new SilverCornerPane(cardContent);
         card.setMaxWidth(400);
@@ -71,8 +75,20 @@ public class RegisterScene {
         headerBox.setAlignment(Pos.CENTER);
 
         // Form
-        VBox form = new VBox(12);
+        VBox form = new VBox(10);
         form.setAlignment(Pos.CENTER_LEFT);
+
+        // Email
+        VBox emailBox = new VBox(4);
+        Label emailLabel = new Label("Email");
+        emailLabel.setFont(Theme.fontMedium(12));
+        emailLabel.setTextFill(Theme.C_TEXT_MUTED);
+
+        emailField = new TextField();
+        emailField.setPromptText("Ví dụ: cothu@gmail.com");
+        Theme.styleTextInput(emailField);
+        emailField.setOnAction(e -> usernameField.requestFocus());
+        emailBox.getChildren().addAll(emailLabel, emailField);
 
         // Tên tài khoản
         VBox userBox = new VBox(4);
@@ -83,6 +99,7 @@ public class RegisterScene {
         usernameField = new TextField();
         usernameField.setPromptText("Ví dụ: cothu_pro");
         Theme.styleTextInput(usernameField);
+        usernameField.setOnAction(e -> passwordField.requestFocus());
         userBox.getChildren().addAll(userLabel, usernameField);
 
         // Mật khẩu
@@ -94,6 +111,7 @@ public class RegisterScene {
         passwordField = new PasswordField();
         passwordField.setPromptText("Nhập mật khẩu");
         Theme.styleTextInput(passwordField);
+        passwordField.setOnAction(e -> confirmField.requestFocus());
         passBox.getChildren().addAll(passLabel, passwordField);
 
         // Xác nhận mật khẩu
@@ -118,7 +136,7 @@ public class RegisterScene {
         // Nút Đăng ký (Chính)
         Button registerBtn = new Button("Đăng ký tài khoản");
         registerBtn.setMaxWidth(Double.MAX_VALUE);
-        registerBtn.setPrefHeight(42);
+        registerBtn.setPrefHeight(40);
         Theme.stylePrimaryButton(registerBtn);
         registerBtn.setOnAction(e -> {
             SoundManager.playButtonClick();
@@ -128,14 +146,14 @@ public class RegisterScene {
         // Nút Quay lại Đăng nhập
         Button backBtn = new Button("← Quay lại Đăng nhập");
         backBtn.setMaxWidth(Double.MAX_VALUE);
-        backBtn.setPrefHeight(38);
+        backBtn.setPrefHeight(36);
         Theme.styleSecondaryButton(backBtn);
         backBtn.setOnAction(e -> {
             SoundManager.playButtonClick();
             sceneManager.showLogin();
         });
 
-        form.getChildren().addAll(userBox, passBox, confBox, errorLabel, registerBtn, backBtn);
+        form.getChildren().addAll(emailBox, userBox, passBox, confBox, errorLabel, registerBtn, backBtn);
         cardContent.getChildren().addAll(headerBox, form);
 
         root.getChildren().addAll(bg, card);
@@ -161,27 +179,43 @@ public class RegisterScene {
     }
 
     private void doRegister() {
+        String email = emailField.getText().trim();
         String u = usernameField.getText().trim();
         String p = passwordField.getText();
         String c = confirmField.getText();
 
-        if (u.isEmpty() || p.isEmpty() || c.isEmpty()) {
+        if (email.isEmpty() || u.isEmpty() || p.isEmpty() || c.isEmpty()) {
             errorLabel.setText("Vui lòng điền đầy đủ các thông tin.");
+            return;
+        }
+
+        if (!EMAIL_PATTERN.matcher(email).matches()) {
+            errorLabel.setText("Địa chỉ email không hợp lệ (ví dụ: cothu@gmail.com).");
+            emailField.requestFocus();
             return;
         }
 
         if (u.length() < 3 || u.length() > 20) {
             errorLabel.setText("Tên đăng nhập phải từ 3 đến 20 ký tự.");
+            usernameField.requestFocus();
+            return;
+        }
+
+        if (u.contains(" ")) {
+            errorLabel.setText("Tên đăng nhập không được chứa khoảng trắng.");
+            usernameField.requestFocus();
             return;
         }
 
         if (p.length() < 6) {
             errorLabel.setText("Mật khẩu phải có ít nhất 6 ký tự.");
+            passwordField.requestFocus();
             return;
         }
 
         if (!p.equals(c)) {
             errorLabel.setText("Mật khẩu xác nhận không khớp!");
+            confirmField.requestFocus();
             return;
         }
 
@@ -192,7 +226,7 @@ public class RegisterScene {
 
         errorLabel.setTextFill(Theme.C_ACCENT_BRASS);
         errorLabel.setText("Đang đăng ký tài khoản...");
-        network.sendRegister(u, p);
+        network.sendRegister(email, u, p);
     }
 
     private void setupNetworkCallback() {

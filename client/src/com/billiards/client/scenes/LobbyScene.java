@@ -10,6 +10,8 @@ import com.billiards.client.vfx.DragonCloudBackground;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
@@ -78,6 +80,9 @@ public class LobbyScene {
     private Label       chatTitleLabel;
     private String      currentChatFriend = null;
     private Timeline    friendRefreshTimeline;
+    private String      lastFriendListData = null;
+    private String      pendingFriendListData = null;
+    private ContextMenu activeFriendMenu = null;
 
     // Quản lý lời mời thách đấu (Hiển thị đếm ngược 10s)
     private Stage activeChallengeDialog = null;
@@ -170,6 +175,19 @@ public class LobbyScene {
         root.getChildren().addAll(bg, mainLayout);
         scene = new Scene(root, 1060, 680);
         scene.setFill(Theme.C_BG_MAIN);
+
+        // Áp dụng phong cách tối sang trọng cho ContextMenu và MenuItem
+        try {
+            String menuCss = "data:text/css," + java.net.URLEncoder.encode(
+                ".context-menu { -fx-background-color: #1A2420; -fx-border-color: #34443B; -fx-border-width: 1px; -fx-border-radius: 6px; -fx-background-radius: 6px; -fx-padding: 4px; }" +
+                ".menu-item { -fx-background-color: transparent; -fx-padding: 6px 12px; -fx-background-radius: 4px; }" +
+                ".menu-item:hover, .menu-item:focused { -fx-background-color: #24322B; }" +
+                ".menu-item .label { -fx-text-fill: #EDF1E8; -fx-font-size: 12px; }" +
+                ".menu-item:disabled .label { -fx-opacity: 0.4; }",
+                java.nio.charset.StandardCharsets.UTF_8
+            );
+            scene.getStylesheets().add(menuCss);
+        } catch (Exception ignored) {}
     }
 
     // ============================================================
@@ -463,6 +481,7 @@ public class LobbyScene {
         );
         refreshBtn.setOnAction(e -> {
             SoundManager.playButtonClick();
+            lastFriendListData = null;
             if (network != null) {
                 network.sendFriendListRequest();
             }
@@ -570,7 +589,19 @@ public class LobbyScene {
     }
 
     private void appendChatMessage(String sender, String time, String message, boolean isMe) {
+        // Chặn trùng lặp nếu tin nhắn cuối cùng hiển thị có cùng người gửi, thời gian và nội dung
+        if (!chatMessagesBox.getChildren().isEmpty()) {
+            Node lastNode = chatMessagesBox.getChildren().get(chatMessagesBox.getChildren().size() - 1);
+            if (lastNode.getUserData() != null) {
+                String lastData = (String) lastNode.getUserData();
+                if (lastData.equals(sender + "|" + time + "|" + message)) {
+                    return;
+                }
+            }
+        }
+
         HBox wrapper = new HBox();
+        wrapper.setUserData(sender + "|" + time + "|" + message);
         wrapper.setAlignment(isMe ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
 
         VBox bubble = new VBox(2);
@@ -616,6 +647,18 @@ public class LobbyScene {
 
     private void updateFriendList(String data) {
         Platform.runLater(() -> {
+            // Không vẽ lại nếu dữ liệu giống hệt lần cập nhật trước
+            if (data != null && data.equals(lastFriendListData)) {
+                return;
+            }
+
+            // Nếu người dùng đang mở menu thao tác của bạn bè, hoãn vẽ lại để không làm mất menu
+            if (activeFriendMenu != null && activeFriendMenu.isShowing()) {
+                pendingFriendListData = data;
+                return;
+            }
+
+            lastFriendListData = data;
             friendListBox.getChildren().clear();
 
             if (data == null || data.isEmpty()) {
@@ -698,17 +741,39 @@ public class LobbyScene {
         Region sp = new Region();
         HBox.setHgrow(sp, Priority.ALWAYS);
 
-        // Menu tùy chọn nhỏ gọn (dấu 3 chấm ⋯)
-        MenuButton optBtn = new MenuButton("⋯");
+        // Nút mũi tên sổ xuống (▾) mở menu thao tác
+        Button optBtn = new Button("▾");
         optBtn.setTooltip(new Tooltip("Tùy chọn"));
         optBtn.setStyle(
             "-fx-background-color: transparent;" +
             "-fx-text-fill: " + (isOnline ? Theme.TEXT_PRIMARY : Theme.TEXT_MUTED) + ";" +
-            "-fx-font-size: 14px;" +
+            "-fx-font-size: 13px;" +
             "-fx-font-weight: bold;" +
             "-fx-cursor: hand;" +
-            "-fx-padding: 0 4px;"
+            "-fx-padding: 2px 6px;" +
+            "-fx-background-radius: 4px;"
         );
+        optBtn.setOnMouseEntered(e -> optBtn.setStyle(
+            "-fx-background-color: " + Theme.SURFACE_HOVER + ";" +
+            "-fx-text-fill: " + Theme.TEXT_PRIMARY + ";" +
+            "-fx-font-size: 13px;" +
+            "-fx-font-weight: bold;" +
+            "-fx-cursor: hand;" +
+            "-fx-padding: 2px 6px;" +
+            "-fx-background-radius: 4px;"
+        ));
+        optBtn.setOnMouseExited(e -> optBtn.setStyle(
+            "-fx-background-color: transparent;" +
+            "-fx-text-fill: " + (isOnline ? Theme.TEXT_PRIMARY : Theme.TEXT_MUTED) + ";" +
+            "-fx-font-size: 13px;" +
+            "-fx-font-weight: bold;" +
+            "-fx-cursor: hand;" +
+            "-fx-padding: 2px 6px;" +
+            "-fx-background-radius: 4px;"
+        ));
+
+        ContextMenu optMenu = new ContextMenu();
+        optMenu.setAutoHide(true);
 
         MenuItem chatItem = new MenuItem("💬 Nhắn tin");
         chatItem.setOnAction(e -> showChatView(name));
@@ -724,7 +789,30 @@ public class LobbyScene {
         MenuItem removeItem = new MenuItem("✕ Xóa bạn");
         removeItem.setOnAction(e -> confirmRemoveFriend(name));
 
-        optBtn.getItems().addAll(chatItem, challengeItem, removeItem);
+        optMenu.getItems().addAll(chatItem, challengeItem, removeItem);
+
+        optBtn.setOnAction(e -> {
+            if (optMenu.isShowing()) {
+                optMenu.hide();
+            } else {
+                if (activeFriendMenu != null && activeFriendMenu.isShowing()) {
+                    activeFriendMenu.hide();
+                }
+                activeFriendMenu = optMenu;
+                optMenu.show(optBtn, Side.BOTTOM, -70, 4);
+            }
+        });
+
+        optMenu.setOnHidden(e -> {
+            if (activeFriendMenu == optMenu) {
+                activeFriendMenu = null;
+                if (pendingFriendListData != null) {
+                    String pending = pendingFriendListData;
+                    pendingFriendListData = null;
+                    updateFriendList(pending);
+                }
+            }
+        });
 
         item.getChildren().addAll(statusDot, info, sp, optBtn);
         return item;
@@ -964,6 +1052,7 @@ public class LobbyScene {
 
         Optional<ButtonType> result = alert.showAndWait();
         if (result.isPresent() && result.get() == btnYes) {
+            lastFriendListData = null;
             network.sendRemoveFriend(friendName);
             if (friendName.equals(currentChatFriend)) {
                 showFriendListView();
@@ -1015,6 +1104,7 @@ public class LobbyScene {
         dialog.getDialog().setOnHidden(e -> {
             setupNetworkCallback();
             startFriendAutoRefresh();
+            lastFriendListData = null;
             network.sendFriendListRequest();
         });
     }
@@ -1061,14 +1151,29 @@ public class LobbyScene {
                         String time = new java.text.SimpleDateFormat("HH:mm").format(new java.util.Date());
                         Platform.runLater(() -> {
                             if (!senderUsername.equals(currentChatFriend)) {
+                                // Mở view chat sẽ tự động gửi yêu cầu lấy toàn bộ lịch sử (bao gồm tin nhắn mới này)
                                 showChatView(senderUsername);
+                            } else {
+                                appendChatMessage(senderUsername, time, message, false);
                             }
-                            appendChatMessage(senderUsername, time, message, false);
                         });
                     }
                     case CHAT_HISTORY_RESPONSE -> {
                         String historyData = pkt.readString();
                         Platform.runLater(() -> {
+                            // Lưu giữ các tin nhắn do mình vừa gõ gửi trong lúc đợi history phản hồi
+                            List<String> unsavedMyMessages = new ArrayList<>();
+                            for (Node child : chatMessagesBox.getChildren()) {
+                                if (child.getUserData() != null) {
+                                    String data = (String) child.getUserData();
+                                    if (data.startsWith("Bạn|")) {
+                                        unsavedMyMessages.add(data);
+                                    }
+                                }
+                            }
+
+                            chatMessagesBox.getChildren().clear();
+
                             if (!historyData.isEmpty()) {
                                 String[] messages = historyData.split(";");
                                 for (String msgStr : messages) {
@@ -1079,9 +1184,22 @@ public class LobbyScene {
                                         String content = parts[2];
                                         boolean isMe = sender.equals(username);
                                         appendChatMessage(isMe ? "Bạn" : sender, time, content, isMe);
+                                        if (isMe) {
+                                            unsavedMyMessages.removeIf(u -> u.endsWith("|" + content));
+                                        }
                                     }
                                 }
                             }
+
+                            // Khôi phục các tin nhắn vừa gửi chưa kịp ghi vào DB lúc history được tải
+                            for (String unsaved : unsavedMyMessages) {
+                                String[] parts = unsaved.split("\\|", 3);
+                                if (parts.length == 3) {
+                                    appendChatMessage("Bạn", parts[1], parts[2], true);
+                                }
+                            }
+
+                            chatScrollPane.setVvalue(1.0);
                         });
                     }
                     case CHALLENGE_RECEIVE -> {
