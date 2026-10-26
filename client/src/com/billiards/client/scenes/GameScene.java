@@ -538,32 +538,17 @@ public class GameScene {
         vsLbl.setTextFill(Color.web("#C2A36B"));
         vsBadge.getChildren().addAll(vsCircle, vsLbl);
 
-        // Player 2 Card (Đối thủ hoặc Khung trống khi luyện tập solo)
-        VBox oppBox;
+        // Player 2 Card (Ẩn hoàn toàn khi luyện tập solo)
+        VBox oppBox = new VBox();
         if (isPractice) {
             vsBadge.setVisible(false);
             vsBadge.setManaged(false);
-
-            StackPane emptySlot = new StackPane();
-            emptySlot.setPrefSize(180, 42);
-            emptySlot.setStyle(
-                "-fx-background-color: rgba(20, 29, 26, 0.4);" +
-                "-fx-border-color: #24322B;" +
-                "-fx-border-style: dashed;" +
-                "-fx-border-width: 1.5px;" +
-                "-fx-border-radius: 4px;"
-            );
-            Label emptyLbl = new Label("Khung Trống (Solo)");
-            emptyLbl.setFont(Font.font("Segoe UI", 11));
-            emptyLbl.setTextFill(Color.web("#52665A"));
-            emptySlot.getChildren().add(emptyLbl);
+            oppBox.setVisible(false);
+            oppBox.setManaged(false);
 
             oppBallsBox = new HBox(3);
             oppBallsBox.setVisible(false);
             oppBallsBox.setManaged(false);
-
-            oppBox = new VBox(2, emptySlot);
-            oppBox.setAlignment(Pos.CENTER_RIGHT);
         } else {
             oppAvatarPane = AvatarManager.createSmallAvatar(oppAvatarId);
             Label oppLabel = new Label(opponentName);

@@ -119,6 +119,10 @@ public class LobbyScene {
     }
 
     private void startFriendAutoRefresh() {
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(this::startFriendAutoRefresh);
+            return;
+        }
         stopFriendAutoRefresh();
         friendRefreshTimeline = new Timeline(new KeyFrame(Duration.seconds(3.5), e -> {
             if (network != null && network.isConnected() && friendListPanel != null && friendListPanel.isVisible()) {
@@ -130,6 +134,10 @@ public class LobbyScene {
     }
 
     private void stopFriendAutoRefresh() {
+        if (!Platform.isFxApplicationThread()) {
+            Platform.runLater(this::stopFriendAutoRefresh);
+            return;
+        }
         if (friendRefreshTimeline != null) {
             friendRefreshTimeline.stop();
             friendRefreshTimeline = null;
@@ -896,6 +904,7 @@ public class LobbyScene {
         dialog.initOwner(sceneManager.getPrimaryStage());
         dialog.initModality(Modality.APPLICATION_MODAL);
         dialog.initStyle(StageStyle.TRANSPARENT);
+        dialog.setAlwaysOnTop(true);
         dialog.setTitle("Lời mời thách đấu");
 
         VBox content = new VBox(14);
@@ -1015,13 +1024,18 @@ public class LobbyScene {
 
         activeChallengeDialog = dialog;
         dialog.show();
-        activeChallengeTimeline.play();
+        dialog.toFront();
+        dialog.requestFocus();
 
         Stage owner = sceneManager.getPrimaryStage();
         if (owner != null) {
-            dialog.setX(owner.getX() + (owner.getWidth() - dialog.getWidth()) / 2);
-            dialog.setY(owner.getY() + (owner.getHeight() - dialog.getHeight()) / 2);
+            double w = dialog.getWidth() > 0 ? dialog.getWidth() : 390;
+            double h = dialog.getHeight() > 0 ? dialog.getHeight() : 250;
+            dialog.setX(owner.getX() + Math.max(0, (owner.getWidth() - w) / 2));
+            dialog.setY(owner.getY() + Math.max(0, (owner.getHeight() - h) / 2));
         }
+
+        activeChallengeTimeline.play();
     }
 
     private void closeActiveChallengeDialog() {
@@ -1114,12 +1128,12 @@ public class LobbyScene {
             try {
                 switch (pkt.type) {
                     case MATCH_FOUND -> {
-                        stopFriendAutoRefresh();
                         String opponentName     = pkt.readString();
                         int    opponentLevel    = pkt.readInt();
                         int    opponentAvatarId = pkt.readInt();
                         String opponentCueColor = pkt.readString();
                         Platform.runLater(() -> {
+                            stopFriendAutoRefresh();
                             closeActiveChallengeDialog();
                             dismissCurrentToast();
                             sceneManager.showPreGame(username, level, avatarId, cueColor,
@@ -1212,17 +1226,14 @@ public class LobbyScene {
                         Platform.runLater(() -> {
                             closeActiveChallengeDialog();
                             dismissCurrentToast();
-                            Alert alert = new Alert(success ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
-                            alert.setTitle("Thách đấu");
-                            alert.setHeaderText(null);
-                            alert.setContentText(message);
-                            alert.showAndWait();
+                            showToast((success ? "⚔ " : "✕ ") + message, 4.0);
                         });
                     }
                     default -> {}
                 }
-            } catch (IOException e) {
+            } catch (Exception e) {
                 System.err.println("[LobbyScene] Lỗi xử lý gói tin: " + e.getMessage());
+                e.printStackTrace();
             }
         });
     }

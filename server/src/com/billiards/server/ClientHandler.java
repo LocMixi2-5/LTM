@@ -582,22 +582,47 @@ public class ClientHandler implements Runnable {
     private String currentChallenger = null;
     private java.util.Timer challengeTimer = null;
 
+    /**
+     * Tìm ClientHandler trực tuyến theo tên (hỗ trợ không phân biệt hoa thường và loại bỏ khoảng trắng).
+     */
+    private ClientHandler getOnlinePlayer(String username) {
+        if (username == null) return null;
+        String trimmed = username.trim();
+        ClientHandler direct = ServerMain.onlinePlayers.get(trimmed);
+        if (direct != null) return direct;
+        for (java.util.Map.Entry<String, ClientHandler> entry : ServerMain.onlinePlayers.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(trimmed)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
     private void handleChallengeRequest() throws IOException {
         String targetUsername = Packet.readString(in);
         
         if (isLoggedIn && playerInfo != null) {
-            ClientHandler target = ServerMain.onlinePlayers.get(targetUsername);
+            if (targetUsername == null || targetUsername.trim().isEmpty()) {
+                sendChallengeResult(false, "Tên người chơi không hợp lệ.");
+                return;
+            }
+
+            ClientHandler target = getOnlinePlayer(targetUsername);
             
             if (target == null) {
                 sendChallengeResult(false, "Người chơi không trực tuyến.");
                 return;
             }
+            if (target == this || (target.playerInfo != null && target.playerInfo.username.equalsIgnoreCase(playerInfo.username))) {
+                sendChallengeResult(false, "Không thể tự thách đấu chính mình.");
+                return;
+            }
             if (target.getCurrentRoom() != null) {
-                sendChallengeResult(false, targetUsername + " đang trong một trận đấu khác.");
+                sendChallengeResult(false, target.playerInfo != null ? target.playerInfo.username : targetUsername + " đang trong một trận đấu khác.");
                 return;
             }
             if (target.currentChallenger != null) {
-                sendChallengeResult(false, targetUsername + " đang bận.");
+                sendChallengeResult(false, (target.playerInfo != null ? target.playerInfo.username : targetUsername) + " đang bận.");
                 return;
             }
             
@@ -617,21 +642,24 @@ public class ClientHandler implements Runnable {
             }
         } catch (IOException e) { running = false; return; }
         
-        // Hủy sau 10s nếu không nhận phản hồi
-        if (challengeTimer != null) challengeTimer.cancel();
+        // Hủy sau 15s nếu không nhận phản hồi (client hiển thị 10s, server cho 15s để bù độ trễ mạng)
+        if (challengeTimer != null) {
+            challengeTimer.cancel();
+            challengeTimer = null;
+        }
         challengeTimer = new java.util.Timer();
         challengeTimer.schedule(new java.util.TimerTask() {
             @Override
             public void run() {
-                if (challengerUsername.equals(currentChallenger)) {
+                if (currentChallenger != null && challengerUsername.equalsIgnoreCase(currentChallenger)) {
                     currentChallenger = null;
-                    ClientHandler challenger = ServerMain.onlinePlayers.get(challengerUsername);
+                    ClientHandler challenger = getOnlinePlayer(challengerUsername);
                     if (challenger != null) {
-                        challenger.sendChallengeResult(false, "Đã hết thời gian chờ.");
+                        challenger.sendChallengeResult(false, "Đã hết thời gian chờ phản hồi thách đấu.");
                     }
                 }
             }
-        }, 10000);
+        }, 15000);
     }
 
     private void handleChallengeResponse() throws IOException {
@@ -643,12 +671,16 @@ public class ClientHandler implements Runnable {
             challengeTimer = null;
         }
         
-        if (challengerUsername.equals(currentChallenger)) {
+        if (currentChallenger != null && (challengerUsername.trim().equalsIgnoreCase(currentChallenger.trim()) || challengerUsername.equals(currentChallenger))) {
             currentChallenger = null;
-            ClientHandler challenger = ServerMain.onlinePlayers.get(challengerUsername);
+            ClientHandler challenger = getOnlinePlayer(challengerUsername);
             
             if (challenger == null) {
                 sendChallengeResult(false, "Người thách đấu đã ngắt kết nối.");
+                return;
+            }
+            if (challenger.getCurrentRoom() != null) {
+                sendChallengeResult(false, challenger.playerInfo.username + " đã vào một trận đấu khác.");
                 return;
             }
             
@@ -657,7 +689,9 @@ public class ClientHandler implements Runnable {
                 return;
             }
             
-            // Bắt đầu game
+            // Bắt đầu game (xóa cả hai khỏi hàng đợi tìm trận nếu đang tìm)
+            lobbyManager.removeFromQueue(challenger);
+            lobbyManager.removeFromQueue(this);
             lobbyManager.createGame(challenger, this);
         }
     }
@@ -686,6 +720,17 @@ public class ClientHandler implements Runnable {
         lobbyManager.removeFromQueue(this);
         if (currentRoom != null) {
             currentRoom.handleDisconnect(this);
+        }
+        if (challengeTimer != null) {
+            challengeTimer.cancel();
+            challengeTimer = null;
+        }
+        if (currentChallenger != null) {
+            ClientHandler c = getOnlinePlayer(currentChallenger);
+            if (c != null) {
+                c.sendChallengeResult(false, (playerInfo != null ? playerInfo.username : "Đối thủ") + " đã ngắt kết nối.");
+            }
+            currentChallenger = null;
         }
         try { socket.close(); } catch (IOException ignored) {}
     }

@@ -56,6 +56,9 @@ public class LobbyManager {
     // ============================================================
 
     public void createGame(ClientHandler player1, ClientHandler player2) {
+        removeFromQueue(player1);
+        removeFromQueue(player2);
+
         System.out.println("[Lobby] Ghép trận: "
                 + player1.getPlayerInfo().username + " vs "
                 + player2.getPlayerInfo().username);
