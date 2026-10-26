@@ -1,0 +1,13 @@
+PASS JavaFX explicit email submission and malformed-email validation (fixture transport)
+FINDING JavaFX rejects a syntactically valid long TLD: player@example.technology
+PASS friend menu remains open during refresh; unchanged data skips redraw; deferred data applied on close
+FINDING friend list A->B->A while menu open applies stale B after close
+FINDING two intentional equal messages in the same minute render as one (no message ID)
+FINDING late history response from prior friend can populate current conversation (fixture callback replay)
+PASS friend refresh start/stop called from worker thread uses JavaFX thread
+PASS challenge popup shown above owner and closes through JavaFX lifecycle
+PASS challenge result shows toast without modal alert
+PASS solo practice hides opponent layout and removes empty slot
+PASS current 34-byte aim frame decoded by GameScene (fixture callback)
+FINDING client SETTINGS_RESPONSE parser requires missing string; boolean-only server payload raises EOF
+Screenshots: actual JavaFX scenes of 00bf1cc; controlled sample data and fixture transport, not end-to-end chat/game tests.

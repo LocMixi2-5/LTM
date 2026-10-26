@@ -1,0 +1,1332 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="" xml:lang="">
+<head>
+  <meta charset="utf-8">
+  <meta name="generator" content="pandoc">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+  <title>Báo cáo LTM — bản mới 00bf1cc</title>
+  <style>
+    code{white-space: pre-wrap;}
+    span.smallcaps{font-variant: small-caps;}
+    div.columns{display: flex; gap: min(4vw, 1.5em);}
+    div.column{flex: auto; overflow-x: auto;}
+    div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+    /* The extra [class] is a hack that increases specificity enough to
+       override a similar rule in reveal.js */
+    ul.task-list[class]{list-style: none;}
+    ul.task-list li input[type="checkbox"] {
+      font-size: inherit;
+      width: 0.8em;
+      margin: 0 0.8em 0.2em -1.6em;
+      vertical-align: middle;
+    }
+    .display.math{display: block; text-align: center; margin: 0.5rem auto;}
+  </style>
+  <link rel="stylesheet" href="report.css">
+</head>
+<body>
+<header id="title-block-header">
+<h1 class="title">Báo cáo LTM — bản mới 00bf1cc</h1>
+</header>
+<div class="cover"><h1 id="báo-cáo-đồ-án-học-phần-lập-trình-mạng">BÁO CÁO ĐỒ ÁN HỌC PHẦN
+LẬP TRÌNH MẠNG</h1>
+<h2 id="xây-dựng-trò-chơi-bi-a-8-ball-pool-hai-người-chơi-qua-mạng">XÂY
+DỰNG TRÒ CHƠI BI-A 8-BALL POOL HAI NGƯỜI CHƠI QUA MẠNG</h2>
+<p>Trường: [Bổ sung tên trường]</p>
+<p>Khoa/Lớp: [Bổ sung khoa và lớp]</p>
+<p>Giảng viên hướng dẫn: [Bổ sung họ tên]</p>
+<p>Nhóm thực hiện: Nguyễn Xuân Lộc — Trung — Phạm Hoàng Minh — Lê Tiến
+Mạnh</p>
+<p>Mã sinh viên: [Bổ sung theo danh sách nhóm]</p>
+<p>Ngày cập nhật: 26/10/2026, múi giờ Việt Nam.</p>
+<p>Phiên bản đối chiếu: LocMixi2-5/LTM, commit
+00bf1ccaf8df2cdd54b79cb75ca188ae9c38627e.</p>
+</div><h2 id="tóm-tắt" class="front-break">TÓM TẮT</h2>
+<p>Đồ án xây dựng trò chơi bi-a hai người theo kiến trúc client–server.
+Client JavaFX đảm nhiệm giao diện, thao tác ngắm gậy và mô phỏng bi;
+server Java Socket xác thực tài khoản, quản lý phiên, ghép trận, xử lý
+thách đấu và điều phối lượt. PostgreSQL lưu tài khoản, kinh nghiệm, lịch
+sử trận, quan hệ bạn bè và tin nhắn. TCP cổng 12345 vận chuyển nghiệp
+vụ; UDP cổng 12346 hỗ trợ tìm máy chủ trong mạng LAN.</p>
+<p>Phiên bản hiện tại bổ sung xử lý thách đấu theo tên không phân biệt
+hoa thường, cải thiện hộp thoại lời mời và thông báo kết quả, đồng thời
+bỏ khung đối thủ trống trong chế độ luyện tập solo. Các cải tiến đăng ký
+bằng email, hiển thị chat và menu bạn bè cũng có trong mã nguồn. Báo cáo
+mô tả việc triển khai, kết quả kiểm tra đã thực hiện và giới hạn còn tồn
+tại.</p>
+<p>Báo cáo giữ bốn phần theo bảng phân công nhóm: tổng hợp và giao thức
+mạng; server và cơ sở dữ liệu; client, giao diện và game engine; kiểm
+thử và đánh giá. Các hình minh họa gồm sơ đồ dựng từ mã nguồn và ảnh
+chụp trực tiếp các màn hình JavaFX. Ảnh dữ liệu mẫu được ghi rõ để không
+bị hiểu nhầm là minh chứng chạy hai máy Windows hoặc chơi hoàn chỉnh qua
+Internet.</p>
+<h2 id="phân-công-và-phạm-vi-báo-cáo" class="front-break">PHÂN CÔNG VÀ PHẠM VI BÁO CÁO</h2>
+<table>
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Phần</th>
+<th>Thành viên theo phân công</th>
+<th>Trách nhiệm</th>
+<th>Sản phẩm trình bày</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1</td>
+<td>Nguyễn Xuân Lộc</td>
+<td>Tổng hợp code và báo cáo</td>
+<td>Kiến trúc tổng thể, giao thức TCP, NetworkClient, tích hợp và nội
+dung thuyết trình</td>
+</tr>
+<tr class="even">
+<td>2</td>
+<td>Trung</td>
+<td>Server + DB</td>
+<td>ServerMain, ClientHandler, GameRoom, LobbyManager, AuthManager,
+DatabaseManager và schema</td>
+</tr>
+<tr class="odd">
+<td>3</td>
+<td>Phạm Hoàng Minh</td>
+<td>Client + UI</td>
+<td>Điều hướng, các màn hình JavaFX, Ball, PhysicsEngine, GameScene</td>
+</tr>
+<tr class="even">
+<td>4</td>
+<td>Lê Tiến Mạnh</td>
+<td>Kiểm thử</td>
+<td>Môi trường, kịch bản, kết quả, ảnh minh họa và đánh giá</td>
+</tr>
+</tbody>
+</table>
+<p>Nguồn phân công là bảng Google Sheets do nhóm cung cấp [1]. Tên
+“Trung” được giữ nguyên vì bảng chưa ghi đủ họ tên. Bảng này mô tả trách
+nhiệm được giao, không xác nhận tỷ lệ đóng góp hoặc tác giả của từng
+dòng mã. Thông tin trường, lớp, giảng viên và MSSV chưa có được để trống
+để nhóm bổ sung.</p>
+<p>Kế hoạch ban đầu nhắc đến 21 loại packet và ConnectScene. Mã hiện tại
+định nghĩa 47 mã packet; chức năng cấu hình server nằm trong
+ServerConfigDialog. Báo cáo sử dụng tên lớp và hành vi đang có trong
+phiên bản đối chiếu, không sao chép nguyên các mô tả đã cũ trong tài
+liệu trước.</p>
+<h2 id="phạm-vi-cập-nhật-ngày-26102026" class="front-break">PHẠM VI CẬP NHẬT NGÀY
+26/10/2026</h2>
+<p>Lần kiểm tra này lấy nhánh main mới nhất tại commit 00bf1cc. Lịch sử
+main đã thay đổi so với nhánh chứa báo cáo trước: các thành phần đồng bộ
+v2, thư mục tests và reports của bản trước không còn trong cây nguồn
+hiện tại. Vì vậy báo cáo được biên soạn lại từ mã đang có; kết quả kiểm
+thử trên nhánh cũ không được sử dụng để kết luận cho phiên bản này.</p>
+<table>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Nội dung</th>
+<th>Hiện trạng tại 00bf1cc</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Packet</td>
+<td>47 mã; chưa có HELLO xác nhận phiên bản, token lượt, BOARD_STATE hay
+STATE_ACK</td>
+</tr>
+<tr class="even">
+<td>Ngắm gậy</td>
+<td>Một boolean và bốn double; 34 byte tính cả mã gói; gửi có điều tiết
+theo thay đổi tại client</td>
+</tr>
+<tr class="odd">
+<td>Cú đánh</td>
+<td>Client đánh mô phỏng ngay; server chuyển GAME_STATE cho đối thủ</td>
+</tr>
+<tr class="even">
+<td>Chuyển lượt</td>
+<td>Máy đánh gửi PHYSICS_DONE; chưa có hàng rào xác nhận cùng bàn từ cả
+hai client</td>
+</tr>
+<tr class="odd">
+<td>Thách đấu mới</td>
+<td>Tra tên online có trim/không phân biệt hoa thường; kiểm tra tự mời,
+người nhận bận; thời hạn server 15 giây</td>
+</tr>
+<tr class="even">
+<td>Giao diện mới</td>
+<td>Popup lời mời nổi trên cửa sổ chủ, đếm 10 giây; kết quả dùng toast;
+thao tác Timeline đưa về luồng JavaFX</td>
+</tr>
+<tr class="odd">
+<td>Luyện tập solo</td>
+<td>Ẩn và loại khỏi bố cục các thành phần đối thủ; bỏ dòng “Khung Trống
+(Solo)”</td>
+</tr>
+<tr class="even">
+<td>Kiểm chứng lần này</td>
+<td>Biên dịch mới, thử TCP/server/PostgreSQL và kiểm tra JavaFX có dữ
+liệu điều khiển; không chạy bộ hồi quy v2 cũ</td>
+</tr>
+</tbody>
+</table>
+<p>Lần cập nhật chỉ bổ sung tài liệu, hình ảnh và mã kiểm tra phục vụ
+báo cáo. Không khôi phục mã đồng bộ cũ vào main và không thay đổi mã
+nghiệp vụ Java của người dùng.</p>
+<h1 id="phần-1.-tổng-hợp-hệ-thống-và-giao-thức-mạng">PHẦN 1. TỔNG HỢP HỆ
+THỐNG VÀ GIAO THỨC MẠNG</h1>
+<p>Thành viên phụ trách theo phân công: Nguyễn Xuân Lộc.</p>
+<h2 id="bài-toán-mục-tiêu-và-phạm-vi-chức-năng">1.1. Bài toán, mục tiêu
+và phạm vi chức năng</h2>
+<p>Trò chơi nhiều người phải thống nhất dữ liệu tài khoản, đối thủ và
+quyền thao tác giữa những máy có tốc độ xử lý hoặc độ trễ khác nhau. Với
+bi-a, các dữ liệu chính gồm góc gậy, lực đánh, vị trí bi cái, độ xoáy và
+thời điểm chuyển lượt. Truyền thông số cú đánh giúp giảm lưu lượng,
+nhưng hai mô phỏng độc lập có thể khác tiến độ; vì vậy không được suy ra
+rằng TCP tự làm cho vị trí bi ở hai máy luôn giống nhau.</p>
+<p>Hệ thống hướng đến quy trình đăng ký, đăng nhập, tìm trận hoặc thách
+đấu, chơi và nhận kết quả. Các chức năng bạn bè, chat, bảng xếp hạng,
+tùy chỉnh avatar/gậy và luyện tập hỗ trợ trải nghiệm ngoài ván đấu. Phạm
+vi học phần tập trung lập trình socket, thiết kế packet, quản lý đồng
+thời, lưu dữ liệu và xử lý tình huống lỗi.</p>
+<p>Mô hình hiện tại đặt vật lý tại client. Server kiểm tra người có
+lượt, chuyển tiếp thao tác và cập nhật kết quả do luồng nghiệp vụ xác
+định; server không chạy một bản vật lý độc lập để đối chiếu mọi va chạm.
+Luyện tập solo là chế độ cục bộ, khác với phòng đối kháng hai người.</p>
+<h2 id="kiến-trúc-tổng-thể">1.2. Kiến trúc tổng thể</h2>
+<p>Luồng nghiệp vụ thông thường đi từ Scene JavaFX đến NetworkClient,
+qua TCP tới ClientHandler, rồi tới bộ phận xác thực, ghép trận hoặc dữ
+liệu. Trong trận, GameRoom giữ hai người chơi và chỉ số người có lượt.
+DatabaseManager là lớp truy cập PostgreSQL thông qua JDBC.</p>
+<table>
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Tầng</th>
+<th>Thành phần</th>
+<th>Trách nhiệm</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hiển thị và tương tác</td>
+<td>JavaFX scenes, Canvas, AnimationTimer</td>
+<td>Nhận thao tác, hiển thị hồ sơ/phòng/bàn chơi, mô phỏng bi</td>
+</tr>
+<tr class="even">
+<td>Mạng client</td>
+<td>NetworkClient, Packet, PacketType</td>
+<td>Kết nối, đóng gói, đọc payload, đo RTT và phát callback</td>
+</tr>
+<tr class="odd">
+<td>Dịch vụ server</td>
+<td>ServerMain, ClientHandler</td>
+<td>Nhận socket, xử lý yêu cầu của phiên và gửi phản hồi</td>
+</tr>
+<tr class="even">
+<td>Nghiệp vụ</td>
+<td>AuthManager, LobbyManager, GameRoom</td>
+<td>Đăng nhập, ghép trận, thách đấu, quyền lượt và kết thúc</td>
+</tr>
+<tr class="odd">
+<td>Lưu trữ</td>
+<td>DatabaseManager, PostgreSQL</td>
+<td>Tài khoản, EXP, trận đấu, bạn bè, chat</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="images/architecture.png" alt="Hình 1.1 — Kiến trúc hiện tại: TCP cho nghiệp vụ, UDP cho khám phá server LAN và JDBC kết nối PostgreSQL.">
+<figcaption aria-hidden="true">Hình 1.1 — Kiến trúc hiện tại: TCP cho
+nghiệp vụ, UDP cho khám phá server LAN và JDBC kết nối
+PostgreSQL.</figcaption>
+</figure>
+<p>Mỗi kết nối có một ClientHandler chạy trên luồng riêng. Phòng đấu và
+lời mời dùng bộ định thời; client có luồng lắng nghe và luồng ping. Cụm
+từ “một thread/client” chỉ mô tả luồng đọc yêu cầu tại server, không
+phải tổng số luồng của toàn hệ thống.</p>
+<h2 id="tcp-udp-và-cấu-trúc-packet">1.3. TCP, UDP và cấu trúc
+packet</h2>
+<p>TCP sử dụng cổng 12345. Gói ở tầng ứng dụng có dạng một byte
+PacketType, theo sau là các trường được ghi tuần tự. Các số nhiều byte
+dùng big-endian. Chuỗi UTF-8 được đặt sau một int 32-bit biểu diễn số
+byte; Packet.readString kiểm tra độ dài từ 0 đến 65.536 rồi đọc đủ số
+byte đó.</p>
+<p>TCP bảo đảm thứ tự luồng byte nhưng không giữ ranh giới giữa các lần
+ghi. Một lần đọc không nhất thiết tương ứng một packet. Vì không có
+chiều dài tổng quát cho mọi packet, hai phía phải thống nhất chính xác
+số lượng và kiểu trường. Nếu một phía đọc thêm chuỗi không được gửi, dữ
+liệu của packet tiếp theo có thể bị lấy nhầm làm độ dài chuỗi.</p>
+<p>UDP discovery dùng cổng 12346. Client gửi BILLIARDS_DISCOVER, server
+trả BILLIARDS_SERVER:12345. Cơ chế này giúp tìm máy chủ trong LAN; các
+thao tác gameplay vẫn đi qua TCP. Broadcast LAN không tự cung cấp khám
+phá server trên Internet.</p>
+<p>Phiên bản hiện tại chưa trao đổi mã phiên bản khi mở socket. Một
+client có thể gửi đăng ký/đăng nhập trực tiếp. Bởi vậy phải dùng client
+và server có định dạng tương thích; không thể trộn các binary của nhánh
+v2 cũ với nhánh hiện tại rồi kỳ vọng tự thương lượng giao thức.</p>
+<h2 id="danh-mục-47-mã-và-payload-quan-trọng">1.4. Danh mục 47 mã và
+payload quan trọng</h2>
+<table>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Nhóm mã</th>
+<th>Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>1–4</td>
+<td>Đăng nhập, đăng ký và phản hồi</td>
+</tr>
+<tr class="even">
+<td>5–9</td>
+<td>Tìm/hủy tìm trận, ghép đối thủ, sẵn sàng và khởi tạo</td>
+</tr>
+<tr class="odd">
+<td>10–14</td>
+<td>Cú đánh, trạng thái cú đánh, chuyển lượt, bi vào lỗ và kết quả</td>
+</tr>
+<tr class="even">
+<td>15–19</td>
+<td>Bảng xếp hạng, ngắt kết nối, ping và lỗi</td>
+</tr>
+<tr class="odd">
+<td>20–23</td>
+<td>PHYSICS_DONE, CLAIM_WIN và thiết lập hồ sơ</td>
+</tr>
+<tr class="even">
+<td>24–37</td>
+<td>Tìm người chơi, kết bạn, chấp nhận/từ chối và xóa bạn</td>
+</tr>
+<tr class="odd">
+<td>38–41</td>
+<td>Tin nhắn và lịch sử chat</td>
+</tr>
+<tr class="even">
+<td>42–45</td>
+<td>Yêu cầu, tiếp nhận, phản hồi và kết quả thách đấu</td>
+</tr>
+<tr class="odd">
+<td>46–47</td>
+<td>Đặt bi cái và trạng thái ngắm gậy</td>
+</tr>
+</tbody>
+</table>
+<p>Đây là số mã định nghĩa trong enum, không phải khẳng định mọi mã đều
+được sử dụng trong mọi luồng. Các payload dưới đây được đối chiếu với
+phương thức đọc/ghi của hai phía, không dựa riêng vào comment rút gọn
+cạnh tên enum.</p>
+<table>
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Packet</th>
+<th>Chiều chính</th>
+<th>Payload</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>GAME_START (9)</td>
+<td>Server → hai client</td>
+<td>int playerIndex, boolean isFirstTurn, long matchSeed</td>
+</tr>
+<tr class="even">
+<td>CUE_SHOT (10)</td>
+<td>Người đánh → server</td>
+<td>6 double: angle, force, cueX, cueY, spinX, spinY</td>
+</tr>
+<tr class="odd">
+<td>GAME_STATE (11)</td>
+<td>Server → đối thủ</td>
+<td>6 double của cú đánh</td>
+</tr>
+<tr class="even">
+<td>TURN_CHANGE (12)</td>
+<td>Server → hai client</td>
+<td>boolean isYourTurn, boolean ballInHand, string reason</td>
+</tr>
+<tr class="odd">
+<td>GAME_OVER (14)</td>
+<td>Server → client</td>
+<td>boolean youWin, int expGained</td>
+</tr>
+<tr class="even">
+<td>PING (18)</td>
+<td>Client ↔︎ server</td>
+<td>long timestamp; server trả lại timestamp</td>
+</tr>
+<tr class="odd">
+<td>PHYSICS_DONE (20)</td>
+<td>Máy đánh → server</td>
+<td>boolean keepTurn, boolean isFoul</td>
+</tr>
+<tr class="even">
+<td>CLAIM_WIN (21)</td>
+<td>Client → server</td>
+<td>boolean isWin</td>
+</tr>
+<tr class="odd">
+<td>CHALLENGE_REQUEST (42)</td>
+<td>Người mời → server</td>
+<td>string targetUsername</td>
+</tr>
+<tr class="even">
+<td>CHALLENGE_RECEIVE (43)</td>
+<td>Server → người nhận</td>
+<td>string challengerUsername</td>
+</tr>
+<tr class="odd">
+<td>CHALLENGE_RESPONSE (44)</td>
+<td>Người nhận → server</td>
+<td>string challengerUsername, boolean accept</td>
+</tr>
+<tr class="even">
+<td>CHALLENGE_RESULT (45)</td>
+<td>Server → client</td>
+<td>boolean success, string message</td>
+</tr>
+<tr class="odd">
+<td>CUE_BALL_PLACED (46)</td>
+<td>Client → server → đối thủ</td>
+<td>double cueX, double cueY</td>
+</tr>
+<tr class="even">
+<td>CUE_AIM (47)</td>
+<td>Client → server → đối thủ</td>
+<td>boolean isAiming, 4 double: angle, forceRatio, spinX, spinY</td>
+</tr>
+</tbody>
+</table>
+<p>CUE_AIM hiện có kích thước 1 + 1 + 4 × 8 = 34 byte ở tầng ứng dụng.
+Khoảng 30 mẫu/giây tương ứng khoảng 1.020 byte/giây trên mỗi chặng nếu
+thực sự gửi đủ số mẫu đó. Đây là phép tính lý thuyết, chưa tính TCP/IP
+và không phải số đo lưu lượng thực tế. CUE_SHOT có kích thước 49 byte
+gồm mã loại và sáu double.</p>
+<h2 id="networkclient-callback-và-đo-độ-trễ">1.5. NetworkClient,
+callback và đo độ trễ</h2>
+<p>NetworkClient mở Socket với thời hạn kết nối 2,5 giây, bật keepalive
+và TCP_NODELAY, rồi tạo BufferedInputStream/BufferedOutputStream. Một
+luồng lắng nghe đọc trọn payload theo PacketType trước khi chuyển cho
+callback của màn hình. Các màn hình dùng Platform.runLater để đưa cập
+nhật về JavaFX Application Thread.</p>
+<p>Client gửi ping ngay khi kết nối và định kỳ mỗi hai giây. Server trả
+lại timestamp; client lấy chênh lệch thời gian để hiển thị RTT. Đây là
+cơ chế đo độ trễ hiện có, không phải cơ chế heartbeat 5 giây và read
+timeout 20 giây được mô tả trong báo cáo nhánh cũ. Mã kết nối hiện tại
+không đặt thời hạn đọc socket tương ứng.</p>
+<p>Các phương thức gửi ghi và flush trực tiếp vào stream, phần lớn được
+synchronized. Không còn lớp hàng đợi ghi riêng QueuedOutputStream với
+FIFO giới hạn và một ô thay thế mẫu ngắm. Do đó thao tác ghi có thể chậm
+khi đường truyền hoặc bên nhận tắc; việc điều tiết ngắm tại GameScene
+không tự biến I/O thành bất đồng bộ.</p>
+<h2 id="đồng-bộ-ngắm-và-chuyển-lượt-ở-phiên-bản-hiện-tại">1.6. Đồng bộ
+ngắm và chuyển lượt ở phiên bản hiện tại</h2>
+<p>GameScene chỉ gửi cập nhật ngắm nếu dữ liệu thay đổi đủ mức hoặc có
+sự kiện cần gửi ngay. Với luồng thông thường, khoảng cách hai lần gửi
+tối thiểu là 33 ms, ngưỡng đổi góc 0,008 rad và ngưỡng đổi lực 0,015.
+Chuyển trạng thái isAiming hoặc forceSend có thể vượt quy tắc 33 ms; vì
+vậy đây không phải giới hạn cứng 30 Hz cho mọi tình huống.</p>
+<p>Phía quan sát nội suy góc theo khoảng quay ngắn nhất qua ±π, dùng hệ
+số 0,35 cho góc và 0,4 cho lực ở mỗi khung hình. Cách nội suy này phụ
+thuộc số khung hình thực tế, chưa chuẩn hóa theo thời gian trôi qua.
+Packet không có token lượt hoặc sequence, nên server không thể loại dữ
+liệu cũ dựa trên hai trường đó.</p>
+<p>Khi thả chuột, máy đánh gửi CUE_SHOT và chạy vật lý ngay. Server kiểm
+tra đúng người có lượt, rồi chỉ gửi GAME_STATE cho đối thủ. Khi mô phỏng
+của máy đánh kết thúc, client gửi PHYSICS_DONE; server phát TURN_CHANGE
+để giữ lượt hoặc đổi người đánh. Hai client không trao đổi bản vị trí
+cuối của toàn bộ 16 bi để xác nhận trước lượt tiếp theo.</p>
+<figure>
+<img src="images/shot_flow.png" alt="Hình 1.2 — Luồng cú đánh hiện tại. Người đánh mô phỏng ngay; chuyển lượt dựa trên PHYSICS_DONE, chưa có chốt bàn bằng snapshot và ACK.">
+<figcaption aria-hidden="true">Hình 1.2 — Luồng cú đánh hiện tại. Người
+đánh mô phỏng ngay; chuyển lượt dựa trên PHYSICS_DONE, chưa có chốt bàn
+bằng snapshot và ACK.</figcaption>
+</figure>
+<p>MatchSeed giúp hai client khởi tạo cách phân nhóm/thiết lập trận từ
+cùng đầu vào. Seed giống nhau không chứng minh các vị trí bi sẽ luôn
+giống nhau sau mọi cú đánh, nhất là khi nhịp cập nhật vật lý phụ thuộc
+khung hình.</p>
+<h2 id="tích-hợp-và-những-điểm-cần-đối-chiếu">1.7. Tích hợp và những
+điểm cần đối chiếu</h2>
+<p>Khi tổng hợp mã nguồn, cần kiểm tra cùng PacketType, thứ tự trường và
+ý nghĩa phản hồi ở cả hai phía. Sai khác thực tế được tìm thấy tại
+SETTINGS_RESPONSE: server gửi một boolean, trong khi
+NetworkClient.readPacketPayload đọc boolean rồi đọc tiếp string. Kiểm
+tra parser với payload server hợp lệ chỉ gồm boolean tạo EOFException;
+trên socket sống, bên đọc có thể chờ tiếp hoặc diễn giải nhầm byte của
+gói sau.</p>
+<p>Đây là vấn đề định dạng, không phải lỗi do TCP đảo thứ tự. Báo cáo
+ghi nhận hiện trạng và không khẳng định mọi packet đang hoàn toàn đồng
+nhất. Việc biên dịch thành công cũng không đủ để phát hiện sai lệch giao
+thức kiểu này.</p>
+<p>Sản phẩm của phần 1 gồm mô tả kiến trúc, bảng packet và bản tổng hợp
+hiện trạng. Nội dung thuyết trình nên đi từ bài toán, kiến trúc, cú
+đánh, thách đấu, giao diện tới kiểm thử; không trình bày cơ chế v2 đã
+không còn trong nhánh hiện tại như thành quả đang hoạt động.</p>
+<h1 id="phần-2.-server-và-cơ-sở-dữ-liệu">PHẦN 2. SERVER VÀ CƠ SỞ DỮ
+LIỆU</h1>
+<p>Thành viên phụ trách theo phân công: Trung.</p>
+<h2 id="tổ-chức-các-lớp-server">2.1. Tổ chức các lớp server</h2>
+<table>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Lớp</th>
+<th>Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ServerMain</td>
+<td>Khởi tạo dịch vụ, lắng nghe TCP, chạy UDP discovery và quản lý
+onlinePlayers</td>
+</tr>
+<tr class="even">
+<td>ClientHandler</td>
+<td>Đọc packet của từng kết nối, xác thực phiên, gọi nghiệp vụ, gửi phản
+hồi</td>
+</tr>
+<tr class="odd">
+<td>LobbyManager</td>
+<td>Hàng đợi ghép trận và tạo GameRoom</td>
+</tr>
+<tr class="even">
+<td>GameRoom</td>
+<td>Hai người chơi, chỉ số lượt, sẵn sàng, chuyển tiếp cú đánh, kết quả
+và timer</td>
+</tr>
+<tr class="odd">
+<td>AuthManager</td>
+<td>Kiểm tra dữ liệu đăng ký, băm và xác minh mật khẩu</td>
+</tr>
+<tr class="even">
+<td>DatabaseManager</td>
+<td>Kết nối JDBC, truy vấn và cập nhật PostgreSQL</td>
+</tr>
+</tbody>
+</table>
+<p>ServerMain tạo một luồng daemon chạy ClientHandler cho mỗi socket
+được chấp nhận. Các phương thức gửi của ClientHandler khóa trên stream
+out để tránh trộn byte từ nhiều nguồn ghi. LobbyManager dùng
+ConcurrentLinkedQueue và đồng bộ hóa thao tác thêm/xóa hàng đợi. Điều
+này hỗ trợ điều phối, nhưng chưa đủ để khẳng định mọi thao tác tạo phòng
+đồng thời đều có tính nguyên tử.</p>
+<h2 id="đăng-ký-đăng-nhập-và-chuẩn-hóa-email">2.2. Đăng ký, đăng nhập và
+chuẩn hóa email</h2>
+<p>AuthManager kiểm tra email/tên tài khoản không trống, mật khẩu tối
+thiểu sáu ký tự. Mật khẩu được băm SHA-256 cùng salt ngẫu nhiên 16 byte;
+dữ liệu lưu có dạng base64(salt):base64(hash). Khi đăng nhập, server
+tính lại và so sánh với giá trị lưu. Không lưu mật khẩu thuần trong cột
+password_hash.</p>
+<p>DatabaseManager trim email rồi chuyển thành chữ thường, trim username
+và tìm dữ liệu trùng bằng LOWER. Tra cứu đăng nhập dùng LOWER(username)
+hoặc LOWER(email), nên người dùng có thể đăng nhập bằng email hoặc tên
+tài khoản khác kiểu chữ. Các ràng buộc UNIQUE trên email và username vẫn
+tồn tại trong schema.</p>
+<p>Kiểm tra định dạng email đầy đủ hiện nằm ở client, chưa được áp dụng
+tương đương tại AuthManager. Bài thử gửi trực tiếp một email không có @
+qua TCP vẫn tạo tài khoản và đăng nhập được. SHA-256 với salt cũng chưa
+phải hàm băm mật khẩu thích nghi như Argon2/PBKDF2; TCP hiện chưa có
+TLS. Đây là giới hạn của triển khai, không phải xác nhận đã bảo vệ đầy
+đủ khi vận hành trên Internet.</p>
+<h2 id="ghép-trận-ngẫu-nhiên-và-sẵn-sàng">2.3. Ghép trận ngẫu nhiên và
+sẵn sàng</h2>
+<p>FIND_MATCH đưa client vào hàng đợi nếu chưa có phòng và chưa có trong
+queue. Khi có hai người, LobbyManager lấy hai phần tử ra rồi createGame.
+Bản mới bổ sung removeFromQueue cho cả hai ngay trong createGame; luồng
+đồng ý thách đấu cũng thực hiện bước này. Mục đích là không để người đã
+ghép bằng thách đấu tiếp tục bị giữ trong hàng đợi tìm ngẫu nhiên.</p>
+<p>GameRoom giữ currentTurnIndex, gameStarted, gameFinished và
+readyCount. Sau khi tạo phòng, server gửi MATCH_FOUND kèm tên, level,
+avatar và màu gậy đối thủ. Màn hình trước trận gửi PREGAME_READY; server
+tăng bộ đếm và bắt đầu khi readyCount đạt hai.</p>
+<p>Hiện readyCount đếm số lần gọi, chưa dùng cờ riêng cho mỗi người. Bài
+thử gửi hai READY từ một client đã làm cả hai nhận GAME_START dù người
+còn lại chưa READY. Vì thế mô tả chính xác là “đạt hai thông điệp sẵn
+sàng”, không phải bảo đảm đã nhận xác nhận độc lập từ hai màn hình.</p>
+<h2 id="thách-đấu-trực-tiếp-thay-đổi-trong-00bf1cc">2.4. Thách đấu trực
+tiếp: thay đổi trong 00bf1cc</h2>
+<p>ClientHandler.getOnlinePlayer tìm theo tên đã trim; nếu không thấy
+khóa trực tiếp thì duyệt onlinePlayers và so sánh không phân biệt hoa
+thường. handleChallengeRequest từ chối tên rỗng, người nhận không
+online, tự thách đấu, người nhận đang có phòng hoặc đang có lời mời
+chờ.</p>
+<p>Khi hợp lệ, server đặt currentChallenger ở người nhận và gửi
+CHALLENGE_RECEIVE. Người nhận trả lời bằng CHALLENGE_RESPONSE gồm tên
+người mời và cờ accept. Server kiểm tra tên tương ứng, người mời còn
+online và chưa vào phòng khác. Nếu đồng ý thì xóa hai người khỏi hàng
+đợi và tạo phòng; nếu từ chối thì gửi CHALLENGE_RESULT cho người
+mời.</p>
+<figure>
+<img src="images/challenge_flow.png" alt="Hình 2.1 — Quy trình thách đấu hiện tại. Client đếm 10 giây; server chờ tối đa 15 giây khi chưa nhận phản hồi.">
+<figcaption aria-hidden="true">Hình 2.1 — Quy trình thách đấu hiện tại.
+Client đếm 10 giây; server chờ tối đa 15 giây khi chưa nhận phản
+hồi.</figcaption>
+</figure>
+<p>Hộp thoại client tự từ chối sau 10 giây. Timer server đặt 15 giây để
+có khoảng đệm cho việc chuyển phản hồi qua mạng. Vì client thật có thể
+gửi từ chối ở mốc 10 giây, không nên diễn giải rằng mọi lời mời trên UI
+phải tồn tại đủ 15 giây. Bài kiểm tra mốc 15 giây dùng socket thử nghiệm
+chủ động không gửi phản hồi.</p>
+<p>Khi người nhận ngắt kết nối trong lúc có lời mời, cleanup hủy timer
+và thông báo cho người mời. Khi người mời đã ngắt rồi người nhận mới
+đồng ý, server trả thông báo thất bại. Những tình huống này được kiểm
+tra riêng với server thật.</p>
+<h2 id="giới-hạn-vòng-đời-lời-mời">2.5. Giới hạn vòng đời lời mời</h2>
+<p>currentChallenger là một tên người chơi, chưa có invitation ID.
+handleChallengeResponse hủy challengeTimer trước khi kiểm tra phản hồi
+có khớp lời mời đang chờ hay không. Trong bài thử có kiểm soát, sau khi
+lời mời đã được thiết lập timer, một phản hồi mang sai tên làm timer bị
+hủy nhưng currentChallenger vẫn còn; người nhận tiếp tục bị báo bận sau
+hơn 15 giây.</p>
+<p>Lần chạy đầu của bài kiểm tra phản hồi sai được gửi ngay khi vừa nhận
+CHALLENGE_RECEIVE, trước khi có thể chắc timer đã được tạo. Kết quả
+không tái hiện đúng điều kiện dự kiến. Lần chạy tiếp theo chờ 250 ms
+trước khi gửi phản hồi sai để kiểm tra trạng thái timer đã thiết lập;
+lỗi được tái hiện. Nhật ký cả hai lần được giữ lại, không ghi lần đầu là
+một bài kiểm tra đạt.</p>
+<p>Đọc mã còn cho thấy createGame chưa khóa trọn chuỗi kiểm tra khả
+dụng–tạo phòng–gán tham chiếu, và luồng phản hồi kiểm tra phòng của
+người mời nhưng chưa kiểm tra lại đầy đủ phòng của người nhận ở cùng
+thời điểm. Những trường hợp đua tranh nhiều lời mời/phòng cần bài thử
+đồng thời riêng; báo cáo không gộp chúng vào các lỗi đã tái hiện.</p>
+<h2 id="cú-đánh-thời-hạn-lượt-và-kết-thúc-trận">2.6. Cú đánh, thời hạn
+lượt và kết thúc trận</h2>
+<p>GameRoom.processCueShot kiểm tra gameStarted, gameFinished và người
+đang có lượt, hủy timer lượt rồi chuyển cú đánh cho đối thủ. Chưa có
+phase riêng đánh dấu cú đánh đã được chấp nhận và đang chạy. Bài thử gửi
+cùng CUE_SHOT hai lần liên tiếp đã nhận hai GAME_STATE ở phía đối
+thủ.</p>
+<p>Khi nhận PHYSICS_DONE từ người đang có lượt, server giữ lượt nếu
+keepTurn hoặc chuyển lượt nếu không. Chưa có token để phân biệt hai lượt
+liên tiếp của cùng người và chưa có snapshot đối chiếu vị trí. Các gói
+ngắm chỉ được kiểm tra người có lượt; góc NaN đã được chuyển tiếp trong
+bài thử trực tiếp.</p>
+<p>Giao diện client đếm 60 giây và gửi PHYSICS_DONE(false, true) nếu quá
+giờ. Server còn có bộ định thời 61.500 ms, tự đổi lượt và cấp
+ball-in-hand nếu chưa đánh. Timer bị hủy khi có cú đánh; chưa có thời
+hạn riêng chờ kết quả vật lý tương đương mốc 45 giây của nhánh cũ. Báo
+cáo không gọi đây là máy trạng thái WAITING/AIMING/MOVING/SYNCING vì
+enum đó không tồn tại ở bản hiện tại.</p>
+<p>CLAIM_WIN cho phép client gửi boolean thắng/thua. endGame dùng thông
+tin này để chọn người thắng, tăng EXP và gửi GAME_OVER. Ngắt kết nối
+trong phòng làm người còn lại thắng theo quy tắc hiện có. gameFinished
+chặn xử lý kết quả lặp trong cùng phòng, nhưng chưa xác minh kết quả
+bằng vật lý server.</p>
+<h2 id="thiết-kế-cơ-sở-dữ-liệu-postgresql">2.7. Thiết kế cơ sở dữ liệu
+PostgreSQL</h2>
+<table>
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Bảng</th>
+<th>Khóa và trường chính</th>
+<th>Vai trò</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>players</td>
+<td>id SERIAL PK; email UNIQUE; username UNIQUE; password_hash; exp,
+level, wins, losses; avatar_id, cue_color, created_at</td>
+<td>Tài khoản, thống kê và tùy chỉnh</td>
+</tr>
+<tr class="even">
+<td>match_history</td>
+<td>id PK; winner_id, loser_id FK; exp_gained; played_at</td>
+<td>Kết quả trận</td>
+</tr>
+<tr class="odd">
+<td>friendships</td>
+<td>Khóa kép user_id, friend_id; hai FK; status; created_at</td>
+<td>Lời mời và quan hệ bạn bè</td>
+</tr>
+<tr class="even">
+<td>messages</td>
+<td>id PK; sender_id, receiver_id FK; content; is_read; sent_at</td>
+<td>Tin nhắn và lịch sử</td>
+</tr>
+</tbody>
+</table>
+<figure>
+<img src="images/database_erd.png" alt="Hình 2.2 — ERD của schema hiện tại. Các cặp khóa ngoại đều tham chiếu players.id.">
+<figcaption aria-hidden="true">Hình 2.2 — ERD của schema hiện tại. Các
+cặp khóa ngoại đều tham chiếu players.id.</figcaption>
+</figure>
+<p>Người chơi mới có mặc định exp=0, level=1, wins=0, losses=0. Trạng
+thái quan hệ được biểu diễn bằng chuỗi như PENDING, ACCEPTED, BLOCKED;
+schema chưa có CHECK giới hạn các giá trị này. Chỉ mục exp DESC hỗ trợ
+bảng xếp hạng; username có ràng buộc duy nhất và một chỉ mục khai báo
+riêng.</p>
+<p>Cơ sở dữ liệu hiện giữ UNIQUE trên giá trị username gốc, chưa có
+UNIQUE trên LOWER(username). Việc tìm trùng không phân biệt hoa thường
+trước INSERT hỗ trợ kiểm tra tuần tự, nhưng không thay thế ràng buộc
+tương ứng trong mọi yêu cầu đồng thời. Tra cứu username OR email cũng có
+thể cần xử lý khi tên của tài khoản này trùng email tài khoản khác; đây
+là nhận xét từ cấu trúc mã/schema, chưa có bài thử riêng trong lần
+này.</p>
+<h2 id="jdbc-cập-nhật-exp-và-tính-toàn-vẹn">2.8. JDBC, cập nhật EXP và
+tính toàn vẹn</h2>
+<p>DatabaseManager sử dụng PreparedStatement cho nhiều thao tác có tham
+số. Người thắng được cộng 100 EXP và tăng wins, người thua tăng losses;
+level = floor(exp / 200) + 1. Sau đó một dòng được thêm vào
+match_history. Việc cập nhật hồ sơ ở client dựa vào dữ liệu server,
+không tự cộng EXP chỉ từ hoạt ảnh chiến thắng.</p>
+<p>recordMatchResult hiện thực hiện các câu UPDATE/INSERT liên tiếp
+nhưng chưa bọc toàn bộ trong transaction có rollback. Nếu lỗi xảy ra
+giữa các câu, dữ liệu tài khoản và lịch sử có thể chưa thống nhất. Cờ
+gameFinished giúp hạn chế lặp trong vòng đời phòng, không cung cấp bảo
+đảm exactly-once bền vững khi tiến trình hoặc database gặp sự cố.</p>
+<p>DatabaseManager giữ một Connection chung, thông tin cấu hình nằm
+trong mã nguồn. Hướng hoàn thiện là dùng connection pool, cấu hình ngoài
+mã và transaction cho kết quả trận. Đây là đề xuất, không phải tính năng
+đã có.</p>
+<p>Sản phẩm phần 2 là dịch vụ kết nối, xác thực, ghép phòng/thách đấu,
+điều phối lượt và lớp dữ liệu. Các chức năng được báo cáo đúng mức độ
+kiểm chứng ở phần 4.</p>
+<h1 id="phần-3.-client-giao-diện-và-game-engine">PHẦN 3. CLIENT, GIAO
+DIỆN VÀ GAME ENGINE</h1>
+<p>Thành viên phụ trách theo phân công: Phạm Hoàng Minh.</p>
+<h2 id="điều-hướng-giao-diện">3.1. Điều hướng giao diện</h2>
+<p>ClientMain khởi tạo JavaFX, NetworkClient và SceneManager.
+SceneManager chuyển giữa các màn hình theo quy trình sử dụng. Phần
+nghiệp vụ mạng được tách khỏi lớp vẽ bàn, nhưng các Scene vẫn đăng ký
+callback của NetworkClient để nhận sự kiện tương ứng.</p>
+<table>
+<thead>
+<tr class="header">
+<th>Màn hình/lớp</th>
+<th>Nội dung và thao tác</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>ServerConfigDialog</td>
+<td>Cấu hình địa chỉ máy chủ, hỗ trợ kết nối</td>
+</tr>
+<tr class="even">
+<td>LoginScene / RegisterScene</td>
+<td>Đăng nhập và đăng ký</td>
+</tr>
+<tr class="odd">
+<td>LobbyScene</td>
+<td>Hồ sơ, tìm trận, luyện tập, bạn bè, chat và thách đấu</td>
+</tr>
+<tr class="even">
+<td>MatchmakingScene</td>
+<td>Chờ ghép cặp, hủy tìm</td>
+</tr>
+<tr class="odd">
+<td>PreGameScene</td>
+<td>Thông tin đối thủ, đếm ngược và sẵn sàng</td>
+</tr>
+<tr class="even">
+<td>GameScene</td>
+<td>Bàn chơi, gậy, bi, lượt, lực, xoáy, ping/FPS</td>
+</tr>
+<tr class="odd">
+<td>LeaderboardScene</td>
+<td>Xếp hạng lấy từ server</td>
+</tr>
+<tr class="even">
+<td>ResultScene</td>
+<td>Kết quả và EXP được thông báo</td>
+</tr>
+</tbody>
+</table>
+<p>Luồng chính là kết nối → đăng nhập → sảnh → tìm trận/thách đấu →
+trước trận → chơi → kết quả. Luyện tập đi từ sảnh vào GameScene ở chế độ
+cục bộ. Không nên dùng đường đi solo để kết luận luồng mạng hai người đã
+chạy đúng.</p>
+<h2 id="form-đăng-ký-bằng-email">3.2. Form đăng ký bằng email</h2>
+<p>Form có email, tên đăng nhập, mật khẩu và xác nhận mật khẩu. Client
+kiểm tra điền đủ thông tin, tên dài 3–20 ký tự, không chứa dấu cách
+thường, mật khẩu ít nhất sáu ký tự và hai lần nhập trùng nhau. Email đi
+qua regex rồi được gửi bằng sendRegister(email, username, password).</p>
+<figure>
+<img src="images/registration_actual.png" alt="Hình 3.1 — RegisterScene chụp từ bản 00bf1cc. Nội dung là dữ liệu mẫu, mật khẩu được che; transport giả lập phục vụ kiểm tra UI.">
+<figcaption aria-hidden="true">Hình 3.1 — RegisterScene chụp từ bản
+00bf1cc. Nội dung là dữ liệu mẫu, mật khẩu được che; transport giả lập
+phục vụ kiểm tra UI.</figcaption>
+</figure>
+<p>Regex hiện giới hạn đuôi tên miền hai đến bảy chữ cái. Kiểm tra giao
+diện cho thấy player@example.technology bị từ chối. Cần phân biệt kiểm
+tra cú pháp với xác minh địa chỉ có thật: hệ thống chưa gửi thư xác nhận
+hoặc OTP. Kiểm tra dấu cách bằng contains(” “) cũng chưa có nghĩa đã
+loại mọi ký tự trắng Unicode.</p>
+<h2 id="danh-sách-bạn-bè-chat-và-cập-nhật-theo-nền">3.3. Danh sách bạn
+bè, chat và cập nhật theo nền</h2>
+<p>LobbyScene tự yêu cầu danh sách bạn bè theo chu kỳ 3,5 giây khi panel
+tương ứng đang hiển thị. Dữ liệu giống lastFriendListData được bỏ qua để
+tránh dựng lại giao diện. Nếu menu đang mở, dữ liệu mới được giữ ở
+pendingFriendListData rồi áp dụng khi menu đóng.</p>
+<figure>
+<img src="images/friend_menu_actual.png" alt="Hình 3.2 — Menu bạn bè với Nhắn tin, Thách đấu và Xóa bạn. Ảnh là giao diện thực trên Linux, dùng tài khoản mẫu.">
+<figcaption aria-hidden="true">Hình 3.2 — Menu bạn bè với Nhắn tin,
+Thách đấu và Xóa bạn. Ảnh là giao diện thực trên Linux, dùng tài khoản
+mẫu.</figcaption>
+</figure>
+<p>Bản mới đưa startFriendAutoRefresh và stopFriendAutoRefresh về JavaFX
+Application Thread nếu được gọi từ luồng khác. Khi nhận MATCH_FOUND,
+thao tác dừng Timeline, đóng popup và chuyển cảnh nằm trong
+Platform.runLater. Bài kiểm tra gọi start/stop từ worker thread đã xác
+nhận Timeline được tạo/dừng ở nhịp xử lý JavaFX.</p>
+<p>Chat hiển thị tin tự gửi ngay và tải lịch sử từ server. Dòng cuối lưu
+khóa người gửi–thời gian đến phút–nội dung để tránh thêm một dòng giống
+hệt. Khi lịch sử về, các dòng tự gửi được giữ tạm, giao diện dựng lại
+lịch sử rồi bổ sung dòng còn thiếu theo cách đối chiếu hiện có.</p>
+<figure>
+<img src="images/chat_actual.png" alt="Hình 3.3 — Giao diện chat với tin nhắn mẫu. Đây là ảnh kiểm tra bố cục và callback, không phải bằng chứng trao đổi đầu cuối qua Internet.">
+<figcaption aria-hidden="true">Hình 3.3 — Giao diện chat với tin nhắn
+mẫu. Đây là ảnh kiểm tra bố cục và callback, không phải bằng chứng trao
+đổi đầu cuối qua Internet.</figcaption>
+</figure>
+<p>Cơ chế chưa có message ID/conversation ID. Hai tin giống nhau trong
+cùng phút có thể bị gộp; lịch sử từ cuộc trò chuyện cũ trả muộn có thể
+được áp dụng vào cuộc trò chuyện mới. Với danh sách bạn bè, chuỗi dữ
+liệu A → B → A trong lúc menu mở có thể khiến B cũ được áp dụng sau khi
+đóng. Những tình huống này đã được tái hiện tại tầng giao diện và được
+ghi riêng ở phần kiểm thử.</p>
+<h2 id="hộp-thoại-lời-mời-và-thông-báo-kết-quả">3.4. Hộp thoại lời mời
+và thông báo kết quả</h2>
+<p>Bản 00bf1cc tạo hộp thoại với owner là cửa sổ chính, modality
+APPLICATION_MODAL, kiểu trong suốt và alwaysOnTop. Sau show, hộp thoại
+được đưa lên trước, yêu cầu focus và đặt gần giữa cửa sổ chủ. Kích thước
+dự phòng được dùng nếu kích thước thực chưa xác định. Timeline đếm ngược
+được chạy sau bước hiển thị và định vị.</p>
+<figure>
+<img src="images/challenge_actual.png" alt="Hình 3.4 — Hộp thoại thách đấu nổi trên sảnh, có thông tin người mời và đếm ngược 10 giây. Dữ liệu lời mời được đưa vào UI có kiểm soát.">
+<figcaption aria-hidden="true">Hình 3.4 — Hộp thoại thách đấu nổi trên
+sảnh, có thông tin người mời và đếm ngược 10 giây. Dữ liệu lời mời được
+đưa vào UI có kiểm soát.</figcaption>
+</figure>
+<p>Hai nút Đồng ý/Từ chối gửi phản hồi với cờ responded nhằm tránh lặp
+hành động từ cùng hộp thoại. Hết đếm ngược, client gửi từ chối và đóng
+lời mời. Việc hộp thoại xuất hiện đúng trong Xvfb không thay cho kiểm
+tra focus trên mọi bản Windows hoặc nhiều màn hình.</p>
+<p>CHALLENGE_RESULT hiện dùng showToast thay cho Alert.showAndWait. Thay
+đổi này áp dụng cho thông báo kết quả; bản thân hộp thoại nhận lời mời
+vẫn là modal. Nếu đồng ý được server chấp nhận, chuyển trận được điều
+khiển bởi MATCH_FOUND, không cần suy diễn rằng server luôn phát một
+toast “thành công” trước đó.</p>
+<figure>
+<img src="images/challenge_toast.png" alt="Hình 3.5 — Kết quả thách đấu hiển thị bằng toast trên sảnh. Ảnh chụp callback kết quả có dữ liệu mẫu, không mở Alert chặn màn hình.">
+<figcaption aria-hidden="true">Hình 3.5 — Kết quả thách đấu hiển thị
+bằng toast trên sảnh. Ảnh chụp callback kết quả có dữ liệu mẫu, không mở
+Alert chặn màn hình.</figcaption>
+</figure>
+<h2 id="ball-phân-nhóm-và-vật-lý">3.5. Ball, phân nhóm và vật lý</h2>
+<p>Ball lưu chỉ số, vị trí x/y, vận tốc vx/vy, spinX/spinY, cờ active và
+trạng thái rơi vào lỗ. Bi số 0 là bi cái, 8 là bi đen; màu/họa tiết các
+bi còn lại phục vụ nhận biết. Bàn có sáu lỗ. “8-ball” là tên biến thể có
+bi số 8, không phải bàn có tám lỗ.</p>
+<p>Ở chế độ đối kháng hiện tại, GameScene lấy 14 bi mục tiêu khác bi 8,
+xáo bằng matchSeed rồi chia hai nhóm bảy bi. Nhóm được giao vì vậy có
+thể gồm cả số thuộc dải 1–7 và 9–15; không nên mô tả triển khai là tuân
+thủ hoàn toàn luật chia nhóm trơn/sọc chuẩn. Đây là lựa chọn luật chơi
+đang có trong mã.</p>
+<p>PhysicsEngine tính chuyển động, ma sát, va chạm bi–bi, bi–băng và bi
+vào lỗ. Các tham số gồm ma sát 0,985, phục hồi băng 0,78 và phục hồi
+bi–bi 0,96. Mỗi update có 10 bước con để tăng độ chi tiết xử lý va chạm.
+Các hệ số này là tham số mô phỏng của đồ án, chưa được hiệu chuẩn từ bàn
+thực.</p>
+<p>AnimationTimer gọi physics.update khi physicsRunning. Mã hiện tại
+chưa có bộ tích lũy thời gian cố định 1/60 giây và tám bước bù như nhánh
+trước. Do đó tần suất dựng hình có thể ảnh hưởng tốc độ tiến triển mô
+phỏng. Hiển thị 60 FPS trong ảnh không chứng minh mọi thiết bị hoặc mọi
+tình huống đều đạt 60 FPS ổn định.</p>
+<h2 id="điều-khiển-và-hiển-thị-gậy-đối-thủ">3.6. Điều khiển và hiển thị
+gậy đối thủ</h2>
+<p>Người chơi chọn hướng từ vị trí chuột so với bi cái, kéo lực và chỉnh
+xoáy. Khi có quyền đặt bi, thao tác chuột dùng cho vị trí bi cái. Các
+giới hạn vị trí được áp dụng tại client; server hiện kiểm tra lượt trước
+khi chuyển tiếp vị trí, chưa có bản bàn chuẩn để đối chiếu đầy đủ.</p>
+<p>CUE_AIM mang trạng thái hiển thị, góc, tỷ lệ lực và hai thành phần
+xoáy. Phía quan sát cập nhật mục tiêu nội suy; đường ngắm và gậy được
+dựng trên Canvas. Khi nhận GAME_STATE, thông số cú đánh được đưa vào
+pendingShot để vòng lặp áp dụng lúc phù hợp.</p>
+<figure>
+<img src="images/game_actual.png" alt="Hình 3.6 — GameScene nhận payload CUE_AIM hiện tại và hiển thị gậy đối thủ. Ảnh chụp callback giả lập trên màn hình thật; giá trị ping/FPS trong ảnh không phải kết quả benchmark mạng.">
+<figcaption aria-hidden="true">Hình 3.6 — GameScene nhận payload CUE_AIM
+hiện tại và hiển thị gậy đối thủ. Ảnh chụp callback giả lập trên màn
+hình thật; giá trị ping/FPS trong ảnh không phải kết quả benchmark
+mạng.</figcaption>
+</figure>
+<p>Trong lần kiểm tra này, luồng TCP thật đã chuyển tiếp 60 mẫu ngắm
+liên tiếp sang đối thủ; UI riêng đã giải mã payload và hiển thị gậy. Hai
+phép kiểm tra này không tương đương với bài thử hai GameScene qua
+DelayProxy tám giây trên nhánh v2 cũ. Báo cáo không dùng kết quả cũ để
+khẳng định sai số góc hoặc hội tụ 16 bi của bản hiện tại.</p>
+<h2 id="thay-đổi-chế-độ-luyện-tập-solo">3.7. Thay đổi chế độ luyện tập
+solo</h2>
+<p>Khi isPractice=true, vsBadge và oppBox được đặt visible=false,
+managed=false; oppBallsBox cũng bị ẩn và loại khỏi bố cục. Khung nét đứt
+chứa nhãn “Khung Trống (Solo)” bị loại bỏ. Vì vậy giao diện không còn
+dành chỗ cho một đối thủ không tồn tại.</p>
+<figure>
+<img src="images/practice_actual.png" alt="Hình 3.7 — Luyện tập solo tại 00bf1cc: không còn khung đối thủ trống, thanh trên chỉ giữ thông tin người tập và trạng thái luyện tập.">
+<figcaption aria-hidden="true">Hình 3.7 — Luyện tập solo tại 00bf1cc:
+không còn khung đối thủ trống, thanh trên chỉ giữ thông tin người tập và
+trạng thái luyện tập.</figcaption>
+</figure>
+<p>Solo áp dụng cú đánh tại máy cục bộ và có mục tiêu dọn bàn. Kiểm tra
+lần này xác nhận cờ practice, việc ẩn/loại bố cục và không tồn tại nhãn
+khung trống. Chưa có bài nghiệm thu chơi solo hoàn chỉnh tới khi dọn hết
+15 bi; không suy rộng kiểm tra bố cục thành kiểm tra toàn bộ luật
+solo.</p>
+<h2 id="đóng-gói-và-giới-hạn-phiên-bản-sử-dụng">3.8. Đóng gói và giới
+hạn phiên bản sử dụng</h2>
+<p>Repository có hai JAR client/server cùng script biên dịch và launcher
+C# phục vụ đóng gói. Các công cụ portable EXE mới ở nhánh báo cáo trước
+không còn trong main hiện tại. Vì vậy các EXE phát hành từ nhánh v2 cũ
+không được mặc nhiên coi là binary của 00bf1cc.</p>
+<p>Lần cập nhật báo cáo sử dụng mã Java mới biên dịch trong môi trường
+Linux. Không tạo EXE mới, không xác nhận chạy trực tiếp Windows và không
+sửa các binary người dùng đã đưa lên. Khi nghiệm thu trên máy người chơi
+cần kiểm tra rõ phiên bản client/server thay vì chỉ dựa vào tên
+file.</p>
+<p>Sản phẩm phần 3 là các màn hình, mô hình bi, mô phỏng và xử lý giao
+tiếp tại client. Những thay đổi UI được minh họa bằng ảnh thật, còn mức
+độ đúng về nghiệp vụ mạng được đối chiếu trong phần 4.</p>
+<h1 id="phần-4.-kiểm-thử-kết-quả-và-đánh-giá">PHẦN 4. KIỂM THỬ, KẾT QUẢ
+VÀ ĐÁNH GIÁ</h1>
+<p>Thành viên phụ trách theo phân công: Lê Tiến Mạnh.</p>
+<h2 id="phương-pháp-và-môi-trường">4.1. Phương pháp và môi trường</h2>
+<p>Các kiểm tra được thực hiện trên mã 00bf1cc ngày 26/10/2026. Server
+và client được biên dịch vào thư mục mới, không dùng lại output chứa các
+lớp v2 đã bị xóa. Tổng cộng biên dịch thành công 9 file Java server và
+26 file Java client bằng JDK 21, đích tương thích Java 17.</p>
+<table>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Thành phần</th>
+<th>Điều kiện kiểm tra</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hệ điều hành</td>
+<td>Linux trong workspace phát triển</td>
+</tr>
+<tr class="even">
+<td>JavaFX</td>
+<td>17.0.13, Xvfb display :99, màn hình 2048 × 900</td>
+</tr>
+<tr class="odd">
+<td>Cơ sở dữ liệu</td>
+<td>PostgreSQL 17 cục bộ, database phát triển billiards_db</td>
+</tr>
+<tr class="even">
+<td>TCP/UDP</td>
+<td>Server mới từ mã hiện tại; TCP 12345; cấu hình UDP trong mã
+12346</td>
+</tr>
+<tr class="odd">
+<td>Kiểm tra giao thức</td>
+<td>Socket Python trực tiếp tới server, không dùng HELLO v2</td>
+</tr>
+<tr class="even">
+<td>Kiểm tra giao diện</td>
+<td>Lớp JavaFX thật, transport giả lập, callback và dữ liệu có kiểm
+soát</td>
+</tr>
+<tr class="odd">
+<td>Tài khoản</td>
+<td>Định danh tạm riêng cho mỗi lần chạy; dọn bản ghi liên quan sau bài
+thử</td>
+</tr>
+</tbody>
+</table>
+<p>Nguồn kiểm tra và nhật ký nằm trong reports/evidence/00bf1cc. Không
+chạy tests/run.sh của nhánh cũ vì file và hợp đồng giao thức tương ứng
+không còn trong phiên bản này. Kiểm tra chỉ đọc mã được tách khỏi kiểm
+tra đã thực thi; ảnh dữ liệu mẫu được tách khỏi xác minh đầu cuối.</p>
+<h2 id="quy-trình-kiểm-tra-và-tính-tái-lập">4.2. Quy trình kiểm tra và
+tính tái lập</h2>
+<p>Trước khi thử, xác định commit, đối chiếu file thay đổi và dựng lại
+cả hai phía. Server phát triển cũ được dừng đúng theo PID đã theo dõi,
+rồi khởi động server mới. Các phép thử đăng ký/đăng nhập tạo tài khoản
+tạm; sau khi đóng kết nối, script xóa lịch sử trận, quan hệ, tin nhắn và
+tài khoản chỉ thuộc lần chạy.</p>
+<p>check_current.py kiểm tra packet và phản hồi server thật.
+ReportUiCheck.java biên dịch cùng client mới, dựng RegisterScene,
+LobbyScene và GameScene, gọi các tình huống có điều khiển và lưu ảnh.
+Phần transport giả lập không kết nối tài khoản thật hoặc gửi lời mời tới
+người khác.</p>
+<p>Mã thoát 0 của các script mô tả hiện trạng có nghĩa các điều kiện đã
+được kiểm tra đúng như assertion, trong đó có cả assertion tái hiện lỗi.
+Vì vậy một dòng FINDING không được đổi thành “Đạt chức năng” chỉ vì
+script kết thúc bình thường.</p>
+<h2 id="kết-quả-kiểm-tra-giao-thức-và-server">4.3. Kết quả kiểm tra giao
+thức và server</h2>
+<table>
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Mã</th>
+<th>Tình huống</th>
+<th>Kết quả thực tế</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>S01</td>
+<td>Đăng ký và đăng nhập username khác kiểu chữ, không handshake</td>
+<td>Thực hiện thành công</td>
+</tr>
+<tr class="even">
+<td>S02</td>
+<td>Thách đấu tên rỗng, chính mình hoặc người không online</td>
+<td>Bị từ chối như kỳ vọng</td>
+</tr>
+<tr class="odd">
+<td>S03</td>
+<td>Mời tên có khoảng trắng đầu/cuối và khác kiểu chữ; phản hồi từ chối
+tương ứng</td>
+<td>Tìm đúng người và gửi kết quả từ chối</td>
+</tr>
+<tr class="even">
+<td>S04</td>
+<td>Người mời đang trong queue, sau đó được chấp nhận thách đấu</td>
+<td>Tạo đúng phòng; cặp tiếp theo không bị ghép với người mời cũ</td>
+</tr>
+<tr class="odd">
+<td>S05</td>
+<td>Một client gửi hai PREGAME_READY</td>
+<td>Tái hiện mở trận khi người còn lại chưa READY</td>
+</tr>
+<tr class="even">
+<td>S06</td>
+<td>Gửi 60 mẫu góc liên tiếp qua TCP</td>
+<td>Đối thủ nhận đúng mẫu, không phản hồi ngắm về người gửi</td>
+</tr>
+<tr class="odd">
+<td>S07</td>
+<td>CUE_AIM chứa NaN</td>
+<td>Tái hiện server chuyển tiếp góc không hữu hạn</td>
+</tr>
+<tr class="even">
+<td>S08</td>
+<td>Gửi cùng cú đánh hai lần trước PHYSICS_DONE</td>
+<td>Tái hiện đối thủ nhận hai GAME_STATE</td>
+</tr>
+<tr class="odd">
+<td>S09</td>
+<td>Máy đánh gửi PHYSICS_DONE(false, false)</td>
+<td>Server đổi lượt; không có snapshot/ACK đi kèm</td>
+</tr>
+<tr class="even">
+<td>S10</td>
+<td>SETTINGS_UPDATE rồi PING</td>
+<td>Server gửi SETTINGS_RESPONSE chỉ một boolean; PING tiếp theo đúng
+ranh giới</td>
+</tr>
+<tr class="odd">
+<td>S11</td>
+<td>Không phản hồi lời mời</td>
+<td>Server báo hết hạn sau khoảng 15,00 giây</td>
+</tr>
+<tr class="even">
+<td>S12</td>
+<td>Phản hồi sai tên sau khi timer lời mời đã thiết lập</td>
+<td>Tái hiện timer bị hủy, người nhận vẫn bận sau 15 giây</td>
+</tr>
+<tr class="odd">
+<td>S13</td>
+<td>Người nhận ngắt kết nối khi còn lời mời</td>
+<td>Người mời nhận thông báo thất bại</td>
+</tr>
+<tr class="even">
+<td>S14</td>
+<td>Người mời ngắt kết nối trước lúc người nhận đồng ý</td>
+<td>Người nhận nhận thông báo thất bại</td>
+</tr>
+<tr class="odd">
+<td>S15</td>
+<td>Đăng ký bằng email sai định dạng qua TCP trực tiếp</td>
+<td>Tái hiện tài khoản được tạo và đăng nhập bằng địa chỉ đó</td>
+</tr>
+</tbody>
+</table>
+<p>S06 gồm 60 mẫu gửi cách nhau khoảng 34 ms; đây là thử chuyển tiếp và
+định dạng, không phải đo trần thông lượng hoặc độ mượt qua Internet. S11
+chủ động không dùng client UI tự từ chối sau 10 giây. S12 được tái hiện
+trong điều kiện timer đã được thiết lập; nhật ký lần đầu khác điều kiện
+được giữ riêng để tránh bỏ qua sai lệch trong quá trình kiểm tra.</p>
+<h2 id="kết-quả-kiểm-tra-javafx-và-hình-ảnh">4.4. Kết quả kiểm tra
+JavaFX và hình ảnh</h2>
+<table>
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Mã</th>
+<th>Tình huống</th>
+<th>Kết quả thực tế</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>U01</td>
+<td>Form gửi email rõ ràng, chặn chuỗi email sai ở client</td>
+<td>Đúng trong bài kiểm tra transport giả lập</td>
+</tr>
+<tr class="even">
+<td>U02</td>
+<td>Nhập email với đuôi .technology</td>
+<td>Bị chặn do regex giới hạn 7 chữ cái</td>
+</tr>
+<tr class="odd">
+<td>U03</td>
+<td>Dữ liệu bạn bè giống nhau; cập nhật khi menu đang mở</td>
+<td>Không dựng lại khi giống; menu giữ mở, cập nhật được hoãn</td>
+</tr>
+<tr class="even">
+<td>U04</td>
+<td>Dữ liệu bạn bè A → B → A lúc menu mở</td>
+<td>Tái hiện áp dụng B cũ sau khi đóng</td>
+</tr>
+<tr class="odd">
+<td>U05</td>
+<td>Hai tin cùng người gửi, cùng phút, cùng nội dung</td>
+<td>Tái hiện chỉ còn một dòng hiển thị</td>
+</tr>
+<tr class="even">
+<td>U06</td>
+<td>Đổi cuộc trò chuyện rồi nhận lịch sử cũ đến muộn</td>
+<td>Tái hiện lịch sử cũ vào khung mới</td>
+</tr>
+<tr class="odd">
+<td>U07</td>
+<td>Gọi start/stop auto refresh ngoài JavaFX thread</td>
+<td>Thao tác được chuyển về JavaFX, Timeline tạo/dừng được</td>
+</tr>
+<tr class="even">
+<td>U08</td>
+<td>Hiển thị hộp thoại lời mời</td>
+<td>Popup xuất hiện, alwaysOnTop được bật, đóng được theo vòng đời
+UI</td>
+</tr>
+<tr class="odd">
+<td>U09</td>
+<td>Nhận CHALLENGE_RESULT</td>
+<td>Có toast, không dùng modal Alert cho kết quả này</td>
+</tr>
+<tr class="even">
+<td>U10</td>
+<td>Dựng GameScene luyện tập</td>
+<td>Không còn nhãn khung trống; thành phần đối thủ bị ẩn và
+unmanaged</td>
+</tr>
+<tr class="odd">
+<td>U11</td>
+<td>Đưa CUE_AIM hiện tại vào GameScene</td>
+<td>Kích hoạt và hiển thị ngắm của đối thủ</td>
+</tr>
+<tr class="even">
+<td>U12</td>
+<td>Cho parser SETTINGS_RESPONSE đọc payload server chỉ có boolean</td>
+<td>Tái hiện EOF vì parser còn đòi string</td>
+</tr>
+</tbody>
+</table>
+<p>Các ảnh được chụp trực tiếp từ JavaFX tại phiên bản kiểm tra, không
+vẽ lại để làm đẹp giao diện. Hình 3.1–3.7 sử dụng tài khoản và tin nhắn
+mẫu. Hình 3.6 không phải ảnh nghiệm thu hai client qua mạng; ping/FPS
+hiển thị trong ảnh không được dùng làm số liệu hiệu năng.</p>
+<h2 id="phân-tích-các-vấn-đề-quan-trọng">4.5. Phân tích các vấn đề quan
+trọng</h2>
+<p>Sai lệch SETTINGS_RESPONSE ảnh hưởng cách đọc toàn bộ luồng. Server
+đã được thử để xác nhận payload chỉ có boolean. Parser client lại đọc
+thêm string; khi dùng stream kết thúc ngay sau payload hợp lệ, kết quả
+là EOFException. Trên socket không đóng, hành vi có thể là chờ dữ liệu
+hoặc đọc nhầm packet kế tiếp. Việc này cần sửa ở hợp đồng đọc/ghi và
+thêm kiểm thử ranh giới packet.</p>
+<p>Ở luồng sẵn sàng và cú đánh, hiện không có định danh lượt hay pha
+chấp nhận một lần. READY lặp có thể thay cho người thứ hai; CUE_SHOT lặp
+vẫn qua kiểm tra “đúng người có lượt”. Chỉ kiểm tra người gửi là chưa đủ
+để xác minh một thao tác thuộc đúng lần chuyển trạng thái.</p>
+<p>Với thách đấu, việc hủy timer trước khi xác minh người phản hồi để
+lại trạng thái lời mời không hết hạn khi tên không khớp. Cách xử lý nên
+gắn định danh lời mời và chỉ hủy timer của lời mời hợp lệ. Đề xuất này
+chưa được triển khai trong mã nguồn của lần viết báo cáo.</p>
+<p>Chat cần phân biệt bản tin trùng do truyền/xử lý với hai tin hợp lệ
+có nội dung giống nhau. Khóa người gửi–phút–nội dung không làm được điều
+đó. Tương tự, lịch sử cần thông tin cuộc trò chuyện hoặc mã yêu cầu để
+phản hồi cũ không cập nhật sai panel. Đối với bạn bè, dữ liệu chờ cần
+luôn đại diện cập nhật mới nhất kể cả khi nó quay về giá trị đang hiển
+thị.</p>
+<h2 id="hạng-mục-chưa-được-kiểm-chứng">4.6. Hạng mục chưa được kiểm
+chứng</h2>
+<table>
+<colgroup>
+<col style="width: 50%">
+<col style="width: 50%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Hạng mục</th>
+<th>Phạm vi còn thiếu</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Hai máy Windows/EXE</td>
+<td>Chưa chạy trực tiếp client và server Windows của phiên bản hiện
+tại</td>
+</tr>
+<tr class="even">
+<td>Ván đối kháng hoàn chỉnh</td>
+<td>Chưa có biên bản chơi thủ công từ khai cuộc tới kết thúc trên hai UI
+thật</td>
+</tr>
+<tr class="odd">
+<td>So khớp 16 bi</td>
+<td>Chưa có cơ chế snapshot/ACK ở mã hiện tại; không kế thừa kết quả v2
+cũ</td>
+</tr>
+<tr class="even">
+<td>Xoay gậy qua độ trễ/jitter</td>
+<td>Chưa chạy bài hai GameScene qua DelayProxy của nhánh cũ trên phiên
+bản này</td>
+</tr>
+<tr class="odd">
+<td>Timer lượt 60/61,5 giây</td>
+<td>Đã đọc mã; chưa chờ hết thời hạn thật trong lần kiểm tra này</td>
+</tr>
+<tr class="even">
+<td>Nhiều lời mời đồng thời</td>
+<td>Chưa stress test việc mời chéo, nhận mời khi đang được ghép
+phòng</td>
+</tr>
+<tr class="odd">
+<td>Database lỗi giữa giao dịch</td>
+<td>Chưa fault injection hoặc kiểm tra nhiều phòng ghi kết quả cùng
+lúc</td>
+</tr>
+<tr class="even">
+<td>Email và định danh đồng thời</td>
+<td>Chưa thử race đăng ký khác kiểu chữ hoặc username trùng email của
+người khác</td>
+</tr>
+<tr class="odd">
+<td>Luật chơi/solo đầy đủ</td>
+<td>Chưa nghiệm thu mọi tình huống bi 8, phạm lỗi và dọn bàn</td>
+</tr>
+<tr class="even">
+<td>Tải và mạng thực tế</td>
+<td>Chưa benchmark CPU/bộ nhớ, nhiều giờ chơi, Wi-Fi yếu hay
+Internet</td>
+</tr>
+</tbody>
+</table>
+<p>Các bài kiểm tra trước đây trên nhánh v2 không chứng minh các hạng
+mục này ở main hiện tại. Báo cáo giữ ranh giới đó để không trình bày
+những cơ chế đã bị loại khỏi nhánh như tính năng đang bảo vệ trận
+đấu.</p>
+<h2 id="đánh-giá-kết-quả-và-hướng-phát-triển">4.7. Đánh giá kết quả và
+hướng phát triển</h2>
+<p>Những cải tiến mới có tác dụng quan sát được: lời mời tìm đúng tên dù
+khác kiểu chữ; những yêu cầu tự mời, rỗng hoặc offline bị chặn; lời mời
+không phản hồi có thời hạn server; nhận trận bằng thách đấu không để
+người mời bị giữ trong queue của tình huống đã thử. Giao diện đưa thao
+tác Timeline về đúng luồng, hiển thị lời mời phía trước và bỏ thành phần
+đối thủ trong solo.</p>
+<p>Các phần đăng ký/email, chat và menu đã có triển khai nhưng vẫn có
+giới hạn cần xử lý. Bản gameplay hiện dựa trên mô phỏng client và
+PHYSICS_DONE, chưa có đối chiếu bàn chung trước lượt mới. Vì vậy không
+thể kết luận “đã xử lý tất cả lỗi bất đồng bộ” từ những bài kiểm tra
+hiện có.</p>
+<p>Ưu tiên trước mắt là thống nhất payload SETTINGS_RESPONSE, kiểm tra
+dữ liệu số/email ở server, xử lý READY và cú đánh theo trạng thái nhận
+một lần, cùng vòng đời lời mời có định danh. Tiếp theo là định danh tin
+nhắn/cuộc trò chuyện, đồng bộ hóa tạo phòng và sửa cách giữ cập nhật bạn
+bè mới nhất.</p>
+<p>Nếu yêu cầu độ nhất quán gameplay cao hơn, cần thiết kế bước thời
+gian cố định, định danh lượt, cơ chế chốt trạng thái và chính sách
+timeout rõ ràng. Việc bổ sung phải đi kèm đặc tả phiên bản và bài thử
+tương ứng, thay vì chỉ đổi format packet ở một phía. Khi dữ liệu trận
+được lưu, nên dùng transaction và connection pool; trước triển khai công
+cộng cần hoàn thiện xác thực và bảo vệ đường truyền.</p>
+<p>Nghiệm thu tiếp theo nên chạy hai máy Windows với binary đồng bộ,
+chơi các ván đầy đủ và ghi nhận phiên bản, môi trường, thao tác, kết quả
+mong đợi/thực tế. Các chỉ số độ trễ, FPS, số packet và mức dùng tài
+nguyên chỉ được đưa vào báo cáo khi có phép đo tương ứng.</p>
+<h2 id="kết-luận-theo-bốn-phần-công-việc">4.8. Kết luận theo bốn phần
+công việc</h2>
+<p>Phần tổng hợp xác định đúng kiến trúc và giao thức của main hiện tại.
+Phần server và dữ liệu giải thích cách xác thực, tạo phòng, thách đấu,
+điều phối lượt và lưu tài khoản/kết quả. Phần client trình bày các màn
+hình, mô phỏng, thay đổi popup/toast và giao diện luyện tập với ảnh chụp
+thật. Phần kiểm thử phân biệt hành vi đã xác minh, lỗi đã tái hiện và
+phạm vi chưa kiểm chứng.</p>
+<p>Báo cáo này thay thế mô tả v2 không còn phù hợp với nhánh main tại
+00bf1cc. Các cải tiến thách đấu và solo đã được kiểm tra theo phạm vi
+nêu trên; các hạn chế giao thức, đồng bộ và UI vẫn được ghi rõ để làm
+căn cứ hoàn thiện đồ án. Không có sửa đổi mã nguồn ứng dụng trong lần
+cập nhật tài liệu.</p>
+<h2 id="tài-liệu-và-mã-nguồn-đối-chiếu" class="front-break">TÀI LIỆU VÀ MÃ NGUỒN ĐỐI
+CHIẾU</h2>
+<p>[1] Bảng phân công nhóm:
+https://docs.google.com/spreadsheets/d/1-6mH6p7RWCQZz0WJjhmeotOyZ7pgXATkPjmgJvB3u9M/edit?usp=sharing
+. Tên và bốn nhóm nhiệm vụ lấy theo bảng đã cung cấp.</p>
+<p>[2] Phiên bản mã nguồn:
+https://github.com/LocMixi2-5/LTM/tree/00bf1ccaf8df2cdd54b79cb75ca188ae9c38627e
+. Thay đổi gần nhất tập trung GameScene, LobbyScene, ClientHandler,
+LobbyManager và hai JAR.</p>
+<p>[3] Giao thức: client/src/com/billiards/client/NetworkClient.java;
+hai package protocol/Packet.java và protocol/PacketType.java tại [2]. Có
+47 mã; chưa có các packet v2 của báo cáo trước.</p>
+<p>[4] Server:
+server/src/com/billiards/server/{ServerMain,ClientHandler,LobbyManager,GameRoom,AuthManager,DatabaseManager}.java;
+database/schema.sql tại [2].</p>
+<p>[5] Client:
+client/src/com/billiards/client/scenes/{RegisterScene,LobbyScene,PreGameScene,GameScene,SceneManager}.java;
+game/{Ball,PhysicsEngine}.java tại [2].</p>
+<p>[6] Minh chứng lần kiểm tra này: reports/evidence/00bf1cc/README.md,
+check_current.py, ReportUiCheck.java và các nhật ký .txt. Nguồn hình:
+reports/images/README.md. Mã kiểm tra được thêm cùng báo cáo, không có
+sẵn trong commit [2].</p>
+<p>[7] Tài liệu nền tảng để tham khảo thêm: Java API
+https://docs.oracle.com/en/java/javase/17/docs/api/ ; JavaFX
+https://openjfx.io/ ; PostgreSQL https://www.postgresql.org/docs/ ; JDBC
+https://jdbc.postgresql.org/documentation/ .</p>
+</body>
+</html>

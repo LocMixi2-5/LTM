@@ -1,0 +1,9 @@
+digraph G {
+graph [bgcolor="white",pad="0.35",nodesep="0.4",ranksep="0.5",fontname="DejaVu Sans"]; node[shape=box,style="rounded,filled",fillcolor="#eef4fa",color="#3e6285",fontname="DejaVu Sans",fontsize=13,margin="0.18,0.14"];edge[fontname="DejaVu Sans",fontsize=11,color="#536879"];
+a[label="1. Người chơi thả chuột\nClient gửi CUE_SHOT và chạy vật lý ngay"];
+b[label="2. Server kiểm tra người có lượt\nChỉ chuyển GAME_STATE cho đối thủ",fillcolor="#dcefe8"];
+c[label="3. Đối thủ mô phỏng cùng thông số\nKhông có snapshot 16 bi để đối chiếu"];
+d[label="4. Máy đánh gửi PHYSICS_DONE\nkeepTurn + isFoul"];
+e[label="5. Server gửi TURN_CHANGE\nGiữ lượt hoặc chuyển người đánh",fillcolor="#dcefe8"];
+f[label="Không có token lượt / STATE_ACK / handshake v2\nCUE_AIM: 1 boolean + 4 double = 34 byte cả mã gói",shape=note,fillcolor="#fff2d7"];
+a->b->c->d->e;e->f[style=dashed,arrowhead=none];}

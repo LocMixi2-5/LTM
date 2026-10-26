@@ -1,0 +1,17 @@
+PASS registration and mixed-case username login without version handshake
+PASS empty, self and offline challenge rejected
+PASS case-insensitive/trimmed target lookup and decline response
+PASS accepted challenge creates room; inviter removed from matchmaking queue
+FINDING two READY packets from one player start the game before other player is ready
+PASS 60 consecutive aim samples relayed to opponent (34 bytes each); no echo
+FINDING non-finite aiming angle is relayed without validation
+FINDING duplicate shot is forwarded again before PHYSICS_DONE
+PASS PHYSICS_DONE switches turn; no board snapshot or ACK barrier
+PASS server SETTINGS_RESPONSE contains one bool then correctly framed PING
+PASS no challenge response expires after 15.00 seconds
+Temporary accounts and related test records removed
+Traceback (most recent call last):
+  File "/workspace/LTM-report-latest/reports/evidence/00bf1cc/check_current.py", line 98, in <module>
+    assert quiet(e,16)
+           ^^^^^^^^^^^
+AssertionError

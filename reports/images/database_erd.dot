@@ -1,0 +1,10 @@
+digraph G {
+graph [bgcolor="white",pad="0.35",nodesep="0.45",ranksep="0.65",fontname="DejaVu Sans",fontsize=18]; node [shape=box,style="rounded,filled",fillcolor="#eef4fa",color="#3e6285",fontname="DejaVu Sans",fontsize=13,margin="0.18,0.13"]; edge [color="#536879",fontname="DejaVu Sans",fontsize=11,arrowsize=0.8];
+rankdir=LR; node[shape=record];
+ p[label="players|id : SERIAL • PK\lemail : VARCHAR(100) • UNIQUE\lusername : VARCHAR(50) • UNIQUE\lpassword_hash\lexp / level / wins / losses\lavatar_id / cue_color / created_at\l"];
+ h[label="match_history|id : SERIAL • PK\lwinner_id : FK\lloser_id : FK\lexp_gained / played_at\l",fillcolor="#fff2d7"];
+ f[label="friendships|user_id : FK • PK\lfriend_id : FK • PK\lstatus / created_at\l",fillcolor="#dcefe8"];
+ m[label="messages|id : SERIAL • PK\lsender_id : FK\lreceiver_id : FK\lcontent / is_read / sent_at\l",fillcolor="#ede5f5"];
+ p->h[label="1 → N\nwinner_id / loser_id"];p->f[label="1 → N\nuser_id / friend_id"];p->m[label="1 → N\nsender_id / receiver_id"];
+
+}

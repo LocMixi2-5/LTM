@@ -1,0 +1,9 @@
+digraph G {
+graph [bgcolor="white",pad="0.35",ranksep="0.5",nodesep="0.35",fontname="DejaVu Sans"];node[shape=box,style="rounded,filled",fillcolor="#eef4fa",color="#3e6285",fontname="DejaVu Sans",fontsize=13,margin="0.18,0.14"];edge[fontname="DejaVu Sans",fontsize=11,color="#536879"];
+a[label="A gửi CHALLENGE_REQUEST (42)\nTên người nhận"];
+b[label="Server tra người online (trim, không phân biệt hoa thường)\nChặn tên rỗng, tự mời, offline, người nhận bận",fillcolor="#dcefe8"];
+c[label="B nhận CHALLENGE_RECEIVE (43)\nHộp thoại nổi • đếm ngược 10 giây"];
+d[label="B gửi CHALLENGE_RESPONSE (44)\nTên người mời + accept"];
+e[label="Đồng ý: xóa hai người khỏi hàng đợi\nTạo phòng → MATCH_FOUND (6)",fillcolor="#dcefe8"];
+f[label="Từ chối / lỗi / server đợi quá 15 giây\nCHALLENGE_RESULT (45): thông báo thất bại",fillcolor="#fff2d7"];
+a->b->c->d;d->e[label="Đồng ý"];d->f[label="Từ chối"];c->f[label="Không phản hồi 15 s",style=dashed];}
