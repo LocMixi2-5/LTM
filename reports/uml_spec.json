@@ -1,0 +1,340 @@
+[
+  {
+    "tv": "TV1",
+    "title": "Quản lý kết nối & Giao thức truyền tin",
+    "prefix": "C",
+    "items": [
+      {
+        "id": "UC-C01",
+        "name": "Thiết lập kết nối TCP",
+        "actor": "Người chơi",
+        "pre": "Đã có địa chỉ/cổng server và mạng khả dụng.",
+        "flow": "Nhập hoặc nạp địa chỉ; mở socket với timeout kết nối 2,5 giây; tạo stream; khởi động luồng nhận và ping; lưu địa chỉ.",
+        "alt": "Không kết nối được: báo lỗi; người chơi sửa cấu hình hoặc thử lại. Chưa có handshake phiên bản.",
+        "post": "Có kết nối TCP để thực hiện yêu cầu nghiệp vụ.",
+        "source": "NetworkClient.connect; ServerConfigDialog; ServerMain.main"
+      },
+      {
+        "id": "UC-C02",
+        "name": "Khám phá server trong LAN",
+        "actor": "Người chơi",
+        "pre": "Client và server cùng vùng mạng hỗ trợ discovery.",
+        "flow": "Gửi BILLIARDS_DISCOVER qua UDP 12346; nhận BILLIARDS_SERVER:12345; sử dụng địa chỉ nhận để kết nối TCP.",
+        "alt": "Không có phản hồi: người chơi nhập địa chỉ thủ công; discovery không bảo đảm tìm server qua Internet.",
+        "post": "Xác định được địa chỉ server hoặc quay về nhập thủ công.",
+        "source": "NetworkClient: UDP discovery; ServerMain.startUdpDiscoveryListener"
+      },
+      {
+        "id": "UC-C03",
+        "name": "Gửi và nhận packet nhị phân",
+        "actor": "Người chơi thông qua chức năng ứng dụng",
+        "pre": "Socket đang mở; hai phía dùng định dạng tương thích.",
+        "flow": "Ghi byte PacketType và các trường; flush; phía nhận đọc trọn payload theo loại rồi phân phối tới handler/callback.",
+        "alt": "Payload sai hoặc stream kết thúc có thể gây IOException; SETTINGS_RESPONSE hiện có lệch định dạng được ghi ở phụ lục kiểm chứng.",
+        "post": "Yêu cầu được chuyển đến đúng bộ phận khi đọc thành công.",
+        "source": "NetworkClient.readPacketPayload; Packet; PacketType; ClientHandler.handlePacket"
+      },
+      {
+        "id": "UC-C04",
+        "name": "Đo độ trễ RTT",
+        "actor": "Người chơi",
+        "pre": "Socket đang hoạt động.",
+        "flow": "Client gửi PING kèm long timestamp ngay khi kết nối và định kỳ hai giây; server trả timestamp; client tính chênh lệch để hiển thị.",
+        "alt": "Không nhận lại ping: không có số đo mới; đây chưa phải chính sách timeout đọc 20 giây.",
+        "post": "Có giá trị RTT phục vụ hiển thị, không thay đổi luật chơi.",
+        "source": "NetworkClient.sendPing/listenLoop; ClientHandler.handlePing"
+      },
+      {
+        "id": "UC-C05",
+        "name": "Ghép trận ngẫu nhiên",
+        "actor": "Người chơi và đối thủ",
+        "pre": "Đã đăng nhập; chưa có phòng.",
+        "flow": "Gửi FIND_MATCH; đưa vào queue nếu chưa có; khi đủ hai người, tạo GameRoom và gửi MATCH_FOUND cho cả hai.",
+        "alt": "CANCEL_FIND xóa khỏi queue; người đã có phòng hoặc đã nằm trong queue không được thêm lặp.",
+        "post": "Ghép được phòng hai người hoặc tiếp tục chờ/hủy tìm.",
+        "source": "LobbyManager.addToQueue/removeFromQueue/createGame; MatchmakingScene"
+      },
+      {
+        "id": "UC-C06",
+        "name": "Thách đấu trực tiếp",
+        "actor": "Người mời và người nhận",
+        "pre": "Người mời đăng nhập; có tên người nhận online.",
+        "flow": "Gửi tên người nhận; server trim và tra không phân biệt hoa thường; phát lời mời; nhận accept; xóa queue và tạo phòng khi hợp lệ.",
+        "alt": "Tên rỗng/tự mời/offline/bận hoặc từ chối/hết hạn đều thất bại; client đếm 10 giây, server chờ 15 giây.",
+        "post": "Có MATCH_FOUND hoặc thông báo không tạo trận; trường hợp phản hồi sai tên còn lỗi vòng đời timer.",
+        "source": "ClientHandler.handleChallengeRequest/handleChallengeResponse; LobbyManager.createGame"
+      },
+      {
+        "id": "UC-C07",
+        "name": "Ngắt kết nối và giải phóng phiên",
+        "actor": "Người chơi, hoặc kết nối bị gián đoạn",
+        "pre": "Có socket hoặc phiên đang hoạt động.",
+        "flow": "Người chơi ngắt hoặc server phát hiện kết thúc stream; xóa online/queue; hủy timer lời mời; xử lý phòng và đóng socket.",
+        "alt": "Ngắt trong phòng: người còn lại thắng theo quy tắc hiện có; không có phục hồi ván cũ sau reconnect.",
+        "post": "Phiên được dọn theo logic cleanup; không khẳng định mọi lỗi mạng được phát hiện ngay.",
+        "source": "NetworkClient.disconnect/listenLoop; ClientHandler.cleanup; GameRoom.handleDisconnect"
+      }
+    ]
+  },
+  {
+    "tv": "TV2",
+    "title": "Xác thực & Quản lý dữ liệu",
+    "prefix": "D",
+    "items": [
+      {
+        "id": "UC-D01",
+        "name": "Đăng ký tài khoản",
+        "actor": "Người chơi mới",
+        "pre": "Kết nối server và PostgreSQL khả dụng.",
+        "flow": "Nhận email, username, mật khẩu; kiểm tra cơ bản; băm cùng salt; trim/chuyển thường email; kiểm tra trùng và INSERT players.",
+        "alt": "Email/username trùng hoặc mật khẩu quá ngắn bị từ chối; server chưa kiểm tra định dạng email tương đương client.",
+        "post": "Tạo tài khoản với mật khẩu băm hoặc trả mã lỗi.",
+        "source": "AuthManager.register/hashPassword; DatabaseManager.register"
+      },
+      {
+        "id": "UC-D02",
+        "name": "Đăng nhập bằng tên hoặc email",
+        "actor": "Người chơi",
+        "pre": "Tài khoản đã tồn tại; server kết nối DB.",
+        "flow": "Tra LOWER(username) hoặc LOWER(email); xác minh hash với salt; tạo thông tin phiên và trả hồ sơ.",
+        "alt": "Sai mật khẩu/không tìm thấy: trả thất bại; định danh trùng chéo username–email chưa được giải quyết tường minh.",
+        "post": "Có phiên xác thực khi thành công.",
+        "source": "AuthManager.login/verifyPassword; DatabaseManager.getPlayerByUsername; ClientHandler.handleLogin"
+      },
+      {
+        "id": "UC-D03",
+        "name": "Lưu avatar và skin gậy",
+        "actor": "Người chơi đã đăng nhập",
+        "pre": "Có phiên và lựa chọn tùy chỉnh.",
+        "flow": "Nhận avatarId, cueColor/skinId; kiểm tra điều kiện cấp độ bằng CueSkinConfig; cập nhật DB và thông tin phiên; trả boolean.",
+        "alt": "Không đủ cấp hoặc lỗi DB: trả false; client đang đọc thừa string trong SETTINGS_RESPONSE nên phản hồi có thể không được xử lý đúng.",
+        "post": "DB/phiên cập nhật khi thành công; không khẳng định UI đã xác nhận được.",
+        "source": "ClientHandler.handleSettingsUpdate; CueSkinConfig; DatabaseManager.updateSettings"
+      },
+      {
+        "id": "UC-D04",
+        "name": "Ghi kết quả và cập nhật EXP/level",
+        "actor": "GameRoom (tác nhân hệ thống)",
+        "pre": "GameRoom đã chọn người thắng/thua.",
+        "flow": "Đặt gameFinished; cộng thắng và 100 EXP; tính level=floor(EXP/200)+1; tăng thua; INSERT match_history; nạp lại hồ sơ.",
+        "alt": "DB lỗi giữa các câu lệnh có thể để cập nhật dở dang vì chưa có transaction bao trọn.",
+        "post": "Kết quả được ghi theo các câu lệnh thành công; cờ phòng hạn chế lặp trong phiên.",
+        "source": "GameRoom.endGame/handleDisconnect; DatabaseManager.recordMatchResult"
+      },
+      {
+        "id": "UC-D05",
+        "name": "Truy vấn bảng xếp hạng",
+        "actor": "Người chơi",
+        "pre": "Có dữ liệu players và kết nối DB.",
+        "flow": "Nhận LEADERBOARD_REQUEST; lấy người chơi theo exp giảm dần với giới hạn; đóng gói chuỗi và trả client.",
+        "alt": "Lỗi DB hoặc chưa có dữ liệu: xử lý kết quả trống theo mã hiện tại; chưa kiểm thử tải lớn.",
+        "post": "Client nhận dữ liệu xếp hạng để dựng giao diện.",
+        "source": "DatabaseManager.getLeaderboard; ClientHandler.handleLeaderboard"
+      },
+      {
+        "id": "UC-D06",
+        "name": "Quản lý quan hệ bạn bè",
+        "actor": "Người chơi và người được mời kết bạn",
+        "pre": "Tài khoản hợp lệ; dữ liệu người nhận tồn tại.",
+        "flow": "Tìm người chơi, tạo lời mời; chấp nhận/từ chối; đọc danh sách; xóa quan hệ theo yêu cầu.",
+        "alt": "Người nhận không tồn tại hoặc quan hệ không phù hợp: trả trạng thái thất bại; status chưa có CHECK enum trong schema.",
+        "post": "Bảng friendships phản ánh thao tác được chấp nhận.",
+        "source": "DatabaseManager: friendship methods; ClientHandler: friend handlers; schema.sql"
+      },
+      {
+        "id": "UC-D07",
+        "name": "Lưu và truy vấn tin nhắn",
+        "actor": "Người gửi và người nhận",
+        "pre": "Hai tài khoản được xác định theo quy tắc hiện tại.",
+        "flow": "Lưu tin vào messages; chuyển thông báo tới client; truy vấn lịch sử giới hạn và trả chuỗi dữ liệu.",
+        "alt": "Lịch sử truyền chưa có conversation ID/message ID phục vụ UI; không suy ra mọi phản hồi muộn được phân biệt.",
+        "post": "Tin nhắn được lưu hoặc lịch sử được trả theo khả năng DB.",
+        "source": "DatabaseManager.getChatHistory và thao tác messages; ClientHandler.handleChatMessage/handleChatHistory"
+      }
+    ]
+  },
+  {
+    "tv": "TV3",
+    "title": "Gameplay & Engine Vật lý",
+    "prefix": "G",
+    "items": [
+      {
+        "id": "UC-G01",
+        "name": "Khởi tạo bàn và phân nhóm bi",
+        "actor": "Hai người chơi",
+        "pre": "Client nhận GAME_START với chỉ số người chơi và seed.",
+        "flow": "Tạo 16 bi; xáo 14 bi mục tiêu khác bi 8 theo matchSeed; chia hai nhóm bảy bi; thiết lập người có lượt.",
+        "alt": "READY hiện đếm số packet, nên một người có thể gửi lặp để mở trận; cùng seed chưa bảo đảm mô phỏng luôn đồng nhất.",
+        "post": "Có bàn và nhóm mục tiêu; luật phân nhóm là biến thể của dự án.",
+        "source": "GameRoom.playerReady/startGame; GameScene constructors"
+      },
+      {
+        "id": "UC-G02",
+        "name": "Đặt bi cái",
+        "actor": "Người đang có lượt",
+        "pre": "Client cho phép khai cuộc hoặc ball-in-hand.",
+        "flow": "Kéo/chọn vị trí; client giới hạn vùng đặt; gửi CUE_BALL_PLACED; server kiểm tra người có lượt rồi chuyển tọa độ.",
+        "alt": "Không có quyền tại UI thì không đặt; server chưa có snapshot chuẩn để đối chiếu mọi vị trí.",
+        "post": "Client nhận cập nhật vị trí bi cái.",
+        "source": "GameScene.repositionCueBall và thao tác chuột; GameRoom.processCueBallPlaced"
+      },
+      {
+        "id": "UC-G03",
+        "name": "Ngắm và kéo lực gậy",
+        "actor": "Người đang có lượt và người quan sát",
+        "pre": "Bi chưa chạy; UI cho phép ngắm.",
+        "flow": "Tính góc theo chuột và tỷ lệ kéo; gửi CUE_AIM có điều tiết; đối thủ nội suy góc/lực để hiển thị.",
+        "alt": "Không đúng lượt: server bỏ qua; dữ liệu NaN hiện vẫn được chuyển tiếp nếu gửi trực tiếp.",
+        "post": "Người quan sát thấy trạng thái ngắm; chưa có token/sequence.",
+        "source": "GameScene.sendAimUpdateThrottled/startGameLoop; GameRoom.processCueAim"
+      },
+      {
+        "id": "UC-G04",
+        "name": "Chỉnh xoáy và thực hiện cú đánh",
+        "actor": "Người đang có lượt",
+        "pre": "Có hướng/lực hợp lệ ở client và bi cái hoạt động.",
+        "flow": "Chỉnh spinX/spinY; thả chuột; gửi sáu double CUE_SHOT; chạy vật lý tại máy đánh; server chuyển GAME_STATE cho đối thủ.",
+        "alt": "Cú kéo quá ngắn không tạo cú đánh; server chưa chặn cú đánh trùng trong cùng giai đoạn.",
+        "post": "Hai phía có thông số cú đánh; không có xác nhận server trước mô phỏng máy đánh.",
+        "source": "GameScene.onMouseReleased/applyCueShot; NetworkClient.sendCueShot; GameRoom.processCueShot"
+      },
+      {
+        "id": "UC-G05",
+        "name": "Mô phỏng chuyển động và va chạm",
+        "actor": "GameScene (tác nhân hệ thống)",
+        "pre": "physicsRunning và danh sách bi đã khởi tạo.",
+        "flow": "Mỗi khung hình gọi PhysicsEngine.update; thực hiện 10 bước con, di chuyển, ma sát, va chạm băng và bi–bi.",
+        "alt": "Tốc độ khung hình khác nhau có thể thay đổi tiến độ; hiện không có tích lũy bước thời gian cố định.",
+        "post": "Vị trí/vận tốc và hiệu ứng va chạm được cập nhật.",
+        "source": "PhysicsEngine.update/resolveWallCollision/resolveBallCollision; Ball"
+      },
+      {
+        "id": "UC-G06",
+        "name": "Xử lý bi vào lỗ và kết quả lượt",
+        "actor": "GameScene (tác nhân hệ thống)",
+        "pre": "Bi đang được mô phỏng hoặc vừa dừng.",
+        "flow": "Kiểm tra sáu lỗ; chạy hoạt ảnh chìm; xác định active; đánh giá phạm lỗi/giữ lượt và điều kiện bi 8 theo luật triển khai.",
+        "alt": "Client có thể phát CLAIM_WIN; server chưa kiểm chứng kết luận bằng mô phỏng vật lý riêng.",
+        "post": "Có trạng thái bi và thông tin gửi PHYSICS_DONE hoặc CLAIM_WIN.",
+        "source": "PhysicsEngine.checkPockets; Ball.startSinking; GameScene: kết thúc vật lý; GameRoom.endGame"
+      },
+      {
+        "id": "UC-G07",
+        "name": "Điều phối lượt và hết thời gian",
+        "actor": "Hai người chơi; GameRoom timer",
+        "pre": "Trận đã bắt đầu và chưa kết thúc.",
+        "flow": "Máy đánh gửi PHYSICS_DONE; server giữ/đổi lượt; client đếm 60 giây; timer server 61,5 giây xử lý chưa đánh.",
+        "alt": "Timer bị hủy khi có cú đánh; chưa có timeout riêng chờ bản bàn và chưa có ACK hai client.",
+        "post": "Có quyền lượt mới hoặc giữ lượt theo thông tin nhận.",
+        "source": "GameRoom.onPhysicsDone/resetTurnTimer; GameScene.startGameLoop"
+      },
+      {
+        "id": "UC-G08",
+        "name": "Luyện tập solo",
+        "actor": "Người chơi",
+        "pre": "Mở chế độ luyện tập từ sảnh.",
+        "flow": "Tạo GameScene isPractice; đặt/ngắm/đánh và mô phỏng cục bộ; hướng tới dọn bàn; không tạo đối thủ mạng.",
+        "alt": "Chưa nghiệm thu mọi trường hợp dọn hết bàn; bố cục đối thủ bị ẩn và unmanaged.",
+        "post": "Người chơi luyện tập trong phiên cục bộ.",
+        "source": "SceneManager.showPractice; GameScene practice constructor"
+      }
+    ]
+  },
+  {
+    "tv": "TV4",
+    "title": "Giao diện & Cá nhân hóa",
+    "prefix": "UI",
+    "items": [
+      {
+        "id": "UC-UI01",
+        "name": "Điều hướng màn hình",
+        "actor": "Người chơi",
+        "pre": "Ứng dụng JavaFX đã khởi tạo.",
+        "flow": "SceneManager đổi Scene theo đăng nhập, sảnh, tìm trận, trước trận, game và kết quả.",
+        "alt": "Callback đến muộn hoặc thay Scene cần quản lý vòng đời; chưa khẳng định mọi luồng chuyển cảnh đã kiểm thử.",
+        "post": "Người dùng ở màn hình phù hợp với thao tác/sự kiện.",
+        "source": "ClientMain; SceneManager"
+      },
+      {
+        "id": "UC-UI02",
+        "name": "Hiển thị và kiểm tra form tài khoản",
+        "actor": "Người chơi",
+        "pre": "Đang ở LoginScene hoặc RegisterScene.",
+        "flow": "Nhập trường; kiểm tra đủ dữ liệu, email, tên, mật khẩu xác nhận; hiển thị lỗi hoặc gọi NetworkClient.",
+        "alt": "Regex email hiện chặn đuôi miền dài hơn 7 chữ cái; kiểm tra UI không thay kiểm tra server.",
+        "post": "Có thông báo hoặc yêu cầu đăng nhập/đăng ký được gửi.",
+        "source": "LoginScene; RegisterScene.doRegister"
+      },
+      {
+        "id": "UC-UI03",
+        "name": "Hiển thị sảnh và danh sách bạn bè",
+        "actor": "Người chơi",
+        "pre": "Đã đăng nhập và mở LobbyScene.",
+        "flow": "Hiển thị hồ sơ; refresh bạn bè 3,5 giây; không dựng lại dữ liệu giống; mở menu Nhắn tin/Thách đấu/Xóa bạn.",
+        "alt": "Đang mở menu: hoãn cập nhật; chuỗi A→B→A còn có thể áp dụng B cũ khi đóng.",
+        "post": "Sảnh/menu cập nhật theo callback; hạn chế hiện tại được ghi nhận.",
+        "source": "LobbyScene.updateFriendList/createFriendItem/startFriendAutoRefresh"
+      },
+      {
+        "id": "UC-UI04",
+        "name": "Hiển thị hội thoại chat",
+        "actor": "Người chơi",
+        "pre": "Chọn một người để xem chat.",
+        "flow": "Mở panel, yêu cầu lịch sử; hiển thị tin tự gửi và nhận; cuộn xuống; đối chiếu dòng khi lịch sử tới.",
+        "alt": "Hai tin giống nhau cùng phút có thể bị gộp; lịch sử trả muộn có thể vào sai cuộc trò chuyện.",
+        "post": "Có hội thoại hiển thị, chưa bảo đảm nhận diện mọi tin bằng ID.",
+        "source": "LobbyScene.showChatView/appendChatMessage/setupNetworkCallback"
+      },
+      {
+        "id": "UC-UI05",
+        "name": "Hiển thị lời mời và màn hình trước trận",
+        "actor": "Người nhận lời mời hoặc người vừa ghép trận",
+        "pre": "Có CHALLENGE_RECEIVE hoặc MATCH_FOUND.",
+        "flow": "Hiện popup nổi và đếm 10 giây; gửi lựa chọn; dùng toast cho kết quả; khi MATCH_FOUND thì dừng refresh và chuyển PreGameScene.",
+        "alt": "Đếm hết tự từ chối; callback UI được chuyển về FX thread; server còn thời hạn riêng 15 giây.",
+        "post": "Popup đóng hoặc chuyển màn hình trước trận.",
+        "source": "LobbyScene.showChallengeReceivedDialog/showToast; PreGameScene"
+      },
+      {
+        "id": "UC-UI06",
+        "name": "Hiển thị bàn chơi và HUD",
+        "actor": "Người chơi",
+        "pre": "Có GameScene đối kháng hoặc luyện tập.",
+        "flow": "Vẽ bàn/bi/gậy, lượt, lực, xoáy, thời gian và ping/FPS; solo ẩn thông tin đối thủ và bỏ khung trống.",
+        "alt": "Số FPS/ping trên dữ liệu giả lập không phải benchmark; không tự quyết định luật từ thông tin hiển thị.",
+        "post": "Khung hình thể hiện trạng thái hiện có của client.",
+        "source": "GameScene.build/startGameLoop; Canvas; AvatarManager"
+      },
+      {
+        "id": "UC-UI07",
+        "name": "Hiển thị kết quả và bảng xếp hạng",
+        "actor": "Người chơi",
+        "pre": "Có phản hồi GAME_OVER hoặc dữ liệu leaderboard.",
+        "flow": "Dựng kết quả thắng/thua/EXP; hiển thị các dòng xếp hạng do server trả; cho quay về màn hình tiếp theo.",
+        "alt": "Không có dữ liệu hoặc lỗi mạng cần thông báo; chưa có nghiệm thu toàn bộ UI bảng xếp hạng trong lần kiểm tra trước.",
+        "post": "Người dùng xem kết quả/xếp hạng từ dữ liệu server.",
+        "source": "ResultScene; LeaderboardScene; SceneManager"
+      },
+      {
+        "id": "UC-UI08",
+        "name": "Chọn avatar và skin gậy",
+        "actor": "Người chơi",
+        "pre": "Mở SettingsDialog và có hồ sơ hiện tại.",
+        "flow": "Chọn avatar/skin; xem preview và yêu cầu cấp độ; lưu bằng SETTINGS_UPDATE; chuyển việc ghi bền vững cho TV2.",
+        "alt": "Skin khóa bị hạn chế; server kiểm tra lại cấp; lỗi parser SETTINGS_RESPONSE có thể cản xác nhận thành công.",
+        "post": "Lựa chọn được gửi; trạng thái lưu thành công cần phản hồi đúng.",
+        "source": "SettingsDialog; AvatarManager; CueSkinManager; NetworkClient.sendSettingsUpdate"
+      },
+      {
+        "id": "UC-UI09",
+        "name": "Điều chỉnh âm thanh và hiệu ứng",
+        "actor": "Người chơi",
+        "pre": "Đang mở tab âm thanh/cài đặt.",
+        "flow": "Đổi BGM/SFX/mute; thử âm thanh; bật/tắt VFX gậy; SoundManager áp dụng và lưu các tùy chọn âm thanh vào Preferences.",
+        "alt": "Thiếu tài nguyên hoặc thiết bị âm thanh ảnh hưởng kết quả; VFX là cờ cục bộ, không khẳng định được lưu như âm thanh.",
+        "post": "Âm thanh/hiệu ứng thay đổi cục bộ, không tạo packet gameplay.",
+        "source": "SettingsDialog.buildAudioTab; SoundManager; CueSkinManager.setVfxEnabled"
+      }
+    ]
+  }
+]

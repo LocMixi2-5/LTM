@@ -1,0 +1,204 @@
+[
+  {
+    "tv": "TV1",
+    "id": "c_usecase",
+    "type": "Use Case",
+    "title": "TV1 • Các use case thuộc phân hệ",
+    "use_cases": [
+      "UC-C01",
+      "UC-C02",
+      "UC-C03",
+      "UC-C04",
+      "UC-C05",
+      "UC-C06",
+      "UC-C07"
+    ],
+    "path": "uml/c_usecase.png",
+    "number": "1.1"
+  },
+  {
+    "tv": "TV1",
+    "id": "c_sequence",
+    "type": "Sequence",
+    "title": "TV1 • Kết nối TCP và trao đổi PING",
+    "use_cases": [
+      "UC-C01",
+      "UC-C03",
+      "UC-C04"
+    ],
+    "path": "uml/c_sequence.png",
+    "number": "1.2"
+  },
+  {
+    "tv": "TV1",
+    "id": "c_activity",
+    "type": "Activity",
+    "title": "TV1 • Điều phối thách đấu trực tiếp",
+    "use_cases": [
+      "UC-C06",
+      "UC-C07"
+    ],
+    "path": "uml/c_activity.png",
+    "number": "1.3"
+  },
+  {
+    "tv": "TV2",
+    "id": "d_usecase",
+    "type": "Use Case",
+    "title": "TV2 • Các use case thuộc phân hệ",
+    "use_cases": [
+      "UC-D01",
+      "UC-D02",
+      "UC-D03",
+      "UC-D04",
+      "UC-D05",
+      "UC-D06",
+      "UC-D07"
+    ],
+    "path": "uml/d_usecase.png",
+    "number": "2.1"
+  },
+  {
+    "tv": "TV2",
+    "id": "d_register_activity",
+    "type": "Activity",
+    "title": "TV2 • Đăng ký và lưu tài khoản",
+    "use_cases": [
+      "UC-D01"
+    ],
+    "path": "uml/d_register_activity.png",
+    "number": "2.2"
+  },
+  {
+    "tv": "TV2",
+    "id": "d_result_activity",
+    "type": "Activity",
+    "title": "TV2 • Ghi kết quả, EXP và lịch sử",
+    "use_cases": [
+      "UC-D04"
+    ],
+    "path": "uml/d_result_activity.png",
+    "number": "2.3"
+  },
+  {
+    "tv": "TV2",
+    "id": "d_login_sequence",
+    "type": "Sequence",
+    "title": "TV2 • Đăng nhập bằng username hoặc email",
+    "use_cases": [
+      "UC-D02"
+    ],
+    "path": "uml/d_login_sequence.png",
+    "number": "2.4"
+  },
+  {
+    "tv": "TV3",
+    "id": "g_usecase",
+    "type": "Use Case",
+    "title": "TV3 • Các use case thuộc phân hệ",
+    "use_cases": [
+      "UC-G01",
+      "UC-G02",
+      "UC-G03",
+      "UC-G04",
+      "UC-G05",
+      "UC-G06",
+      "UC-G07",
+      "UC-G08"
+    ],
+    "path": "uml/g_usecase.png",
+    "number": "3.1"
+  },
+  {
+    "tv": "TV3",
+    "id": "g_activity",
+    "type": "Activity",
+    "title": "TV3 • Một cú đánh và xử lý cuối lượt",
+    "use_cases": [
+      "UC-G02",
+      "UC-G03",
+      "UC-G04",
+      "UC-G05",
+      "UC-G06",
+      "UC-G07"
+    ],
+    "path": "uml/g_activity.png",
+    "number": "3.2"
+  },
+  {
+    "tv": "TV3",
+    "id": "g_sequence",
+    "type": "Sequence",
+    "title": "TV3 • Truyền cú đánh và đổi lượt hiện tại",
+    "use_cases": [
+      "UC-G03",
+      "UC-G04",
+      "UC-G07"
+    ],
+    "path": "uml/g_sequence.png",
+    "number": "3.3"
+  },
+  {
+    "tv": "TV4",
+    "id": "ui_usecase",
+    "type": "Use Case",
+    "title": "TV4 • Các use case thuộc phân hệ",
+    "use_cases": [
+      "UC-UI01",
+      "UC-UI02",
+      "UC-UI03",
+      "UC-UI04",
+      "UC-UI05",
+      "UC-UI06",
+      "UC-UI07",
+      "UC-UI08",
+      "UC-UI09"
+    ],
+    "path": "uml/ui_usecase.png",
+    "number": "4.1"
+  },
+  {
+    "tv": "TV4",
+    "id": "ui_activity",
+    "type": "Activity",
+    "title": "TV4 • Cá nhân hóa avatar, gậy và âm thanh",
+    "use_cases": [
+      "UC-UI08",
+      "UC-UI09"
+    ],
+    "path": "uml/ui_activity.png",
+    "number": "4.2"
+  },
+  {
+    "tv": "TV4",
+    "id": "ui_sequence",
+    "type": "Sequence",
+    "title": "TV4 • Popup thách đấu, toast và chuyển cảnh",
+    "use_cases": [
+      "UC-UI01",
+      "UC-UI03",
+      "UC-UI05"
+    ],
+    "path": "uml/ui_sequence.png",
+    "number": "4.3"
+  },
+  {
+    "tv": "TV4",
+    "id": "ui_component",
+    "type": "Component",
+    "title": "TV4 • Thành phần giao diện và cá nhân hóa",
+    "use_cases": [
+      "UC-UI01",
+      "UC-UI02",
+      "UC-UI03",
+      "UC-UI04",
+      "UC-UI05",
+      "UC-UI06",
+      "UC-UI07",
+      "UC-UI08",
+      "UC-UI09"
+    ],
+    "path": "uml/ui_component.png",
+    "number": "4.4"
+  }
+]

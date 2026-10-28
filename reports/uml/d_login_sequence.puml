@@ -1,0 +1,51 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+title TV2 • Đăng nhập bằng username hoặc email
+
+actor "Người chơi" as P
+participant "Client" as C
+participant "ClientHandler" as H
+participant "AuthManager" as A
+participant "DatabaseManager" as D
+database "PostgreSQL" as DB
+P -> C : Nhập định danh và mật khẩu
+C -> H : LOGIN_REQUEST(1)
+H -> A : login(identity, password)
+A -> D : getPlayerByUsername(identity)
+D -> DB : SELECT ... WHERE LOWER(username)=?\nOR LOWER(email)=?
+DB --> D : Bản ghi hoặc rỗng
+D --> A : PlayerInfo hoặc null
+A -> A : verifyPassword với salt đã lưu
+alt Xác thực thành công
+ A --> H : PlayerInfo
+ H -> H : Thiết lập phiên / onlinePlayers
+ H --> C : LOGIN_RESPONSE(true, hồ sơ)
+ C --> P : Vào sảnh
+else Không tìm thấy / sai mật khẩu
+ A --> H : null
+ H --> C : LOGIN_RESPONSE(false, lỗi)
+ C --> P : Hiển thị lỗi
+end
+
+@enduml

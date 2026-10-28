@@ -1,6 +1,8 @@
-# Hình báo cáo — nguồn 00bf1cc
+# Hình bổ sung của bản 26/10/2026 — nguồn 00bf1cc
 
-Báo cáo nhúng 11 hình: 4 sơ đồ kỹ thuật và 7 ảnh chụp JavaFX của mã nguồn `00bf1cc`, ngày 26/10/2026. Không dùng ảnh v2 cũ để mô tả gameplay hiện tại.
+Bản báo cáo ngày 28/10 đã chuyển sang **14 biểu đồ UML** theo phân công mới, xem [thư mục UML](../uml/README.md). Các hình dưới đây được giữ làm tư liệu tham khảo; không được nhúng hoặc tính vào 14 biểu đồ của bản mới.
+
+Bản báo cáo ngày 26/10/2026 từng nhúng 11 hình: 4 sơ đồ kỹ thuật và 7 ảnh chụp JavaFX của mã nguồn `00bf1cc`, ngày 26/10/2026. Không dùng ảnh v2 cũ để mô tả gameplay hiện tại.
 
 ## Sơ đồ
 

@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+title TV2 • Ghi kết quả, EXP và lịch sử
+
+start
+:GameRoom chọn người thắng/thua;
+if (gameFinished đã true?) then (Có)
+ :Bỏ sự kiện kết thúc lặp;
+ stop
+endif
+:Đặt gameFinished = true;
+if (Database còn kết nối?) then (Có)
+ :UPDATE người thắng:\nwins + 1, EXP + 100, level = floor(EXP/200) + 1;
+ :UPDATE người thua: losses + 1;
+ :INSERT match_history;
+ note right
+  Các câu SQL tuần tự, chưa có transaction chung.
+  SQLException có thể dừng phần còn lại;
+  dữ liệu trước lỗi không được rollback tự động.
+ end note
+else (Không)
+ :recordMatchResult trả về, không ghi DB;
+endif
+:Nạp lại hồ sơ và gửi GAME_OVER\ntheo logic GameRoom hiện có;
+:Dọn phòng;
+stop
+@enduml

@@ -1,0 +1,49 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+title TV4 • Cá nhân hóa avatar, gậy và âm thanh
+
+start
+:Mở SettingsDialog;
+if (Chỉnh âm thanh / VFX?) then (Có)
+ :Áp dụng BGM, SFX, mute hoặc VFX;
+ :SoundManager lưu tùy chọn âm thanh\nvào Preferences;
+ note right: VFX là cờ cục bộ trong CueSkinManager;\nkhông có packet gameplay tương ứng.
+else (Avatar / gậy)
+ :Chọn avatar, xem preview skin và cấp yêu cầu;
+ :Chọn skin được phép trang bị tại UI;
+endif
+if (Bấm lưu?) then (Có)
+ :sendSettingsUpdate(avatarId, skinId);
+ :Cập nhật session cục bộ và gọi onSaveCallback;
+ :Dừng previewTimer, đóng dialog;
+ note right
+  UI hiện cập nhật trước xác nhận ghi DB.
+  Server kiểm tra cấp và lưu thuộc UC-D03.
+  SETTINGS_RESPONSE còn lỗi đọc thừa string.
+ end note
+else (Đóng / không lưu)
+ :Kết thúc chỉnh sửa theo hành vi dialog;
+endif
+stop
+@enduml
