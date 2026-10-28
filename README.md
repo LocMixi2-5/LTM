@@ -1,6 +1,6 @@
 # LTM - 8-Ball Pool Multiplayer Game
 
-> 📄 **Báo cáo cập nhật 28/10/2026:** [Word](reports/Bao_cao_LTM_4_phan.docx) · [PDF có hình](reports/Bao_cao_LTM_4_phan.pdf) · [Đọc trên GitHub](reports/Bao_cao_LTM_4_phan.md) · [Nguồn UML](reports/uml/README.md). Phân công TV1–TV4: **31 use case (7/7/8/9), 14 biểu đồ (3/4/3/4)**; đối chiếu mã ứng dụng `00bf1cc`.
+> 📄 **Báo cáo tổng hợp cả nhóm (28/10/2026):** [Word](reports/Bao_cao_tong_hop_nhom_LTM.docx) · [PDF](reports/Bao_cao_tong_hop_nhom_LTM.pdf) · [Đọc trên GitHub](reports/Bao_cao_tong_hop_nhom_LTM.md). Đầy đủ phần chung và TV1–TV4: **31 use case, 14 UML, 7 ảnh giao diện**, triển khai và đánh giá. [Bản chuyên sâu bốn phân hệ và nguồn hình](reports/README.md).
 
 > **Bài tập lớn môn Lập Trình Mạng (LTM)**  
 > Trò chơi Bi-a 8-Ball Pool chơi nhiều người qua mạng thời gian thực (Real-time Multiplayer) xây dựng trên nền tảng **Java & JavaFX** kết nối qua **TCP Socket** và cơ sở dữ liệu **PostgreSQL**.
