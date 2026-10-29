@@ -2,6 +2,13 @@
 
 **Bản mới nhất — sửa trực tiếp file Word người dùng gửi, giữ bố cục:** [Word](Bao_cao_tong_hop_nhom_LTM_chinh_sua.docx) · [PDF 61 trang](Bao_cao_tong_hop_nhom_LTM_chinh_sua.pdf). Đã viết lại các đoạn nhắc TV1–TV4 theo chức năng, bỏ tiêu đề và nhãn thành viên trong hình. [Chi tiết thay đổi và cách tái tạo](CHINH_SUA_BAN_GUI.md).
 
+## Rà soát phần kiểm thử của bản Word mới nhất
+
+- [Prompt chỉnh sửa và kiểm tra lại báo cáo (.md)](PROMPT_Ra_soat_va_sua_bao_cao_LTM.md)
+- [Kết quả rà soát ngày 29/10/2026](reviews/Ra_soat_bao_cao_2026-10-29.md)
+
+Hai file trên dựa trên bản người dùng gửi tiếp theo, có bố cục 10 phần. Lần này chỉ rà soát và tạo prompt; chưa sửa bản Word mới hoặc chạy lại game.
+
 ## Bản biên soạn theo chương trước đó
 
 Cập nhật **29/10/2026**, đối chiếu mã ứng dụng **00bf1cc**. Bản này được biên tập theo một mạch nội dung chung để một người có thể trình bày toàn bộ đồ án.
