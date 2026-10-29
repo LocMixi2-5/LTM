@@ -1,0 +1,48 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+
+participant "Client người đánh" as A
+participant "ClientHandler" as H
+participant "GameRoom" as R
+participant "Client đối thủ" as B
+A -> H : CUE_AIM(47): bool + 4 double
+H -> R : processCueAim(...)
+R -> B : CUE_AIM (chỉ đúng người có lượt)
+B -> B : Nội suy góc/lực mỗi khung hình
+A -> H : CUE_SHOT(10): 6 double
+A -> A : applyCueShot ngay, không chờ ACK
+H -> R : processCueShot(...)
+R -> R : Kiểm tra gameStarted/gameFinished và người có lượt
+R -> B : GAME_STATE(11): 6 double
+B -> B : pendingShot → mô phỏng cục bộ
+A -> H : PHYSICS_DONE(20): keepTurn, isFoul
+H -> R : onPhysicsDone(...)
+R --> A : TURN_CHANGE(12)
+R --> B : TURN_CHANGE(12)
+note over A,B
+ Không có token lượt, STATE_ACK hoặc chốt cùng vị trí 16 bi.
+ Cú đánh lặp còn có thể được chuyển tiếp.
+end note
+
+@enduml

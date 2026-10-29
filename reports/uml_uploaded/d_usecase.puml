@@ -1,0 +1,44 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+left to right direction
+actor "Người chơi" as Player
+actor "GameRoom" as Room <<hệ thống>>
+rectangle "Xác thực & Quản lý dữ liệu" {
+usecase "UC-D01\nĐăng ký tài khoản" as U1
+usecase "UC-D02\nĐăng nhập bằng\ntên hoặc email" as U2
+usecase "UC-D03\nLưu avatar và skin gậy" as U3
+usecase "UC-D04\nGhi kết quả\nvà cập nhật EXP/level" as U4
+usecase "UC-D05\nTruy vấn bảng xếp hạng" as U5
+usecase "UC-D06\nQuản lý quan hệ bạn bè" as U6
+usecase "UC-D07\nLưu và truy vấn tin nhắn" as U7
+}
+Player -- U1
+Player -- U2
+Player -- U3
+Room -- U4
+Player -- U5
+Player -- U6
+Player -- U7
+
+@enduml

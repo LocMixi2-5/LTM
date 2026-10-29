@@ -1,0 +1,58 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+
+start
+:Nhận CHALLENGE_REQUEST,
+trim và tra tên online;
+if (Tên rỗng / tự mời / offline
+hoặc người nhận bận?) then (Có)
+ :Gửi kết quả thất bại;
+ stop
+endif
+:Lưu lời mời, gửi CHALLENGE_RECEIVE,\nđặt timer 15 giây;
+if (Không phản hồi trong 15 giây?) then (Có)
+ :Xóa lời mời,
+báo hết thời gian;
+ stop
+endif
+:Hủy timer khi nhận phản hồi
+(hành vi hiện tại);
+if (Tên phản hồi không khớp?) then (Có)
+ :Bỏ phản hồi,
+currentChallenger vẫn còn;
+ note right
+  Giới hạn: lời mời có thể
+  tiếp tục ở trạng thái bận.
+ end note
+ stop
+endif
+:Xóa currentChallenger;
+if (Người mời offline / đã có phòng
+hoặc người nhận từ chối?) then (Có)
+ :Trả thất bại/từ chối;
+ stop
+endif
+:Xóa cả hai khỏi queue,\ntạo GameRoom, gửi MATCH_FOUND;
+stop
+@enduml

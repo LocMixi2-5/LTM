@@ -1,4 +1,8 @@
-# Báo cáo tổng hợp — trình bày thống nhất về hệ thống
+# Báo cáo tổng hợp
+
+**Bản mới nhất — sửa trực tiếp file Word người dùng gửi, giữ bố cục:** [Word](Bao_cao_tong_hop_nhom_LTM_chinh_sua.docx) · [PDF 61 trang](Bao_cao_tong_hop_nhom_LTM_chinh_sua.pdf). Đã viết lại các đoạn nhắc TV1–TV4 theo chức năng, bỏ tiêu đề và nhãn thành viên trong hình. [Chi tiết thay đổi và cách tái tạo](CHINH_SUA_BAN_GUI.md).
+
+## Bản biên soạn theo chương trước đó
 
 Cập nhật **29/10/2026**, đối chiếu mã ứng dụng **00bf1cc**. Bản này được biên tập theo một mạch nội dung chung để một người có thể trình bày toàn bộ đồ án.
 
