@@ -1,0 +1,50 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+title Chức năng gameplay & engine vật lý
+left to right direction
+actor "Người chơi" as Player
+actor "Người chơi khác" as Other
+actor "GameScene" as Loop <<hệ thống>>
+rectangle "Gameplay & Engine Vật lý" {
+usecase "UC-G01\nKhởi tạo bàn và phân nhóm bi" as U1
+usecase "UC-G02\nĐặt bi cái" as U2
+usecase "UC-G03\nNgắm và kéo lực gậy" as U3
+usecase "UC-G04\nChỉnh xoáy và\nthực hiện cú đánh" as U4
+usecase "UC-G05\nMô phỏng chuyển\nđộng và va chạm" as U5
+usecase "UC-G06\nXử lý bi vào\nlỗ và kết quả lượt" as U6
+usecase "UC-G07\nĐiều phối lượt\nvà hết thời gian" as U7
+usecase "UC-G08\nLuyện tập solo" as U8
+}
+Player -- U1
+Player -- U2
+Player -- U3
+Player -- U4
+Loop -- U5
+Loop -- U6
+Player -- U7
+Player -- U8
+Other -- U3
+Other -- U7
+
+@enduml

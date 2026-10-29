@@ -1,24 +1,11 @@
-"""Compose the complete group report while preserving the agreed four-subsystem report."""
+"""Compose a unified project narrative; detailed use cases/UML are reference appendices."""
 from pathlib import Path
+import json
 import re
-import subprocess
-import sys
 
 base = Path(__file__).resolve().parent
-subprocess.run([sys.executable, str(base / 'write_uml_report.py')], check=True)
-original = (base / 'Bao_cao_LTM_4_phan.md').read_text()
-allocation = original.split('## PHÂN CÔNG MỚI VÀ QUY ƯỚC', 1)[1].split('# PHẦN 1.', 1)[0]
-allocation = '## PHÂN CÔNG VÀ QUY ƯỚC\n' + allocation
-allocation = allocation.replace(
-    'Báo cáo giữ nhãn TV1–TV4 đúng theo ảnh phân công mới. Ảnh không cung cấp ánh xạ họ tên, vì vậy không tự gán các tên trong bảng phân công cũ cho những trách nhiệm mới.',
-    'Báo cáo dùng nhãn TV1–TV4 theo phân công của nhóm; họ tên và MSSV được điền trên trang bìa và từng phần trước khi nộp.')
-core = '# PHẦN 1.' + original.split('# PHẦN 1.', 1)[1].split('## TỔNG HỢP ĐỐI CHIẾU VÀ KIỂM CHỨNG', 1)[0]
-core = core.replace('như nhánh v2 cũ', 'trong phiên bản đang đối chiếu')
-references = original.split('## TÀI LIỆU VÀ NGUỒN ĐỐI CHIẾU', 1)[1]
-references = references.replace(',', ', ')
-references = references.replace('Bảng phân công trong ảnh người dùng cung cấp ngày 28/10/2026', 'Phân công nhóm được thống nhất ngày 28/10/2026')
-references = references.replace('Bảng này thay thế cách chia phần công việc trong báo cáo trước.', 'Tổng cộng 31 use case và 14 biểu đồ UML.')
-references = references.replace('Các ảnh chụp UI ngày 26/10 vẫn được giữ để tham khảo, không tính vào 14 biểu đồ UML của bản phân công mới.', 'Bảy ảnh JavaFX ngày 26/10 được dùng làm minh họa M1–M7 trong báo cáo tổng, không tính vào 14 biểu đồ UML.')
+groups = json.loads((base / 'uml_spec.json').read_text())
+diagrams = json.loads((base / 'uml_unified/manifest.json').read_text())
 cover = '''# BÁO CÁO TỔNG HỢP ĐỒ ÁN
 
 ## XÂY DỰNG TRÒ CHƠI BI-A HAI NGƯỜI QUA MẠNG
@@ -31,53 +18,59 @@ Giảng viên hướng dẫn: [Bổ sung]
 
 Nhóm thực hiện: [Tên nhóm]
 
-TV1: [Họ tên — MSSV] · TV2: [Họ tên — MSSV]
+Danh sách thành viên và MSSV: [Bổ sung]
 
-TV3: [Họ tên — MSSV] · TV4: [Họ tên — MSSV]
-
-Ngày hoàn thiện báo cáo: 28/10/2026 — múi giờ Việt Nam.
+Ngày cập nhật: 29/10/2026 — múi giờ Việt Nam.
 
 Phiên bản mã ứng dụng đối chiếu: 00bf1cc.
 
 ## TÓM TẮT
 
-Báo cáo trình bày toàn bộ đồ án trò chơi bi-a hai người qua mạng do nhóm xây dựng bằng Java, JavaFX, TCP/UDP Socket và PostgreSQL. Tài liệu bao gồm mục tiêu và phạm vi, cơ sở lý thuyết, kiến trúc chung, phân tích bốn phân hệ, triển khai và sử dụng, minh họa giao diện, kiểm thử, đánh giá và hướng phát triển.
+Đồ án xây dựng trò chơi bi-a hai người qua mạng bằng Java, JavaFX, TCP/UDP Socket và PostgreSQL. Ứng dụng cung cấp một hành trình sử dụng từ kết nối, đăng ký và đăng nhập tới tìm đối thủ, thi đấu, xem kết quả và tiếp tục tương tác trong sảnh. Các chức năng bạn bè, chat, luyện tập và cá nhân hóa bổ sung cho trải nghiệm đó.
 
-Bốn phần chuyên môn được phân công gồm quản lý kết nối và giao thức; xác thực và dữ liệu; gameplay và engine vật lý; giao diện và cá nhân hóa. Tổng số đặc tả là 31 use case, phân bố 7/7/8/9; tổng số UML là 14 biểu đồ, phân bố 3/4/3/4. Bảy ảnh JavaFX được bổ sung ở phần triển khai và đánh số riêng để minh họa sản phẩm tích hợp.
+Báo cáo trình bày hệ thống theo mạch từ bài toán đến giải pháp: cơ sở công nghệ, kiến trúc, quy trình hoạt động, triển khai và đánh giá. Trong từng luồng, thao tác người chơi được liên hệ với truyền thông, xử lý nghiệp vụ, lưu trữ và phản hồi giao diện. Các đặc tả và biểu đồ chi tiết được tập hợp ở phụ lục để hỗ trợ tra cứu.
 
-Mã nguồn đối chiếu là 00bf1cc; lần kiểm tra GitHub ngày 28/10/2026 chưa có thay đổi mã ứng dụng sau phiên bản này. Minh chứng thực thi được kế thừa từ ngày 26/10/2026, gồm biên dịch, thử giao thức với server thật và kiểm tra JavaFX bằng transport giả lập. Kết quả cho thấy nhiều luồng đã hoạt động trong phạm vi thử, đồng thời xác định các lỗi trạng thái, hợp đồng packet và giao diện cần hoàn thiện. Các yêu cầu chưa nghiệm thu được nêu rõ, không được gộp thành kết quả đã đạt.
+Mã nguồn đối chiếu là 00bf1cc, vẫn là phiên bản mã ứng dụng trên main khi kiểm tra ngày 29/10/2026. Minh chứng thực thi từ ngày 26/10/2026 cho thấy ứng dụng biên dịch được và nhiều luồng hoạt động trong phạm vi đã thử, đồng thời xác định một số lỗi cần hoàn thiện. Báo cáo phân biệt kết quả đã quan sát với kế hoạch nghiệm thu, đặc biệt đối với đồng bộ hai client và vận hành EXE trên Windows.
 
-Từ khóa: lập trình mạng; JavaFX; TCP Socket; PostgreSQL; trò chơi nhiều người; UML.
-
-'''
-illustrations = '''## DANH MỤC ẢNH MINH HỌA GIAO DIỆN
-
-| Mã hình | Nội dung | Liên hệ phân hệ |
-| --- | --- | --- |
-| M1 | Form đăng ký | TV2–TV4 |
-| M2 | Sảnh và menu bạn bè | TV2–TV4 |
-| M3 | Hội thoại chat | TV2–TV4 |
-| M4 | Popup thách đấu | TV1–TV4 |
-| M5 | Toast phản hồi lời mời | TV1–TV4 |
-| M6 | Luyện tập solo | TV3–TV4 |
-| M7 | Bàn chơi và hiển thị hướng gậy | TV1–TV3–TV4 |
-
-Các ảnh là minh họa JavaFX từ môi trường kiểm tra ngày 26/10/2026. Điều kiện chụp và giới hạn kiểm chứng được ghi ở phần triển khai.
+Từ khóa: lập trình mạng; JavaFX; TCP Socket; PostgreSQL; trò chơi nhiều người.
 
 '''
-extra_refs = '''
-[7] Oracle. Java SE 17 API: Socket, ServerSocket, DataInputStream, DataOutputStream. Tài liệu nền về kết nối và đọc/ghi dữ liệu: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/Socket.html và https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/DataInputStream.html .
+catalog = '## DANH MỤC HÌNH\n\n| Hình | Nội dung | Vị trí |\n| --- | --- | --- |\n'
+ui_titles = ['Form đăng ký','Sảnh và menu bạn bè','Hội thoại chat','Popup thách đấu','Toast phản hồi lời mời','Bàn luyện tập solo','Bàn chơi và hướng gậy']
+for i, title in enumerate(ui_titles, 1):
+    catalog += f'| 5.{i} | {title} | Chương 5 |\n'
+for d in diagrams:
+    catalog += f'| {d["number"]} | {d["title"]} ({d["type"]}) | Phụ lục B |\n'
+main = (base/'chapters/he_thong_thong_nhat.md').read_text() + '\n' + (base/'chapters/trien_khai_thong_nhat.md').read_text()
+assert not re.search(r'TV[1-4]|UC-|phân công', main)
+appendix = '''# PHỤ LỤC A. ĐẶC TẢ CHỨC NĂNG
 
-[8] OpenJFX. JavaFX 17 API: Platform và AnimationTimer. https://openjfx.io/javadoc/17/javafx.graphics/javafx/application/Platform.html ; https://openjfx.io/javadoc/17/javafx.graphics/javafx/animation/AnimationTimer.html .
+Phụ lục tập hợp 31 đặc tả để đối chiếu khi cần kiểm tra một chức năng cụ thể. Các mã được giữ ổn định để tra cứu với sơ đồ; nội dung chính của báo cáo diễn giải các chức năng trong quy trình sử dụng ở Chương 4. Những nhóm dưới đây là nhóm chức năng của cùng hệ thống.
 
-[9] PostgreSQL Global Development Group. PostgreSQL 17 Documentation: Transactions, Constraints và Indexes. https://www.postgresql.org/docs/17/tutorial-transactions.html ; https://www.postgresql.org/docs/17/ddl-constraints.html ; https://www.postgresql.org/docs/17/indexes.html .
-
-[10] PostgreSQL JDBC Driver. Tài liệu JDBC và thao tác dữ liệu: https://jdbc.postgresql.org/documentation/ .
-
-[11] PlantUML. Tài liệu Use Case, Activity, Sequence và Component: https://plantuml.com/use-case-diagram ; https://plantuml.com/activity-diagram-beta ; https://plantuml.com/sequence-diagram ; https://plantuml.com/component-diagram . Các tài liệu công nghệ dùng làm nguồn kiến thức nền; hiện trạng dự án được xác định từ mã nguồn [2–4] và minh chứng [6].
 '''
-result = cover + allocation + illustrations + (base / 'chapters/tong_quan.md').read_text() + '\n\n' + core + (base / 'chapters/trien_khai_va_danh_gia.md').read_text() + '\n\n# TÀI LIỆU THAM KHẢO\n' + references + extra_refs
+for g in groups:
+    appendix += f'## {g["title"]}\n\n'
+    for u in g['items']:
+        appendix += f'### {u["id"]} — {u["name"]}\n\n'
+        appendix += f'**Tác nhân:** {u["actor"]}.\n\n**Điều kiện bắt đầu:** {u["pre"]}\n\n'
+        flow = u['flow'].replace('chuyển việc ghi bền vững cho TV2', 'server kiểm tra quyền và ghi dữ liệu')
+        steps = [s.strip().rstrip('.') for s in flow.split(';') if s.strip()]
+        appendix += '**Diễn tiến:** ' + '. '.join(s[0].upper()+s[1:] for s in steps) + '.\n\n'
+        appendix += f'**Ngoại lệ và giới hạn:** {u["alt"]}\n\n**Kết quả:** {u["post"]}\n\n'
+        appendix += f'**Liên hệ mã nguồn:** {u["source"]}.\n\n'
+appendix += '''# PHỤ LỤC B. BIỂU ĐỒ PHÂN TÍCH VÀ THIẾT KẾ
+
+Các sơ đồ hỗ trợ giải thích những luồng đã trình bày trong báo cáo. Use Case thể hiện phạm vi chức năng; Activity mô tả các bước và nhánh điều kiện; Sequence làm rõ tương tác theo thời gian; Component biểu diễn phụ thuộc giữa các thành phần. Chú thích và nhánh lỗi phản ánh mã hiện tại, không được hiểu là những cải tiến đã hoàn thành.
+
+'''
+for d in diagrams:
+    appendix += f'## {d["number"]}. {d["title"]}\n\n'
+    appendix += f'Loại sơ đồ: {d["type"]}. Đối chiếu Phụ lục A: '+', '.join(d['use_cases'])+'.\n\n'
+    appendix += f'![Hình {d["number"]} — {d["title"]}; {d["type"]}, đối chiếu mã 00bf1cc.]({d["path"]})\n\n'
+result = cover + catalog + '\n' + main + '\n' + appendix + '\n' + (base/'chapters/tai_lieu_tham_khao.md').read_text()
+assert not re.search(r'TV[1-4]|Thành viên phụ trách|phân công', result)
+assert len(re.findall(r'^# CHƯƠNG [1-7]\.', result, re.M)) == 7
 assert len(re.findall(r'^### UC-[A-Z]+\d{2} —', result, re.M)) == 31
 assert len(re.findall(r'^!\[', result, re.M)) == 21
-(base / 'Bao_cao_tong_hop_nhom_LTM.md').write_text(result)
-print('Group report:', len(result.split()), 'words; 31 use cases; 14 UML + 7 UI figures.')
+(base/'Bao_cao_tong_hop_nhom_LTM.md').write_text(result)
+print('Unified report:', len(result.split()), 'words; 7 narrative chapters; UC and UML in appendices.')

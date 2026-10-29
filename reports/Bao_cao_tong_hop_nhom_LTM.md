@@ -10,1025 +10,233 @@ Giảng viên hướng dẫn: [Bổ sung]
 
 Nhóm thực hiện: [Tên nhóm]
 
-TV1: [Họ tên — MSSV] · TV2: [Họ tên — MSSV]
+Danh sách thành viên và MSSV: [Bổ sung]
 
-TV3: [Họ tên — MSSV] · TV4: [Họ tên — MSSV]
-
-Ngày hoàn thiện báo cáo: 28/10/2026 — múi giờ Việt Nam.
+Ngày cập nhật: 29/10/2026 — múi giờ Việt Nam.
 
 Phiên bản mã ứng dụng đối chiếu: 00bf1cc.
 
 ## TÓM TẮT
 
-Báo cáo trình bày toàn bộ đồ án trò chơi bi-a hai người qua mạng do nhóm xây dựng bằng Java, JavaFX, TCP/UDP Socket và PostgreSQL. Tài liệu bao gồm mục tiêu và phạm vi, cơ sở lý thuyết, kiến trúc chung, phân tích bốn phân hệ, triển khai và sử dụng, minh họa giao diện, kiểm thử, đánh giá và hướng phát triển.
+Đồ án xây dựng trò chơi bi-a hai người qua mạng bằng Java, JavaFX, TCP/UDP Socket và PostgreSQL. Ứng dụng cung cấp một hành trình sử dụng từ kết nối, đăng ký và đăng nhập tới tìm đối thủ, thi đấu, xem kết quả và tiếp tục tương tác trong sảnh. Các chức năng bạn bè, chat, luyện tập và cá nhân hóa bổ sung cho trải nghiệm đó.
 
-Bốn phần chuyên môn được phân công gồm quản lý kết nối và giao thức; xác thực và dữ liệu; gameplay và engine vật lý; giao diện và cá nhân hóa. Tổng số đặc tả là 31 use case, phân bố 7/7/8/9; tổng số UML là 14 biểu đồ, phân bố 3/4/3/4. Bảy ảnh JavaFX được bổ sung ở phần triển khai và đánh số riêng để minh họa sản phẩm tích hợp.
+Báo cáo trình bày hệ thống theo mạch từ bài toán đến giải pháp: cơ sở công nghệ, kiến trúc, quy trình hoạt động, triển khai và đánh giá. Trong từng luồng, thao tác người chơi được liên hệ với truyền thông, xử lý nghiệp vụ, lưu trữ và phản hồi giao diện. Các đặc tả và biểu đồ chi tiết được tập hợp ở phụ lục để hỗ trợ tra cứu.
 
-Mã nguồn đối chiếu là 00bf1cc; lần kiểm tra GitHub ngày 28/10/2026 chưa có thay đổi mã ứng dụng sau phiên bản này. Minh chứng thực thi được kế thừa từ ngày 26/10/2026, gồm biên dịch, thử giao thức với server thật và kiểm tra JavaFX bằng transport giả lập. Kết quả cho thấy nhiều luồng đã hoạt động trong phạm vi thử, đồng thời xác định các lỗi trạng thái, hợp đồng packet và giao diện cần hoàn thiện. Các yêu cầu chưa nghiệm thu được nêu rõ, không được gộp thành kết quả đã đạt.
+Mã nguồn đối chiếu là 00bf1cc, vẫn là phiên bản mã ứng dụng trên main khi kiểm tra ngày 29/10/2026. Minh chứng thực thi từ ngày 26/10/2026 cho thấy ứng dụng biên dịch được và nhiều luồng hoạt động trong phạm vi đã thử, đồng thời xác định một số lỗi cần hoàn thiện. Báo cáo phân biệt kết quả đã quan sát với kế hoạch nghiệm thu, đặc biệt đối với đồng bộ hai client và vận hành EXE trên Windows.
 
-Từ khóa: lập trình mạng; JavaFX; TCP Socket; PostgreSQL; trò chơi nhiều người; UML.
+Từ khóa: lập trình mạng; JavaFX; TCP Socket; PostgreSQL; trò chơi nhiều người.
 
-## PHÂN CÔNG VÀ QUY ƯỚC
+## DANH MỤC HÌNH
 
-
-| Thành viên | Phân hệ phụ trách | Use Cases | Số biểu đồ | Loại biểu đồ |
-| --- | --- | --- | --- | --- |
-| TV1 | Quản lý kết nối & Giao thức truyền tin | UC-C01 → UC-C07 (7 UC) | 3 | Use Case, Sequence, Activity |
-| TV2 | Xác thực & Quản lý dữ liệu | UC-D01 → UC-D07 (7 UC) | 4 | Use Case, Activity ×2, Sequence |
-| TV3 | Gameplay & Engine Vật lý | UC-G01 → UC-G08 (8 UC) | 3 | Use Case, Activity, Sequence |
-| TV4 | Giao diện & Cá nhân hóa | UC-UI01 → UC-UI09 (9 UC) | 4 | Use Case, Activity, Sequence, Component |
-| Tổng | 4 phân hệ | 31 UC | 14 | 4 Use Case, 5 Activity, 4 Sequence, 1 Component |
-
-Báo cáo dùng nhãn TV1–TV4 theo phân công của nhóm; họ tên và MSSV được điền trên trang bìa và từng phần trước khi nộp. Mã use case do báo cáo đặt theo đúng dải đã yêu cầu; chúng không phải tên hằng số có sẵn trong mã Java.
-
-Use case biểu diễn mục tiêu/chức năng ở ranh giới phân hệ. Với một số xử lý nền, GameRoom hoặc GameScene được dùng làm tác nhân hệ thống đối với phân hệ đang xét. Các bước kỹ thuật của engine được mô hình hóa như use case chức năng theo phạm vi bài tập; không đồng nhất mọi bước nội bộ với một thao tác riêng mà người chơi trực tiếp bấm.
-
-Một chức năng xuyên nhiều phân hệ có các góc nhìn khác nhau: TV1 chuyển gói và điều phối phiên; TV2 xác thực/ghi dữ liệu; TV3 quyết định/mô phỏng gameplay; TV4 hiển thị và nhận thao tác. Ví dụ UC-UI08 chọn và xem skin, còn UC-D03 kiểm tra quyền và lưu skin. Hai use case liên quan nhưng không thay thế nhau.
-
-Mỗi biểu đồ Use Case liệt kê đủ use case của thành viên. Các Activity/Sequence đi sâu vào luồng đại diện được nêu ở chú thích; không có yêu cầu mỗi use case phải có một biểu đồ Sequence riêng. Tổng số biểu đồ trong tài liệu được giữ đúng 3/4/3/4.
-
-## DANH MỤC 14 BIỂU ĐỒ
-
-| Mã hình | Thành viên | Loại | Nội dung / phạm vi |
-| --- | --- | --- | --- |
-| 1.1 | TV1 | Use Case | Các use case thuộc phân hệ |
-| 1.2 | TV1 | Sequence | Kết nối TCP và trao đổi PING |
-| 1.3 | TV1 | Activity | Điều phối thách đấu trực tiếp |
-| 2.1 | TV2 | Use Case | Các use case thuộc phân hệ |
-| 2.2 | TV2 | Activity | Đăng ký và lưu tài khoản |
-| 2.3 | TV2 | Activity | Ghi kết quả, EXP và lịch sử |
-| 2.4 | TV2 | Sequence | Đăng nhập bằng username hoặc email |
-| 3.1 | TV3 | Use Case | Các use case thuộc phân hệ |
-| 3.2 | TV3 | Activity | Một cú đánh và xử lý cuối lượt |
-| 3.3 | TV3 | Sequence | Truyền cú đánh và đổi lượt hiện tại |
-| 4.1 | TV4 | Use Case | Các use case thuộc phân hệ |
-| 4.2 | TV4 | Activity | Cá nhân hóa avatar, gậy và âm thanh |
-| 4.3 | TV4 | Sequence | Popup thách đấu, toast và chuyển cảnh |
-| 4.4 | TV4 | Component | Thành phần giao diện và cá nhân hóa |
-
-## DANH MỤC ẢNH MINH HỌA GIAO DIỆN
-
-| Mã hình | Nội dung | Liên hệ phân hệ |
+| Hình | Nội dung | Vị trí |
 | --- | --- | --- |
-| M1 | Form đăng ký | TV2–TV4 |
-| M2 | Sảnh và menu bạn bè | TV2–TV4 |
-| M3 | Hội thoại chat | TV2–TV4 |
-| M4 | Popup thách đấu | TV1–TV4 |
-| M5 | Toast phản hồi lời mời | TV1–TV4 |
-| M6 | Luyện tập solo | TV3–TV4 |
-| M7 | Bàn chơi và hiển thị hướng gậy | TV1–TV3–TV4 |
+| 5.1 | Form đăng ký | Chương 5 |
+| 5.2 | Sảnh và menu bạn bè | Chương 5 |
+| 5.3 | Hội thoại chat | Chương 5 |
+| 5.4 | Popup thách đấu | Chương 5 |
+| 5.5 | Toast phản hồi lời mời | Chương 5 |
+| 5.6 | Bàn luyện tập solo | Chương 5 |
+| 5.7 | Bàn chơi và hướng gậy | Chương 5 |
+| B.1 | Chức năng quản lý kết nối & giao thức truyền tin (Use Case) | Phụ lục B |
+| B.2 | Kết nối TCP và trao đổi PING (Sequence) | Phụ lục B |
+| B.3 | Điều phối thách đấu trực tiếp (Activity) | Phụ lục B |
+| B.4 | Chức năng xác thực & quản lý dữ liệu (Use Case) | Phụ lục B |
+| B.5 | Đăng ký và lưu tài khoản (Activity) | Phụ lục B |
+| B.6 | Ghi kết quả, EXP và lịch sử (Activity) | Phụ lục B |
+| B.7 | Đăng nhập bằng username hoặc email (Sequence) | Phụ lục B |
+| B.8 | Chức năng gameplay & engine vật lý (Use Case) | Phụ lục B |
+| B.9 | Một cú đánh và xử lý cuối lượt (Activity) | Phụ lục B |
+| B.10 | Truyền cú đánh và đổi lượt hiện tại (Sequence) | Phụ lục B |
+| B.11 | Chức năng giao diện & cá nhân hóa (Use Case) | Phụ lục B |
+| B.12 | Cá nhân hóa avatar, gậy và âm thanh (Activity) | Phụ lục B |
+| B.13 | Popup thách đấu, toast và chuyển cảnh (Sequence) | Phụ lục B |
+| B.14 | Thành phần giao diện và cá nhân hóa (Component) | Phụ lục B |
 
-Các ảnh là minh họa JavaFX từ môi trường kiểm tra ngày 26/10/2026. Điều kiện chụp và giới hạn kiểm chứng được ghi ở phần triển khai.
+# CHƯƠNG 1. GIỚI THIỆU ĐỀ TÀI
 
-# MỞ ĐẦU
+## 1.1. Bối cảnh và lý do lựa chọn
 
-## Lý do chọn đề tài
+Trò chơi nhiều người qua mạng là một bài toán tiêu biểu của lập trình mạng: các máy cần trao đổi dữ liệu, duy trì phiên và phản ánh thao tác của nhau trong khi người dùng vẫn tương tác liên tục với giao diện. Với trò chơi bi-a, yêu cầu này thể hiện qua việc tìm đối thủ, quan sát hướng gậy, thực hiện cú đánh và xác định lượt tiếp theo. Trải nghiệm của người chơi phụ thuộc vào sự phối hợp của toàn bộ hệ thống, từ kết nối đến xử lý trận đấu và lưu kết quả.
 
-Trò chơi nhiều người qua mạng kết hợp các vấn đề cốt lõi của lập trình mạng: duy trì kết nối, trao đổi dữ liệu có cấu trúc, quản lý phiên, xử lý đồng thời và phản hồi trạng thái trên giao diện. Với bi-a, người chơi còn cần quan sát hướng gậy, lực đánh, chuyển động của bi và quyền đánh của từng bên. Vì vậy, đề tài vừa có nghiệp vụ tài khoản và dữ liệu, vừa có yêu cầu phối hợp trạng thái theo thời gian.
+Xuất phát từ bài toán đó, nhóm xây dựng ứng dụng bi-a hai người bằng Java và JavaFX, sử dụng Socket để truyền thông và PostgreSQL để lưu trữ. Đề tài cho phép vận dụng kiến thức môn Lập trình mạng vào một sản phẩm có quy trình sử dụng hoàn chỉnh, đồng thời làm rõ những khó khăn khi phối hợp trạng thái giữa các máy.
 
-Nhóm lựa chọn xây dựng trò chơi bi-a hai người bằng Java và JavaFX, sử dụng TCP Socket để truyền dữ liệu nghiệp vụ, UDP để tìm máy chủ trong LAN và PostgreSQL để lưu dữ liệu. Sản phẩm tạo điều kiện áp dụng kiến thức môn Lập trình mạng vào một quy trình hoàn chỉnh: từ kết nối, đăng nhập và tìm đối thủ đến thi đấu, cập nhật kết quả và tương tác bạn bè.
+## 1.2. Mục tiêu và phạm vi
 
-## Mục tiêu và sản phẩm của nhóm
+Ứng dụng hướng tới việc người chơi có thể tạo tài khoản, đăng nhập, tìm đối thủ, thi đấu, xem kết quả và tiếp tục tương tác trong sảnh. Bên cạnh trận đấu trực tuyến, hệ thống có luyện tập solo, bạn bè, chat, bảng xếp hạng và tùy chỉnh avatar, gậy, âm thanh. Các chức năng này cùng phục vụ một hành trình sử dụng, thay vì tồn tại như những phần mềm độc lập.
 
-Mục tiêu chức năng là cung cấp một ứng dụng có tài khoản người chơi, sảnh, ghép trận hoặc thách đấu, bàn bi-a tương tác, luyện tập solo, bạn bè, chat, bảng xếp hạng và cá nhân hóa. Mục tiêu kỹ thuật là tổ chức rõ trách nhiệm của client, server và cơ sở dữ liệu; xây dựng giao thức nhị phân dùng chung; liên kết thao tác giao diện với xử lý nghiệp vụ và phản hồi từ mạng.
+Về kỹ thuật, mục tiêu là kết nối được giao diện, truyền thông, xử lý trò chơi và cơ sở dữ liệu trong kiến trúc client–server. Hệ thống cần thống nhất cách diễn giải thông điệp, xác định trạng thái phiên và trả phản hồi phù hợp với thao tác của người dùng. Tài liệu trình bày cách triển khai hiện tại, kết quả kiểm tra và những điểm còn cần hoàn thiện.
 
-Sản phẩm được trình bày trong báo cáo gồm mã nguồn client/server, schema PostgreSQL, các script biên dịch và đóng gói, 31 đặc tả use case, 14 biểu đồ UML, ảnh giao diện và minh chứng kiểm tra. Báo cáo phân biệt ba mức: chức năng có trong mã, hành vi đã được thực thi kiểm tra và nội dung còn cần nghiệm thu. Việc một use case có đặc tả không tự chứng minh toàn bộ các nhánh đã chạy đúng.
+Mỗi trận trực tuyến có hai người. Client đảm nhiệm hiển thị và mô phỏng bi; server quản lý kết nối, sảnh, phòng đấu và điều phối lượt; PostgreSQL lưu dữ liệu bền vững. Luật chơi được mô tả theo phiên bản dự án đang có, chưa khẳng định đáp ứng toàn bộ luật thi đấu bi-a chuẩn quốc tế. Thanh toán, giải đấu và chế độ khán giả nằm ngoài phạm vi sản phẩm hiện tại.
 
-## Đối tượng, phạm vi và phương pháp
+## 1.3. Yêu cầu đặt ra
 
-Đối tượng sử dụng chính là người chơi; mỗi trận trực tuyến có hai người. Máy chủ quản lý kết nối, sảnh và nhiều đối tượng phòng; PostgreSQL lưu hồ sơ và lịch sử. Trong phạm vi triển khai hiện tại, mô phỏng bi diễn ra tại các client, còn server kiểm tra quyền lượt và chuyển tiếp thông tin cú đánh. Đây chưa phải mô hình server tự mô phỏng và quyết định toàn bộ trạng thái vật lý.
+| Nhu cầu sử dụng | Yêu cầu đối với hệ thống |
+| --- | --- |
+| Vào trò chơi và sử dụng tài khoản | Tìm hoặc nhập địa chỉ server, kết nối, đăng ký và đăng nhập |
+| Tìm người chơi cùng | Hiển thị sảnh, ghép trận hoặc gửi lời mời trực tiếp |
+| Chơi một trận bi-a | Khởi tạo bàn, nhận thao tác ngắm/đánh, mô phỏng và điều phối lượt |
+| Theo dõi kết quả | Hiển thị người thắng/thua, lưu lịch sử và cập nhật chỉ số |
+| Duy trì tương tác | Quản lý bạn bè, trao đổi tin nhắn và xem xếp hạng |
+| Điều chỉnh trải nghiệm | Chọn avatar/gậy, âm thanh và hiệu ứng; có chế độ solo |
 
-Phạm vi đồ án gồm bốn phân hệ theo bảng phân công của nhóm. Không đưa thanh toán, vật phẩm mua bằng tiền, giải đấu hoặc khán giả vào danh sách tính năng hiện có. Quy tắc phân nhóm bi được mô tả theo mã dự án; không khẳng định toàn bộ luật thi đấu bi-a chuẩn quốc tế đã được triển khai.
+Ngoài chức năng, giao diện cần phản hồi rõ khi kết nối hoặc thao tác thất bại. Các thông điệp phải có định dạng nhất quán giữa hai đầu; dữ liệu dùng chung cần được quản lý khi nhiều phiên cùng hoạt động. Đây là mục tiêu chất lượng của đồ án, không phải cam kết rằng mọi tình huống đã vượt qua kiểm thử. Những giới hạn đã phát hiện được đánh giá ở Chương 6.
 
-Phương pháp thực hiện báo cáo gồm đọc mã nguồn và schema; phân rã use case theo trách nhiệm; mô hình hóa Use Case, Activity, Sequence và Component; đối chiếu với nhật ký kiểm tra; mô tả cài đặt và xây dựng kế hoạch nghiệm thu còn thiếu. Các nhận xét về lỗi được đặt cạnh luồng nghiệp vụ liên quan để tránh nhầm lẫn giữa thiết kế mong muốn và hành vi đang có.
+## 1.4. Cách tiếp cận và bố cục báo cáo
 
-## Yêu cầu chức năng và chất lượng
+Nhóm tiếp cận bài toán theo dòng dữ liệu: thao tác bắt đầu ở giao diện, được chuyển thành yêu cầu mạng, xử lý theo trạng thái phiên và trả kết quả về màn hình; các thông tin cần lưu được ghi vào cơ sở dữ liệu. Cách tiếp cận này giúp giải thích đồng thời trải nghiệm của người chơi và vai trò của các thành phần kỹ thuật.
 
-| Nhóm yêu cầu | Nội dung | Phân hệ chịu trách nhiệm |
+Báo cáo đi từ nền tảng công nghệ đến kiến trúc, sau đó theo dõi một phiên sử dụng từ kết nối tới kết thúc trận. Phần triển khai minh họa sản phẩm bằng ảnh giao diện; phần đánh giá đối chiếu với minh chứng thực thi. Đặc tả chức năng và các biểu đồ UML được đặt ở phụ lục để tra cứu khi cần làm rõ một luồng xử lý cụ thể.
+
+# CHƯƠNG 2. CƠ SỞ LÝ THUYẾT VÀ CÔNG NGHỆ
+
+## 2.1. Mô hình client–server và truyền thông Socket
+
+Trong mô hình client–server, client chủ động kết nối và gửi yêu cầu, còn server lắng nghe, quản lý phiên và trả phản hồi. Dự án sử dụng TCP cho nghiệp vụ cần trao đổi có thứ tự như xác thực, lời mời và thông tin trận đấu. ServerMain tiếp nhận socket, còn ClientHandler xử lý dữ liệu của từng kết nối. Người đã kết nối có thể ở sảnh mà chưa tham gia phòng đấu; vì vậy vòng đời kết nối và vòng đời trận được phân biệt.
+
+TCP cung cấp một luồng byte có thứ tự, không cung cấp ranh giới thông điệp ứng dụng [7]. Một thông điệp có thể tới qua nhiều lần đọc; nhiều thông điệp cũng có thể nằm liền nhau trong bộ đệm. Phía nhận phải đọc đủ các trường theo quy ước thay vì giả định một lần đọc tương ứng một yêu cầu hoàn chỉnh.
+
+Độ tin cậy của TCP không tự bảo đảm trạng thái trò chơi nhất quán. Nếu ứng dụng gửi lại lệnh đánh hoặc áp dụng lệnh vào sai lượt, thông điệp vẫn có thể được truyền chính xác nhưng kết quả nghiệp vụ sai. Tương tự, hai máy nhận cùng thông số cú đánh chưa chắc kết thúc mô phỏng tại cùng tọa độ. Tính nhất quán vì thế cần được bảo vệ ở tầng ứng dụng.
+
+UDP được sử dụng cho khám phá server trong LAN. Client có thể phát truy vấn tìm kiếm trước khi biết địa chỉ máy chủ; sau khi nhận phản hồi, các nghiệp vụ tiếp tục trên TCP. Nếu cấu hình mạng không cho phép broadcast, người chơi cần nhập địa chỉ server trực tiếp.
+
+## 2.2. Giao thức nhị phân
+
+Thông điệp của dự án bắt đầu bằng một byte mã loại, sau đó là các trường dữ liệu theo thứ tự đã định. Các số nhiều byte dùng big-endian; chuỗi gồm độ dài kiểu int và nội dung UTF-8. Cách biểu diễn này gọn và phù hợp với các lớp đọc/ghi dữ liệu của Java, nhưng đòi hỏi phía gửi và phía nhận thống nhất chính xác kiểu và số trường.
+
+Một thay đổi payload phải được cập nhật ở cả hai đầu. Chẳng hạn, nếu server chỉ gửi trạng thái boolean mà client còn chờ một chuỗi, quá trình đọc sẽ không còn khớp với hợp đồng. Đây là dạng lỗi khác với mất gói ở tầng mạng; nó cần được kiểm tra bằng cách đối chiếu bộ ghi và bộ đọc.
+
+## 2.3. JavaFX và xử lý đồng thời
+
+JavaFX cung cấp các thành phần giao diện, Canvas và cơ chế cập nhật theo khung hình. Ứng dụng có luồng nhận mạng riêng để việc chờ dữ liệu không chặn thao tác người dùng. Những thay đổi node và thao tác giao diện phải được chuyển về JavaFX Application Thread, thường thông qua Platform.runLater [8].
+
+Ở server, nhiều kết nối có thể cùng truy cập sảnh, danh sách người chơi và phòng đấu. Các thao tác liên quan trạng thái dùng chung cần có điều kiện kiểm tra và cơ chế bảo vệ phù hợp. Đồng bộ hóa một phương thức chỉ bảo vệ phạm vi thao tác đó; không tự biến nhiều cập nhật ở các đối tượng khác nhau thành một giao dịch thống nhất.
+
+## 2.4. Mô phỏng vật lý và nội suy hiển thị
+
+Bi được biểu diễn bằng vị trí, vận tốc, trạng thái hoạt động và tham số xoáy. Engine cập nhật chuyển động, giảm vận tốc do ma sát, kiểm tra va chạm giữa các bi, phản xạ với băng và phát hiện bi vào lỗ. Chia một lần cập nhật thành các bước con giúp giảm quãng dịch chuyển giữa hai lần kiểm tra va chạm.
+
+Hướng gậy nhận qua mạng được nội suy để hình vẽ chuyển dần tới trạng thái mới. Nội suy giúp giảm cảm giác giật khi các mẫu tới cách nhau, nhưng không thay thế việc kiểm tra quyền đánh hoặc hiệu chỉnh vị trí bi cuối lượt. AnimationTimer cũng không bảo đảm mỗi callback cách nhau đúng một khoảng thời gian cố định; yếu tố này cần được xét khi đánh giá mô phỏng trên hai máy khác nhau.
+
+## 2.5. Lưu trữ bằng PostgreSQL và JDBC
+
+PostgreSQL lưu tài khoản, lịch sử trận, quan hệ bạn bè và tin nhắn. JDBC cung cấp kết nối và cơ chế thực thi truy vấn từ Java. PreparedStatement tách dữ liệu đầu vào khỏi cấu trúc SQL; các điều kiện nghiệp vụ như quyền sử dụng skin hoặc điều kiện ghi kết quả vẫn cần được kiểm tra trong ứng dụng [9–10].
+
+Các cập nhật phụ thuộc nhau nên được xem xét trong cùng giao dịch. Ví dụ, ghi lịch sử và cộng điểm sau trận cần tránh tình trạng chỉ một phần được lưu khi xảy ra lỗi. Khóa chính, khóa ngoại và ràng buộc duy nhất bảo vệ một phần tính toàn vẹn; chúng phải phù hợp với quy tắc tra cứu và xử lý ở ứng dụng.
+
+Mật khẩu hiện được băm bằng SHA-256 cùng salt ngẫu nhiên. Salt giúp các mật khẩu giống nhau không luôn có cùng giá trị lưu, nhưng thuật toán băm nhanh vẫn có giới hạn khi chống dò mật khẩu. TLS và thuật toán chuyên dụng cho mật khẩu là hướng hoàn thiện, chưa phải tính năng đã có trong phiên bản được báo cáo.
+
+# CHƯƠNG 3. KIẾN TRÚC VÀ THIẾT KẾ HỆ THỐNG
+
+## 3.1. Kiến trúc tổng thể
+
+Hệ thống gồm ứng dụng JavaFX, máy chủ Java Socket và PostgreSQL. Trên client, màn hình nhận thao tác, NetworkClient trao đổi dữ liệu và engine mô phỏng bàn chơi. Trên server, yêu cầu được xử lý theo phiên người dùng, trạng thái sảnh và phòng đấu; dữ liệu cần lưu đi qua lớp truy cập cơ sở dữ liệu. Client không kết nối trực tiếp tới PostgreSQL.
+
+| Thành phần | Vai trò trong hệ thống |
+| --- | --- |
+| ClientMain, SceneManager và các màn hình | Khởi chạy, điều hướng và phản hồi cho người dùng |
+| NetworkClient và các lớp protocol | Kết nối, tuần tự hóa, đọc thông điệp và phân phối callback |
+| GameScene, Ball và PhysicsEngine | Nhận thao tác trên bàn, biểu diễn bi và mô phỏng cú đánh |
+| ServerMain và ClientHandler | Tiếp nhận kết nối, quản lý phiên và điều phối yêu cầu |
+| LobbyManager và GameRoom | Ghép cặp, tạo phòng, xác định quyền lượt và kết thúc trận |
+| AuthManager và DatabaseManager | Xác thực, truy vấn và cập nhật dữ liệu |
+| PostgreSQL | Lưu hồ sơ, kết quả, bạn bè và tin nhắn |
+
+Các thành phần cùng tham gia một nghiệp vụ. Khi đăng nhập, màn hình thu nhận thông tin, kết nối chuyển yêu cầu, server kiểm tra dữ liệu rồi trả hồ sơ để giao diện vào sảnh. Khi đánh bi, GameScene đồng thời làm việc với engine và kết nối mạng. Do đó, đường đi của thao tác là cơ sở để hiểu sự phối hợp của hệ thống.
+
+## 3.2. Thiết kế dữ liệu
+
+players là bảng trung tâm, chứa định danh, email, username, mật khẩu băm, EXP, level, thống kê thắng/thua và tùy chọn cá nhân. Các bảng còn lại tham chiếu tới người chơi để lưu kết quả trận, quan hệ bạn bè và hội thoại.
+
+| Bảng | Dữ liệu chính | Liên kết |
 | --- | --- | --- |
-| Kết nối và phiên | Kết nối TCP, khám phá LAN, trao đổi packet, RTT, ghép trận, lời mời và ngắt kết nối | TV1 |
-| Tài khoản và dữ liệu | Đăng ký, đăng nhập, hồ sơ, kết quả, xếp hạng, bạn bè và tin nhắn | TV2 |
-| Thi đấu | Khởi tạo bàn, đặt bi, ngắm/lực/xoáy, mô phỏng, luật lượt và solo | TV3 |
-| Tương tác | Màn hình, form, sảnh, chat, lời mời, HUD, kết quả và tùy chọn cá nhân | TV4 |
-| Tính nhất quán | Hai phía diễn giải cùng một payload; quyền lượt và chuyển trạng thái không mâu thuẫn | Phối hợp TV1–TV3 |
-| Khả năng sử dụng | Hiển thị phản hồi rõ, thao tác trên luồng JavaFX đúng quy tắc, có đường xử lý lỗi | Phối hợp cả nhóm |
-| Khả năng bảo trì | Mã giao thức, nghiệp vụ, dữ liệu và giao diện có trách nhiệm xác định | Phối hợp cả nhóm |
+| players | Tài khoản, chỉ số và avatar/gậy | Khóa chính id; email và username có UNIQUE |
+| match_history | Người thắng/thua, EXP thưởng và thời gian | Hai khóa ngoại tới players |
+| friendships | Cặp người dùng và trạng thái quan hệ | Khóa kép user_id/friend_id; tham chiếu players |
+| messages | Người gửi/nhận, nội dung, trạng thái đọc và thời gian | Khóa ngoại tới players |
 
-Các yêu cầu chất lượng là mục tiêu đánh giá, chưa phải cam kết hiệu năng đã đo. Báo cáo không đặt số người dùng đồng thời, FPS tối thiểu hoặc độ trễ tối đa nếu chưa có môi trường và phép đo tương ứng.
+Schema bảo vệ các liên kết cơ bản nhưng chưa bao quát mọi quy tắc nghiệp vụ. Trạng thái bạn bè đang là varchar không có CHECK giới hạn tập giá trị; ràng buộc UNIQUE của username gốc chưa tương đương với duy nhất không phân biệt hoa/thường. Những điểm này cần được đối chiếu với cách tra cứu của ứng dụng khi xử lý yêu cầu đồng thời.
 
-## Tổ chức phối hợp và bàn giao
+## 3.3. Thiết kế truyền thông và vòng đời phiên
 
-TV1 cung cấp hợp đồng truyền thông; TV2 sử dụng hợp đồng đó để nhận yêu cầu xác thực và dữ liệu; TV3 gửi/nhận thông số gameplay; TV4 hiển thị trạng thái và thu nhận thao tác. Mỗi thay đổi payload cần đồng thời cập nhật phía gửi, phía nhận và đặc tả. Một sửa đổi giao diện có liên quan dữ liệu phải được kiểm tra cả nhánh thành công lẫn phản hồi thất bại từ server.
+Máy chủ dùng TCP 12345 cho nghiệp vụ và UDP 12346 cho khám phá trong LAN. Giao thức hiện có 47 mã loại. Một số thông điệp quan trọng trong phiên chơi được tóm tắt dưới đây; đặc tả chi tiết được giữ ở tài liệu kỹ thuật đi kèm.
 
-Báo cáo giữ nhãn TV1–TV4 theo phân công đã thống nhất. Các nhãn thể hiện trách nhiệm trình bày và bàn giao, không được dùng để suy ra số dòng code hoặc tỷ lệ đóng góp cá nhân khi chưa có xác nhận của nhóm. Kiểm thử tích hợp và tổng hợp báo cáo là công việc phối hợp chung.
+| Thông điệp | Ý nghĩa |
+| --- | --- |
+| PING | Trao đổi timestamp để đo thời gian khứ hồi |
+| CUE_AIM | Cập nhật trạng thái ngắm, góc, lực tương đối và xoáy |
+| CUE_SHOT / GAME_STATE | Gửi thông số cú đánh và chuyển sang đối thủ |
+| PHYSICS_DONE / TURN_CHANGE | Báo mô phỏng kết thúc và thông báo quyền lượt tiếp theo |
+| SETTINGS_UPDATE / SETTINGS_RESPONSE | Yêu cầu lưu tùy chọn và phản hồi trạng thái |
 
-# CƠ SỞ LÝ THUYẾT VÀ CÔNG NGHỆ
+Một phiên có thể diễn tiến từ kết nối, xác thực và vào sảnh tới chờ đối thủ, vào phòng, sẵn sàng, thi đấu và kết thúc. Server cần quyết định thông điệp nào được chấp nhận ở từng thời điểm. Phiên bản hiện tại chưa có một máy trạng thái thống nhất bảo vệ mọi chuyển tiếp; các trường hợp lệnh lặp và phản hồi muộn vẫn là điểm cần hoàn thiện.
 
-## Mô hình client–server và Socket
+## 3.4. Tổ chức giao diện và tài nguyên
 
-Trong mô hình client–server, client chủ động mở kết nối và gửi yêu cầu; server lắng nghe, tạo ngữ cảnh xử lý cho kết nối và trả kết quả. Ở dự án này, ServerMain tiếp nhận socket, ClientHandler xử lý luồng dữ liệu của từng client, LobbyManager quản lý ghép trận và GameRoom quản lý một trận. Cách tổ chức này tách vòng đời kết nối khỏi vòng đời trận đấu: một người đã đăng nhập có thể ở sảnh mà chưa thuộc phòng nào.
+SceneManager điều hướng giữa các màn hình tài khoản, sảnh, trước trận, bàn chơi và kết quả. GameScene kết hợp Canvas với phần thông tin người chơi, lượt và trạng thái. SettingsDialog, AvatarManager, CueSkinManager và SoundManager cung cấp lựa chọn cá nhân và phản hồi nghe/nhìn.
 
-TCP cung cấp luồng byte có thứ tự và cơ chế truyền lại ở tầng vận chuyển [7]. Tuy nhiên, một lần ghi không tương ứng một lần đọc. Một packet nghiệp vụ có thể đến qua nhiều lần đọc hoặc nhiều packet có thể nằm liền trong bộ đệm. Do đó, phía nhận cần đọc đủ từng trường theo định dạng chung; không được dùng số byte đang sẵn có như độ dài cố định của toàn bộ thông điệp.
+Hồ sơ avatar/gậy cần đi qua server để kiểm tra quyền và lưu dữ liệu. Ngược lại, các mức âm lượng và mute áp dụng tại máy người chơi. Sự khác biệt này quyết định khi nào giao diện có thể cập nhật ngay và khi nào cần xác nhận từ hệ thống lưu trữ. Sơ đồ thành phần ở Phụ lục B thể hiện các phụ thuộc giữa những lớp đang triển khai.
 
-TCP cũng không bảo đảm hai giao diện đang ở cùng trạng thái ứng dụng. Hai lệnh đánh hợp lệ về mặt byte vẫn có thể bị áp dụng lặp nếu ứng dụng không nhận diện lệnh đã xử lý. Tương tự, truyền chính xác thông số cú đánh không tự bảo đảm hai engine kết thúc tại cùng tọa độ. Đây là lý do cần phân biệt độ tin cậy của vận chuyển với tính nhất quán của trò chơi.
+# CHƯƠNG 4. QUY TRÌNH HOẠT ĐỘNG CỦA ỨNG DỤNG
 
-UDP phù hợp cho truy vấn khám phá trong LAN vì client có thể phát thông điệp tìm kiếm mà chưa biết địa chỉ server. Dự án dùng UDP 12346 cho BILLIARDS_DISCOVER và phản hồi BILLIARDS_SERVER:12345. Đường khám phá không thay thế kết nối TCP cho tài khoản hoặc thi đấu; khi broadcast không đi qua cấu hình mạng, người chơi vẫn cần nhập IP server.
+## 4.1. Từ khởi động đến tài khoản người chơi
 
-## Giao thức nhị phân và tuần tự hóa
+Khi mở ứng dụng, người chơi chọn server hoặc sử dụng địa chỉ đã lưu. Nếu cùng LAN, client có thể gửi truy vấn khám phá để tìm máy chủ. Khi đã xác định địa chỉ, client mở TCP socket, tạo luồng đọc dữ liệu và bắt đầu trao đổi PING. Kết nối thành công tạo đường truyền cho nghiệp vụ; người chơi vẫn cần xác thực để sử dụng tài khoản.
 
-Giao thức nhị phân biểu diễn dữ liệu bằng các kiểu byte, boolean, int, long và double theo quy ước. Dự án đặt mã loại một byte trước payload; thứ tự trường phụ thuộc PacketType. Số nhiều byte dùng big-endian. Chuỗi gồm độ dài kiểu int rồi dữ liệu UTF-8; bộ đọc giới hạn độ dài để không cấp phát theo giá trị tùy ý [2–4].
+Người chưa có tài khoản nhập thông tin ở màn hình đăng ký. Giao diện kiểm tra đầu vào và gửi yêu cầu; server kiểm tra điều kiện, băm mật khẩu và lưu tài khoản nếu hợp lệ. Với tài khoản đã có, server tìm theo username hoặc email, đối chiếu mật khẩu rồi trả trạng thái và hồ sơ. Giao diện dựa trên phản hồi để vào sảnh hoặc hiển thị lỗi.
 
-Ưu điểm của cách này là payload nhỏ và đọc/ghi trực tiếp bằng Java. Đổi lại, hai đầu phải thống nhất chính xác kiểu, thứ tự và số trường. Nếu server chỉ ghi boolean nhưng client đọc thêm string, các byte kế tiếp có thể bị hiểu sai hoặc quá trình đọc bị chặn. Lỗi SETTINGS_RESPONSE trong phần kiểm thử là ví dụ cụ thể của việc hợp đồng hai đầu chưa khớp.
+Như vậy, trải nghiệm đăng nhập là một luồng liên tục giữa màn hình, kết nối và dữ liệu. Kiểm tra tại client giúp người dùng sửa lỗi nhập nhanh, còn server vẫn phải chịu trách nhiệm kiểm tra yêu cầu nhận được. Hiện quy tắc email ở hai đầu chưa hoàn toàn thống nhất; giới hạn này được ghi trong phần đánh giá.
 
-## Luồng xử lý và JavaFX
+## 4.2. Tương tác trong sảnh và tìm đối thủ
 
-Server xử lý nhiều kết nối nên cần quản lý dữ liệu dùng chung như danh sách online, hàng chờ và trạng thái phòng. Đồng bộ hóa một phương thức giúp bảo vệ vùng thao tác cụ thể, nhưng không tự biến chuỗi tác vụ liên quan nhiều đối tượng hoặc nhiều câu SQL thành một giao dịch nguyên tử.
+Sau đăng nhập, sảnh là nơi người chơi xem thông tin, tìm bạn, mở hội thoại hoặc chọn cách vào trận. Danh sách bạn bè và tin nhắn cần kết hợp dữ liệu lưu trong DB với trạng thái phiên đang online. Giao diện nhận dữ liệu qua callback và cập nhật trên luồng JavaFX.
 
-Client có luồng nhận mạng và JavaFX Application Thread. Luồng nhận phân tích packet, còn thay đổi node và các thao tác giao diện phải chuyển về luồng JavaFX, thường qua Platform.runLater [8]. Tác vụ đọc socket không nên chạy trực tiếp trên luồng hiển thị vì có thể chặn thao tác người dùng. AnimationTimer hỗ trợ cập nhật hình theo khung hình; nó không đồng nghĩa mỗi callback cách nhau đúng một khoảng thời gian cố định.
+Khi tìm trận ngẫu nhiên, server đưa người chơi vào hàng chờ và ghép với đối tượng phù hợp. Với thách đấu trực tiếp, server kiểm tra người nhận, trạng thái bận và tính hợp lệ của lời mời trước khi chuyển tới client đối phương. Người nhận thấy popup, chọn chấp nhận hoặc từ chối; nếu không phản hồi, lời mời có thể hết hạn.
 
-## Nguyên lý mô phỏng bi và làm mượt hiển thị
+Khi lời mời được chấp nhận và điều kiện vẫn còn hợp lệ, server loại người chơi liên quan khỏi hàng chờ, tạo phòng và thông báo cho hai client. Giao diện chuyển tới bước trước trận. Nếu đối tác rời hoặc yêu cầu không còn hợp lệ, kết quả thất bại cần được phản ánh để người chơi quay lại hoạt động trong sảnh.
 
-Mỗi bi được mô hình hóa bằng vị trí, vận tốc, trạng thái hoạt động và tham số xoáy. Engine lần lượt cập nhật chuyển động, tác động ma sát, kiểm tra va chạm bi–bi, phản xạ băng và phát hiện lỗ. Việc chia một lần update thành các bước con giúp giảm khoảng dịch chuyển giữa hai lần kiểm tra va chạm. Tuy nhiên, nó không thay thế bộ bước thời gian cố định hoặc cơ chế hiệu chỉnh trạng thái giữa hai máy.
+Quá trình này cho thấy một thay đổi ở kết nối ảnh hưởng trực tiếp tới trải nghiệm màn hình. Để tránh trạng thái bận kéo dài, timer, người mời và kết quả phản hồi phải được xử lý nhất quán. Phiên bản đang báo cáo còn lỗi ở nhánh phản hồi sai tên, nên phần kiểm thử không coi mọi trường hợp thách đấu đã hoàn tất nghiệm thu.
 
-Các hệ số ma sát và phục hồi trong dự án là tham số của mô hình trò chơi; không được xem là số liệu vật lý thực nghiệm. Hướng gậy nhận qua mạng được nội suy để giảm cảm giác giật khi các mẫu tới cách nhau. Nội suy chỉ làm mượt cách vẽ giữa các trạng thái đã nhận, không xác nhận cú đánh hoặc sửa khác biệt vị trí bi cuối lượt.
+## 4.3. Khởi tạo bàn và bắt đầu trận
 
-## PostgreSQL, JDBC và bảo vệ dữ liệu
+Sau khi tạo phòng, hai client nhận thông tin trận và đối thủ. Dữ liệu seed hỗ trợ khởi tạo cách sắp xếp/phân nhóm bi. Mã hiện tại xáo 14 bi mục tiêu khác bi 8 rồi chia thành hai nhóm bảy bi; đây là quy tắc của dự án, không nên hiểu là luôn chia trơn/sọc theo luật chuẩn.
 
-Cơ sở dữ liệu quan hệ liên kết hồ sơ, kết quả trận, bạn bè và tin nhắn bằng khóa chính/khóa ngoại. JDBC cung cấp kết nối, PreparedStatement và ResultSet để mã Java thực hiện truy vấn. PreparedStatement tách giá trị đầu vào khỏi cấu trúc câu SQL; các quy tắc nghiệp vụ như quyền thay skin hoặc quyền ghi kết quả vẫn phải được kiểm tra ở ứng dụng.
+Màn hình trước trận thu nhận trạng thái sẵn sàng. Khi trận bắt đầu, bàn hiển thị người chơi, bi mục tiêu và quyền lượt. Các thao tác đặt bi cái, ngắm hoặc đánh chỉ nên được áp dụng khi trạng thái cho phép. Tuy nhiên, bộ đếm READY hiện chưa phân biệt đầy đủ việc một người gửi lặp; trường hợp này cần sửa để bảo đảm điều kiện bắt đầu thực sự đến từ hai phía.
 
-Một giao dịch dữ liệu cần bảo đảm các bước phụ thuộc nhau cùng thành công hoặc cùng bị hủy. Ví dụ ghi lịch sử và tăng EXP nên được xem xét như một đơn vị nghiệp vụ. Phần hiện trạng nêu rõ recordMatchResult chưa có transaction bao trọn các cập nhật. Index có thể hỗ trợ truy vấn phù hợp nhưng hiệu quả còn phụ thuộc điều kiện truy vấn, dữ liệu và kế hoạch thực thi; báo cáo không gán một độ phức tạp cố định cho mọi truy vấn [9–10].
+## 4.4. Ngắm gậy, chọn lực và thực hiện cú đánh
 
-Mật khẩu trong dự án được băm với SHA-256 và salt ngẫu nhiên. Salt giúp tránh việc các mật khẩu giống nhau luôn cho cùng giá trị lưu, nhưng băm nhanh chưa phải lựa chọn tối ưu để chống dò mật khẩu. TLS cho đường truyền và thuật toán chuyên dụng như Argon2id hoặc bcrypt là hướng hoàn thiện, không được mô tả là tính năng sẵn có.
+Ở lượt của mình, người chơi điều chỉnh hướng gậy, kéo lực và chọn điểm chạm trên bi cái. Giao diện hiển thị các lựa chọn đó, đồng thời client gửi mẫu ngắm để đối thủ quan sát. Client đối phương nội suy hướng và lực đã nhận nhằm làm chuyển động hiển thị liên tục hơn giữa các mẫu.
 
-## Vai trò các biểu đồ UML
+Các mẫu ngắm được gửi theo ngưỡng thời gian và mức thay đổi, giúp giảm việc gửi thông tin gần như không đổi. Một số đường gửi cưỡng bức có thể bỏ qua ngưỡng thông thường; vì vậy không mô tả đây là một giới hạn tần số cứng trong mọi trường hợp. Độ mượt thực tế còn phụ thuộc thời điểm nhận mẫu và tốc độ vẽ ở máy đối thủ.
 
-Use Case xác định chức năng và tác nhân ở ranh giới phân hệ. Activity thể hiện bước xử lý và nhánh điều kiện. Sequence thể hiện thứ tự tương tác giữa các đối tượng. Component trình bày nhóm thành phần và phụ thuộc. Báo cáo dùng đúng 14 biểu đồ được giao; ảnh chụp giao diện ở chương triển khai là minh họa sản phẩm, không phải biểu đồ UML bổ sung. Nguồn PlantUML được giữ cùng ảnh SVG và PNG để nhóm có thể điều chỉnh [11].
+Khi thả gậy với điều kiện hợp lệ, máy đánh gửi thông số cú đánh và áp dụng mô phỏng ngay tại chỗ. Server kiểm tra quyền lượt rồi chuyển thông số tới đối thủ. Máy đối thủ đưa cú đánh vào quá trình mô phỏng của mình. Cách làm này phản hồi nhanh cho người thao tác nhưng chưa có bước xác nhận rằng hai máy đã bắt đầu từ một trạng thái bàn hoàn toàn giống nhau.
 
-# KIẾN TRÚC VÀ THIẾT KẾ CHUNG
+## 4.5. Mô phỏng, chuyển lượt và kết thúc trận
 
-## Các thành phần và đường đi dữ liệu
+Trong khi bi chuyển động, PhysicsEngine cập nhật vị trí, ma sát, va chạm và kiểm tra lỗ. Phiên bản hiện tại chia mỗi update thành 10 bước con, với các hệ số ma sát và phục hồi phục vụ mô hình trò chơi. Đây không phải bộ tham số thực nghiệm bảo đảm mô phỏng vật lý chính xác tuyệt đối.
 
-| Thành phần | Trách nhiệm | Liên kết chính |
-| --- | --- | --- |
-| Client JavaFX | Điều hướng, form, bàn chơi, mô phỏng và âm thanh | Gửi/nhận qua NetworkClient |
-| NetworkClient và protocol | Kết nối, đọc/ghi payload, callback và đo RTT | TCP đến ClientHandler; UDP discovery |
-| ServerMain và ClientHandler | Nhận kết nối, quản lý phiên và điều phối yêu cầu | AuthManager, LobbyManager, GameRoom, DatabaseManager |
-| LobbyManager và GameRoom | Ghép cặp, quản lý phòng, quyền lượt và kết quả | Hai ClientHandler của trận |
-| AuthManager và DatabaseManager | Xác thực, hồ sơ và lưu trữ | PostgreSQL qua JDBC |
-| PostgreSQL | players, match_history, friendships, messages | Máy chủ ứng dụng truy cập; client không kết nối DB trực tiếp |
+Sau khi các bi dừng, client đánh giá bi vào lỗ, lỗi và điều kiện kết thúc. Nếu trận tiếp tục, thông báo PHYSICS_DONE cho biết khả năng giữ lượt và trạng thái phạm lỗi; server xử lý rồi phát TURN_CHANGE. Khi có kết quả theo logic hiện tại, server xử lý kết thúc và cập nhật dữ liệu người chơi. Màn hình kết quả là phần thể hiện cuối cùng của chuỗi xử lý này.
 
-Một thao tác đăng nhập bắt đầu từ LoginScene, được NetworkClient tuần tự hóa, ClientHandler phân phối đến phần xác thực, DatabaseManager truy vấn tài khoản và kết quả được trả lại client. Giao diện chỉ chuyển cảnh khi xử lý phản hồi phù hợp. Với cú đánh, đường đi khác: GameScene vừa gửi thông số vừa mô phỏng tại máy đánh; GameRoom chuyển thông số sang đối thủ và xử lý báo cáo cuối lượt.
+Điểm quan trọng là server hiện chưa tự mô phỏng va chạm để kiểm chứng toàn bộ bàn. Hai client cũng chưa chốt snapshot vị trí 16 bi kèm xác nhận. Vì vậy, chuyển lượt thành công chỉ chứng minh bước điều phối đã diễn ra, chưa đủ chứng minh hai bàn luôn hội tụ. Đánh giá tính nhất quán cần quan sát cả trạng thái cuối cú đánh, không chỉ gói đổi lượt.
 
-## Hợp đồng liên kết bốn phân hệ
+Kết quả trận liên quan đồng thời lịch sử, điểm kinh nghiệm và thống kê thắng/thua. Mã hiện tại thưởng 100 EXP cho người thắng, level được tính bằng floor(EXP/200)+1. Các bước ghi này chưa được bao trọn trong một transaction, nên cần hoàn thiện để tránh kết quả lưu một phần nếu lỗi phát sinh giữa chừng.
 
-| Điểm bàn giao | Bên cung cấp → bên sử dụng | Điều cần thống nhất |
-| --- | --- | --- |
-| Dữ liệu tài khoản | TV2 → TV4, qua TV1 | Trạng thái thành công/thất bại và các trường hồ sơ |
-| Tạo trận | TV1 → TV3 và TV4 | Đối thủ, seed, thông tin trước trận và trạng thái sẵn sàng |
-| Ngắm và đánh | TV4/TV3 → TV1 → TV3/TV4 đối thủ | Góc, lực, xoáy, tọa độ bi cái và quyền lượt |
-| Kết quả | TV3/TV1 → TV2 → TV4 | Người thắng/thua, EXP và thông báo kết thúc |
-| Cá nhân hóa | TV4 → TV2, qua TV1 | Avatar/skin, quyền theo level và phản hồi lưu |
-| Bạn bè và chat | TV4 → TV2, qua TV1 | Định danh đối tượng, dữ liệu hiển thị và vòng đời yêu cầu |
+## 4.6. Luyện tập và cá nhân hóa trải nghiệm
 
-Ma trận này là ranh giới phối hợp trong báo cáo. Một lớp có thể tham gia nhiều đường đi; ví dụ GameScene vừa thuộc phần trình bày của TV4 vừa gọi engine của TV3. Vì vậy, trách nhiệm được phân theo chức năng, không áp đặt mỗi lớp chỉ thuộc duy nhất một người.
+Ở chế độ solo, người chơi sử dụng bàn và engine cục bộ mà không cần đối thủ. Giao diện ẩn khung đối thủ và loại phần đó khỏi bố cục. Chế độ này cho phép làm quen với ngắm, lực và xoáy, nhưng không thay thế thử nghiệm tương tác giữa hai client qua mạng.
 
-## Thiết kế dữ liệu và tính toàn vẹn
+Avatar và skin gậy được chọn trong SettingsDialog. Server kiểm tra điều kiện level trước khi lưu lựa chọn vào hồ sơ; các tùy chọn âm thanh được SoundManager áp dụng cục bộ và lưu bằng Preferences. VFX được điều khiển bằng cờ tại client. Như vậy, cá nhân hóa kết hợp phần dữ liệu tài khoản và phần trải nghiệm riêng trên mỗi máy.
 
-players là bảng trung tâm, có định danh tài khoản, email, username, mật khẩu băm, EXP, level, thắng/thua và tùy chọn avatar/gậy. match_history tham chiếu hai người thắng/thua. friendships dùng cặp user_id/friend_id làm khóa; messages có sender_id và receiver_id tham chiếu players. Những liên kết này hỗ trợ truy vấn dữ liệu theo người chơi và tránh tham chiếu tới tài khoản không tồn tại khi ràng buộc được thực thi.
+Giao diện hiện cập nhật lựa chọn và đóng hộp thoại trước khi có xác nhận lưu hoàn chỉnh. Cùng với sai lệch định dạng SETTINGS_RESPONSE, điều này cho thấy cần phân biệt việc đã nhìn thấy thay đổi với việc đã lưu thành công. Sau khi hoàn thiện luồng phản hồi, hệ thống cần kiểm tra lại khả năng giữ tùy chọn qua lần đăng nhập tiếp theo.
 
-Các ràng buộc hiện có chưa thay thế toàn bộ quy tắc nghiệp vụ. Cột status của friendships là varchar, không có CHECK giới hạn tập trạng thái trong schema. UNIQUE của username gốc cũng không tự tạo tính duy nhất theo LOWER(username). Nếu ứng dụng tra cứu không phân biệt hoa/thường thì cần xem xét ràng buộc tương ứng và tình huống hai yêu cầu đồng thời. Đây là điểm cần cải thiện của thiết kế lưu trữ, không phải kết quả một bài thử tải đã hoàn tất.
+## 4.7. Sự liên kết của toàn bộ quy trình
 
-## Các gói tiêu biểu và trạng thái phiên
+Từ kết nối đến kết thúc trận, cùng một thao tác thường đi qua nhiều thành phần. Hướng gậy là ví dụ rõ: thao tác chuột trở thành dữ liệu ngắm, được truyền tới đối thủ và chuyển thành hình vẽ; cú đánh tiếp theo sử dụng các thông số đó để mô phỏng và tạo kết quả lượt. Tính đúng đắn của từng bước chỉ có ý nghĩa khi chúng phối hợp đúng trong toàn bộ phiên chơi.
 
-| Packet/luồng | Payload hoặc vai trò | Liên hệ |
-| --- | --- | --- |
-| PING | long timestamp; phản hồi giữ timestamp để tính RTT | TV1, HUD của TV4 |
-| CUE_AIM | boolean và 4 double; 34 byte kể cả mã loại | Ngắm, lực tương đối và xoáy |
-| CUE_SHOT | 6 double; 49 byte kể cả mã loại | Cú đánh của người có lượt |
-| GAME_STATE | Chuyển thông số cú đánh sang đối thủ | Mô phỏng cục bộ của đối thủ |
-| PHYSICS_DONE | keepTurn và isFoul | Báo kết thúc mô phỏng để đổi/giữ lượt |
-| SETTINGS_UPDATE / RESPONSE | Yêu cầu lưu tùy chọn và trạng thái trả về | TV2, TV4; có sai lệch parser đã ghi nhận |
+Phần triển khai dưới đây minh họa quy trình bằng môi trường chạy và các màn hình thực tế. Phần đánh giá sau đó kiểm tra lại các mắt xích đã hoạt động, nêu lỗi còn tồn tại và xác định phạm vi nghiệm thu tiếp theo.
 
-Giao thức hiện có 47 mã loại. Các trạng thái nghiệp vụ có thể đọc theo chuỗi: đã kết nối, đã xác thực, đang ở sảnh, đang chờ ghép/lời mời, đã vào phòng, chờ sẵn sàng, thi đấu và kết thúc. Đây là cách diễn giải vòng đời để phân tích; mã hiện tại chưa có một máy trạng thái thống nhất bảo vệ mọi chuyển tiếp. Các tình huống READY lặp hoặc phản hồi lời mời sai tên cho thấy cần kiểm tra điều kiện chuyển trạng thái ở server.
+# CHƯƠNG 5. TRIỂN KHAI VÀ MINH HỌA SẢN PHẨM
 
-## Ranh giới triển khai và kiểm chứng
-
-Server chưa có handshake thương lượng phiên bản, token lượt, sequence number cho cú đánh hoặc snapshot/ACK để chốt toàn bộ bàn. Client gửi mẫu ngắm theo ngưỡng thời gian và mức thay đổi; các đường gửi cưỡng bức có thể vượt quy tắc hạn tần thông thường. Do đó, không suy luận rằng mọi luồng luôn bị giới hạn cứng ở 30 mẫu/giây.
-
-Bốn phần tiếp theo trình bày chi tiết đúng phạm vi của từng TV. Phần triển khai sau đó ghép các chức năng thành quy trình sử dụng chung; phần kiểm thử đối chiếu những gì đã chạy và những gì còn cần kiểm tra trước khi nghiệm thu.
-
-
-# PHẦN 1. TV1 — QUẢN LÝ KẾT NỐI & GIAO THỨC TRUYỀN TIN
-
-Thành viên phụ trách: **TV1**. Họ tên/MSSV: [Bổ sung]. Phạm vi: **7 use case**, **3 biểu đồ**.
-
-## 1.1. Phạm vi và ranh giới trách nhiệm
-
-TV1 phụ trách đường đi dữ liệu từ client đến server, khám phá máy chủ, định dạng packet, đo độ trễ, ghép trận và vòng đời kết nối. Các lớp chính là NetworkClient, Packet, PacketType, ServerMain, ClientHandler và LobbyManager. Điều kiện xác thực và quyết định ghi dữ liệu thuộc TV2; việc vẽ màn hình thuộc TV4.
-
-Giao thức có một byte mã loại và các trường tuần tự big-endian. Chuỗi dùng int độ dài cùng UTF-8, giới hạn đọc 65.536 byte. TCP chỉ bảo toàn luồng byte và thứ tự, nên bên nhận phải đọc chính xác payload. Client hiện ghi/flush trực tiếp; chưa có hàng đợi ghi giới hạn riêng hoặc handshake xác nhận phiên bản.
-
-CUE_AIM mang một boolean và bốn double, tổng 34 byte cả mã gói. CUE_SHOT mang sáu double, tổng 49 byte. PING có long timestamp, gửi ngay lúc kết nối rồi mỗi hai giây. Các con số này mô tả định dạng/lịch gửi trong mã, không phải kết quả đo băng thông Internet.
-
-## 1.2. Danh mục use case
-
-| Mã | Tên use case | Tác nhân chính |
-| --- | --- | --- |
-| UC-C01 | Thiết lập kết nối TCP | Người chơi |
-| UC-C02 | Khám phá server trong LAN | Người chơi |
-| UC-C03 | Gửi và nhận packet nhị phân | Người chơi thông qua chức năng ứng dụng |
-| UC-C04 | Đo độ trễ RTT | Người chơi |
-| UC-C05 | Ghép trận ngẫu nhiên | Người chơi và đối thủ |
-| UC-C06 | Thách đấu trực tiếp | Người mời và người nhận |
-| UC-C07 | Ngắt kết nối và giải phóng phiên | Người chơi, hoặc kết nối bị gián đoạn |
-
-## 1.3. Đặc tả use case
-
-### UC-C01 — Thiết lập kết nối TCP
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Đã có địa chỉ/cổng server và mạng khả dụng.
-
-**Luồng chính:**
-
-1. Nhập hoặc nạp địa chỉ.
-2. Mở socket với timeout kết nối 2,5 giây.
-3. Tạo stream.
-4. Khởi động luồng nhận và ping.
-5. Lưu địa chỉ.
-
-**Ngoại lệ/giới hạn:** Không kết nối được: báo lỗi; người chơi sửa cấu hình hoặc thử lại. Chưa có handshake phiên bản.
-
-**Hậu điều kiện:** Có kết nối TCP để thực hiện yêu cầu nghiệp vụ.
-
-**Mã nguồn liên quan:** NetworkClient.connect; ServerConfigDialog; ServerMain.main.
-
-### UC-C02 — Khám phá server trong LAN
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Client và server cùng vùng mạng hỗ trợ discovery.
-
-**Luồng chính:**
-
-1. Gửi BILLIARDS_DISCOVER qua UDP 12346.
-2. Nhận BILLIARDS_SERVER:12345.
-3. Sử dụng địa chỉ nhận để kết nối TCP.
-
-**Ngoại lệ/giới hạn:** Không có phản hồi: người chơi nhập địa chỉ thủ công; discovery không bảo đảm tìm server qua Internet.
-
-**Hậu điều kiện:** Xác định được địa chỉ server hoặc quay về nhập thủ công.
-
-**Mã nguồn liên quan:** NetworkClient: UDP discovery; ServerMain.startUdpDiscoveryListener.
-
-### UC-C03 — Gửi và nhận packet nhị phân
-
-**Tác nhân:** Người chơi thông qua chức năng ứng dụng.
-
-**Tiền điều kiện:** Socket đang mở; hai phía dùng định dạng tương thích.
-
-**Luồng chính:**
-
-1. Ghi byte PacketType và các trường.
-2. Flush.
-3. Phía nhận đọc trọn payload theo loại rồi phân phối tới handler/callback.
-
-**Ngoại lệ/giới hạn:** Payload sai hoặc stream kết thúc có thể gây IOException; SETTINGS_RESPONSE hiện có lệch định dạng được ghi ở phụ lục kiểm chứng.
-
-**Hậu điều kiện:** Yêu cầu được chuyển đến đúng bộ phận khi đọc thành công.
-
-**Mã nguồn liên quan:** NetworkClient.readPacketPayload; Packet; PacketType; ClientHandler.handlePacket.
-
-### UC-C04 — Đo độ trễ RTT
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Socket đang hoạt động.
-
-**Luồng chính:**
-
-1. Client gửi PING kèm long timestamp ngay khi kết nối và định kỳ hai giây.
-2. Server trả timestamp.
-3. Client tính chênh lệch để hiển thị.
-
-**Ngoại lệ/giới hạn:** Không nhận lại ping: không có số đo mới; đây chưa phải chính sách timeout đọc 20 giây.
-
-**Hậu điều kiện:** Có giá trị RTT phục vụ hiển thị, không thay đổi luật chơi.
-
-**Mã nguồn liên quan:** NetworkClient.sendPing/listenLoop; ClientHandler.handlePing.
-
-### UC-C05 — Ghép trận ngẫu nhiên
-
-**Tác nhân:** Người chơi và đối thủ.
-
-**Tiền điều kiện:** Đã đăng nhập; chưa có phòng.
-
-**Luồng chính:**
-
-1. Gửi FIND_MATCH.
-2. Đưa vào queue nếu chưa có.
-3. Khi đủ hai người, tạo GameRoom và gửi MATCH_FOUND cho cả hai.
-
-**Ngoại lệ/giới hạn:** CANCEL_FIND xóa khỏi queue; người đã có phòng hoặc đã nằm trong queue không được thêm lặp.
-
-**Hậu điều kiện:** Ghép được phòng hai người hoặc tiếp tục chờ/hủy tìm.
-
-**Mã nguồn liên quan:** LobbyManager.addToQueue/removeFromQueue/createGame; MatchmakingScene.
-
-### UC-C06 — Thách đấu trực tiếp
-
-**Tác nhân:** Người mời và người nhận.
-
-**Tiền điều kiện:** Người mời đăng nhập; có tên người nhận online.
-
-**Luồng chính:**
-
-1. Gửi tên người nhận.
-2. Server trim và tra không phân biệt hoa thường.
-3. Phát lời mời.
-4. Nhận accept.
-5. Xóa queue và tạo phòng khi hợp lệ.
-
-**Ngoại lệ/giới hạn:** Tên rỗng/tự mời/offline/bận hoặc từ chối/hết hạn đều thất bại; client đếm 10 giây, server chờ 15 giây.
-
-**Hậu điều kiện:** Có MATCH_FOUND hoặc thông báo không tạo trận; trường hợp phản hồi sai tên còn lỗi vòng đời timer.
-
-**Mã nguồn liên quan:** ClientHandler.handleChallengeRequest/handleChallengeResponse; LobbyManager.createGame.
-
-### UC-C07 — Ngắt kết nối và giải phóng phiên
-
-**Tác nhân:** Người chơi, hoặc kết nối bị gián đoạn.
-
-**Tiền điều kiện:** Có socket hoặc phiên đang hoạt động.
-
-**Luồng chính:**
-
-1. Người chơi ngắt hoặc server phát hiện kết thúc stream.
-2. Xóa online/queue.
-3. Hủy timer lời mời.
-4. Xử lý phòng và đóng socket.
-
-**Ngoại lệ/giới hạn:** Ngắt trong phòng: người còn lại thắng theo quy tắc hiện có; không có phục hồi ván cũ sau reconnect.
-
-**Hậu điều kiện:** Phiên được dọn theo logic cleanup; không khẳng định mọi lỗi mạng được phát hiện ngay.
-
-**Mã nguồn liên quan:** NetworkClient.disconnect/listenLoop; ClientHandler.cleanup; GameRoom.handleDisconnect.
-
-## 1.4. Biểu đồ UML của phân hệ
-
-### Biểu đồ 1.1 — Use Case
-
-Phạm vi: UC-C01, UC-C02, UC-C03, UC-C04, UC-C05, UC-C06, UC-C07.
-
-![Hình 1.1 — TV1 • Các use case thuộc phân hệ. Loại: Use Case; dựng từ mã nguồn 00bf1cc.](uml/c_usecase.png)
-
-### Biểu đồ 1.2 — Sequence
-
-Phạm vi: UC-C01, UC-C03, UC-C04.
-
-![Hình 1.2 — TV1 • Kết nối TCP và trao đổi PING. Loại: Sequence; dựng từ mã nguồn 00bf1cc.](uml/c_sequence.png)
-
-### Biểu đồ 1.3 — Activity
-
-Phạm vi: UC-C06, UC-C07.
-
-![Hình 1.3 — TV1 • Điều phối thách đấu trực tiếp. Loại: Activity; dựng từ mã nguồn 00bf1cc.](uml/c_activity.png)
-
-## 1.5. Liên hệ triển khai và giới hạn
-
-Sơ đồ Sequence 1.2 tập trung thiết lập TCP và ping, còn Activity 1.3 tập trung lời mời thách đấu. Các use case khác vẫn được thể hiện trong Use Case 1.1 và đặc tả riêng. Timer lời mời server là 15 giây; hộp thoại client đếm 10 giây. Nhánh phản hồi sai tên trong Activity được giữ lại vì đó là hành vi hiện có, không mô tả như đã sửa.
-
-Các mối liên hệ xuyên phân hệ: sau UC-C01, TV2 xử lý UC-D01/UC-D02; UC-C05/UC-C06 tạo ngữ cảnh để TV3 thực hiện UC-G01; UC-C03 vận chuyển packet cho tất cả các phân hệ. Việc ngắt kết nối UC-C07 có thể kích hoạt ghi kết quả UC-D04 theo quy tắc phòng hiện tại.
-
-# PHẦN 2. TV2 — XÁC THỰC & QUẢN LÝ DỮ LIỆU
-
-Thành viên phụ trách: **TV2**. Họ tên/MSSV: [Bổ sung]. Phạm vi: **7 use case**, **4 biểu đồ**.
-
-## 2.1. Phạm vi và ranh giới trách nhiệm
-
-TV2 phụ trách xác thực, kiểm tra quyền ghi hồ sơ và các thao tác dữ liệu bền vững qua JDBC. AuthManager băm mật khẩu SHA-256 cùng salt ngẫu nhiên 16 byte. DatabaseManager thao tác các bảng players, match_history, friendships và messages trong PostgreSQL. Dữ liệu GUI được hiển thị bởi TV4; TV2 cung cấp kết quả và trạng thái để GUI sử dụng.
-
-Email được trim và chuyển thường; tra cứu đăng nhập dùng LOWER(username) hoặc LOWER(email). Mã hiện tại chưa kiểm tra định dạng email ở server tương đương client, chưa xác minh quyền sở hữu email bằng thư/OTP và chưa có TLS. Đây là mô tả giới hạn thực tế, không phải tính năng bảo mật đã triển khai.
-
-EXP thắng trận là 100; level = floor(EXP/200)+1. DatabaseManager giữ một Connection chung và recordMatchResult chưa bao các câu SQL trong transaction hoàn chỉnh. Activity 2.3 thể hiện ghi tuần tự và ghi chú việc không tự rollback toàn bộ khi lỗi giữa chừng.
-
-## 2.2. Danh mục use case
-
-| Mã | Tên use case | Tác nhân chính |
-| --- | --- | --- |
-| UC-D01 | Đăng ký tài khoản | Người chơi mới |
-| UC-D02 | Đăng nhập bằng tên hoặc email | Người chơi |
-| UC-D03 | Lưu avatar và skin gậy | Người chơi đã đăng nhập |
-| UC-D04 | Ghi kết quả và cập nhật EXP/level | GameRoom (tác nhân hệ thống) |
-| UC-D05 | Truy vấn bảng xếp hạng | Người chơi |
-| UC-D06 | Quản lý quan hệ bạn bè | Người chơi và người được mời kết bạn |
-| UC-D07 | Lưu và truy vấn tin nhắn | Người gửi và người nhận |
-
-## 2.3. Đặc tả use case
-
-### UC-D01 — Đăng ký tài khoản
-
-**Tác nhân:** Người chơi mới.
-
-**Tiền điều kiện:** Kết nối server và PostgreSQL khả dụng.
-
-**Luồng chính:**
-
-1. Nhận email, username, mật khẩu.
-2. Kiểm tra cơ bản.
-3. Băm cùng salt.
-4. Trim/chuyển thường email.
-5. Kiểm tra trùng và INSERT players.
-
-**Ngoại lệ/giới hạn:** Email/username trùng hoặc mật khẩu quá ngắn bị từ chối; server chưa kiểm tra định dạng email tương đương client.
-
-**Hậu điều kiện:** Tạo tài khoản với mật khẩu băm hoặc trả mã lỗi.
-
-**Mã nguồn liên quan:** AuthManager.register/hashPassword; DatabaseManager.register.
-
-### UC-D02 — Đăng nhập bằng tên hoặc email
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Tài khoản đã tồn tại; server kết nối DB.
-
-**Luồng chính:**
-
-1. Tra LOWER(username) hoặc LOWER(email).
-2. Xác minh hash với salt.
-3. Tạo thông tin phiên và trả hồ sơ.
-
-**Ngoại lệ/giới hạn:** Sai mật khẩu/không tìm thấy: trả thất bại; định danh trùng chéo username–email chưa được giải quyết tường minh.
-
-**Hậu điều kiện:** Có phiên xác thực khi thành công.
-
-**Mã nguồn liên quan:** AuthManager.login/verifyPassword; DatabaseManager.getPlayerByUsername; ClientHandler.handleLogin.
-
-### UC-D03 — Lưu avatar và skin gậy
-
-**Tác nhân:** Người chơi đã đăng nhập.
-
-**Tiền điều kiện:** Có phiên và lựa chọn tùy chỉnh.
-
-**Luồng chính:**
-
-1. Nhận avatarId, cueColor/skinId.
-2. Kiểm tra điều kiện cấp độ bằng CueSkinConfig.
-3. Cập nhật DB và thông tin phiên.
-4. Trả boolean.
-
-**Ngoại lệ/giới hạn:** Không đủ cấp hoặc lỗi DB: trả false; client đang đọc thừa string trong SETTINGS_RESPONSE nên phản hồi có thể không được xử lý đúng.
-
-**Hậu điều kiện:** DB/phiên cập nhật khi thành công; không khẳng định UI đã xác nhận được.
-
-**Mã nguồn liên quan:** ClientHandler.handleSettingsUpdate; CueSkinConfig; DatabaseManager.updateSettings.
-
-### UC-D04 — Ghi kết quả và cập nhật EXP/level
-
-**Tác nhân:** GameRoom (tác nhân hệ thống).
-
-**Tiền điều kiện:** GameRoom đã chọn người thắng/thua.
-
-**Luồng chính:**
-
-1. Đặt gameFinished.
-2. Cộng thắng và 100 EXP.
-3. Tính level=floor(EXP/200)+1.
-4. Tăng thua.
-5. INSERT match_history.
-6. Nạp lại hồ sơ.
-
-**Ngoại lệ/giới hạn:** DB lỗi giữa các câu lệnh có thể để cập nhật dở dang vì chưa có transaction bao trọn.
-
-**Hậu điều kiện:** Kết quả được ghi theo các câu lệnh thành công; cờ phòng hạn chế lặp trong phiên.
-
-**Mã nguồn liên quan:** GameRoom.endGame/handleDisconnect; DatabaseManager.recordMatchResult.
-
-### UC-D05 — Truy vấn bảng xếp hạng
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Có dữ liệu players và kết nối DB.
-
-**Luồng chính:**
-
-1. Nhận LEADERBOARD_REQUEST.
-2. Lấy người chơi theo exp giảm dần với giới hạn.
-3. Đóng gói chuỗi và trả client.
-
-**Ngoại lệ/giới hạn:** Lỗi DB hoặc chưa có dữ liệu: xử lý kết quả trống theo mã hiện tại; chưa kiểm thử tải lớn.
-
-**Hậu điều kiện:** Client nhận dữ liệu xếp hạng để dựng giao diện.
-
-**Mã nguồn liên quan:** DatabaseManager.getLeaderboard; ClientHandler.handleLeaderboard.
-
-### UC-D06 — Quản lý quan hệ bạn bè
-
-**Tác nhân:** Người chơi và người được mời kết bạn.
-
-**Tiền điều kiện:** Tài khoản hợp lệ; dữ liệu người nhận tồn tại.
-
-**Luồng chính:**
-
-1. Tìm người chơi, tạo lời mời.
-2. Chấp nhận/từ chối.
-3. Đọc danh sách.
-4. Xóa quan hệ theo yêu cầu.
-
-**Ngoại lệ/giới hạn:** Người nhận không tồn tại hoặc quan hệ không phù hợp: trả trạng thái thất bại; status chưa có CHECK enum trong schema.
-
-**Hậu điều kiện:** Bảng friendships phản ánh thao tác được chấp nhận.
-
-**Mã nguồn liên quan:** DatabaseManager: friendship methods; ClientHandler: friend handlers; schema.sql.
-
-### UC-D07 — Lưu và truy vấn tin nhắn
-
-**Tác nhân:** Người gửi và người nhận.
-
-**Tiền điều kiện:** Hai tài khoản được xác định theo quy tắc hiện tại.
-
-**Luồng chính:**
-
-1. Lưu tin vào messages.
-2. Chuyển thông báo tới client.
-3. Truy vấn lịch sử giới hạn và trả chuỗi dữ liệu.
-
-**Ngoại lệ/giới hạn:** Lịch sử truyền chưa có conversation ID/message ID phục vụ UI; không suy ra mọi phản hồi muộn được phân biệt.
-
-**Hậu điều kiện:** Tin nhắn được lưu hoặc lịch sử được trả theo khả năng DB.
-
-**Mã nguồn liên quan:** DatabaseManager.getChatHistory và thao tác messages; ClientHandler.handleChatMessage/handleChatHistory.
-
-## 2.4. Biểu đồ UML của phân hệ
-
-### Biểu đồ 2.1 — Use Case
-
-Phạm vi: UC-D01, UC-D02, UC-D03, UC-D04, UC-D05, UC-D06, UC-D07.
-
-![Hình 2.1 — TV2 • Các use case thuộc phân hệ. Loại: Use Case; dựng từ mã nguồn 00bf1cc.](uml/d_usecase.png)
-
-### Biểu đồ 2.2 — Activity
-
-Phạm vi: UC-D01.
-
-![Hình 2.2 — TV2 • Đăng ký và lưu tài khoản. Loại: Activity; dựng từ mã nguồn 00bf1cc.](uml/d_register_activity.png)
-
-### Biểu đồ 2.3 — Activity
-
-Phạm vi: UC-D04.
-
-![Hình 2.3 — TV2 • Ghi kết quả, EXP và lịch sử. Loại: Activity; dựng từ mã nguồn 00bf1cc.](uml/d_result_activity.png)
-
-### Biểu đồ 2.4 — Sequence
-
-Phạm vi: UC-D02.
-
-![Hình 2.4 — TV2 • Đăng nhập bằng username hoặc email. Loại: Sequence; dựng từ mã nguồn 00bf1cc.](uml/d_login_sequence.png)
-
-## 2.5. Liên hệ triển khai và giới hạn
-
-Bốn biểu đồ của TV2 gồm Use Case tổng thể, Activity đăng ký, Activity ghi kết quả và Sequence đăng nhập. Không thêm ERD thành biểu đồ thứ năm; cấu trúc lưu trữ được tóm tắt bằng bảng dưới đây để giữ đúng định mức.
-
-| Bảng | Trường/ràng buộc chính | Use case sử dụng |
-| --- | --- | --- |
-| players | id PK; email/username UNIQUE; password_hash; exp, level, wins, losses; avatar_id, cue_color | UC-D01–UC-D05 |
-| match_history | id PK; winner_id và loser_id FK; exp_gained; played_at | UC-D04 |
-| friendships | Khóa kép user_id/friend_id; status; created_at | UC-D06 |
-| messages | id PK; sender_id/receiver_id FK; content; is_read; sent_at | UC-D07 |
-
-UNIQUE trên username gốc chưa thay cho UNIQUE trên LOWER(username) khi có yêu cầu đồng thời. Việc lấy username hoặc email trong một truy vấn còn cần kiểm tra trùng chéo định danh. Hai điểm này là nhận xét từ mã/schema; không được đánh dấu như đã có bài thử đồng thời đầy đủ.
-
-# PHẦN 3. TV3 — GAMEPLAY & ENGINE VẬT LÝ
-
-Thành viên phụ trách: **TV3**. Họ tên/MSSV: [Bổ sung]. Phạm vi: **8 use case**, **3 biểu đồ**.
-
-## 3.1. Phạm vi và ranh giới trách nhiệm
-
-TV3 phụ trách bàn chơi, bi, ngắm/lực/xoáy, cú đánh, va chạm, xử lý lỗ và luật lượt. Ball biểu diễn x/y, vx/vy, spin và các trạng thái active/inPocket/isSinking. PhysicsEngine có sáu lỗ, xử lý 10 bước con trong mỗi update. Các hệ số hiện có gồm ma sát 0,985, phục hồi băng 0,78, phục hồi bi–bi 0,96.
-
-GameScene gọi update theo AnimationTimer khi physicsRunning. Chưa có bộ tích lũy thời gian cố định 1/60 giây trong phiên bản đang đối chiếu. Máy đánh mô phỏng ngay sau gửi CUE_SHOT; server chỉ chuyển thông số cho đối thủ. Người đánh báo PHYSICS_DONE hoặc CLAIM_WIN theo logic client; server chưa kiểm chứng va chạm bằng một mô phỏng riêng.
-
-MatchSeed dùng xáo 14 bi mục tiêu khác bi 8 và chia hai nhóm bảy bi. Đây là luật phân nhóm của dự án; không thể mô tả là luôn chia nhóm trơn/sọc chuẩn. Cùng seed không chứng minh mọi bi sau cú đánh sẽ khớp ở mọi tốc độ khung hình.
-
-## 3.2. Danh mục use case
-
-| Mã | Tên use case | Tác nhân chính |
-| --- | --- | --- |
-| UC-G01 | Khởi tạo bàn và phân nhóm bi | Hai người chơi |
-| UC-G02 | Đặt bi cái | Người đang có lượt |
-| UC-G03 | Ngắm và kéo lực gậy | Người đang có lượt và người quan sát |
-| UC-G04 | Chỉnh xoáy và thực hiện cú đánh | Người đang có lượt |
-| UC-G05 | Mô phỏng chuyển động và va chạm | GameScene (tác nhân hệ thống) |
-| UC-G06 | Xử lý bi vào lỗ và kết quả lượt | GameScene (tác nhân hệ thống) |
-| UC-G07 | Điều phối lượt và hết thời gian | Hai người chơi; GameRoom timer |
-| UC-G08 | Luyện tập solo | Người chơi |
-
-## 3.3. Đặc tả use case
-
-### UC-G01 — Khởi tạo bàn và phân nhóm bi
-
-**Tác nhân:** Hai người chơi.
-
-**Tiền điều kiện:** Client nhận GAME_START với chỉ số người chơi và seed.
-
-**Luồng chính:**
-
-1. Tạo 16 bi.
-2. Xáo 14 bi mục tiêu khác bi 8 theo matchSeed.
-3. Chia hai nhóm bảy bi.
-4. Thiết lập người có lượt.
-
-**Ngoại lệ/giới hạn:** READY hiện đếm số packet, nên một người có thể gửi lặp để mở trận; cùng seed chưa bảo đảm mô phỏng luôn đồng nhất.
-
-**Hậu điều kiện:** Có bàn và nhóm mục tiêu; luật phân nhóm là biến thể của dự án.
-
-**Mã nguồn liên quan:** GameRoom.playerReady/startGame; GameScene constructors.
-
-### UC-G02 — Đặt bi cái
-
-**Tác nhân:** Người đang có lượt.
-
-**Tiền điều kiện:** Client cho phép khai cuộc hoặc ball-in-hand.
-
-**Luồng chính:**
-
-1. Kéo/chọn vị trí.
-2. Client giới hạn vùng đặt.
-3. Gửi CUE_BALL_PLACED.
-4. Server kiểm tra người có lượt rồi chuyển tọa độ.
-
-**Ngoại lệ/giới hạn:** Không có quyền tại UI thì không đặt; server chưa có snapshot chuẩn để đối chiếu mọi vị trí.
-
-**Hậu điều kiện:** Client nhận cập nhật vị trí bi cái.
-
-**Mã nguồn liên quan:** GameScene.repositionCueBall và thao tác chuột; GameRoom.processCueBallPlaced.
-
-### UC-G03 — Ngắm và kéo lực gậy
-
-**Tác nhân:** Người đang có lượt và người quan sát.
-
-**Tiền điều kiện:** Bi chưa chạy; UI cho phép ngắm.
-
-**Luồng chính:**
-
-1. Tính góc theo chuột và tỷ lệ kéo.
-2. Gửi CUE_AIM có điều tiết.
-3. Đối thủ nội suy góc/lực để hiển thị.
-
-**Ngoại lệ/giới hạn:** Không đúng lượt: server bỏ qua; dữ liệu NaN hiện vẫn được chuyển tiếp nếu gửi trực tiếp.
-
-**Hậu điều kiện:** Người quan sát thấy trạng thái ngắm; chưa có token/sequence.
-
-**Mã nguồn liên quan:** GameScene.sendAimUpdateThrottled/startGameLoop; GameRoom.processCueAim.
-
-### UC-G04 — Chỉnh xoáy và thực hiện cú đánh
-
-**Tác nhân:** Người đang có lượt.
-
-**Tiền điều kiện:** Có hướng/lực hợp lệ ở client và bi cái hoạt động.
-
-**Luồng chính:**
-
-1. Chỉnh spinX/spinY.
-2. Thả chuột.
-3. Gửi sáu double CUE_SHOT.
-4. Chạy vật lý tại máy đánh.
-5. Server chuyển GAME_STATE cho đối thủ.
-
-**Ngoại lệ/giới hạn:** Cú kéo quá ngắn không tạo cú đánh; server chưa chặn cú đánh trùng trong cùng giai đoạn.
-
-**Hậu điều kiện:** Hai phía có thông số cú đánh; không có xác nhận server trước mô phỏng máy đánh.
-
-**Mã nguồn liên quan:** GameScene.onMouseReleased/applyCueShot; NetworkClient.sendCueShot; GameRoom.processCueShot.
-
-### UC-G05 — Mô phỏng chuyển động và va chạm
-
-**Tác nhân:** GameScene (tác nhân hệ thống).
-
-**Tiền điều kiện:** physicsRunning và danh sách bi đã khởi tạo.
-
-**Luồng chính:**
-
-1. Mỗi khung hình gọi PhysicsEngine.update.
-2. Thực hiện 10 bước con, di chuyển, ma sát, va chạm băng và bi–bi.
-
-**Ngoại lệ/giới hạn:** Tốc độ khung hình khác nhau có thể thay đổi tiến độ; hiện không có tích lũy bước thời gian cố định.
-
-**Hậu điều kiện:** Vị trí/vận tốc và hiệu ứng va chạm được cập nhật.
-
-**Mã nguồn liên quan:** PhysicsEngine.update/resolveWallCollision/resolveBallCollision; Ball.
-
-### UC-G06 — Xử lý bi vào lỗ và kết quả lượt
-
-**Tác nhân:** GameScene (tác nhân hệ thống).
-
-**Tiền điều kiện:** Bi đang được mô phỏng hoặc vừa dừng.
-
-**Luồng chính:**
-
-1. Kiểm tra sáu lỗ.
-2. Chạy hoạt ảnh chìm.
-3. Xác định active.
-4. Đánh giá phạm lỗi/giữ lượt và điều kiện bi 8 theo luật triển khai.
-
-**Ngoại lệ/giới hạn:** Client có thể phát CLAIM_WIN; server chưa kiểm chứng kết luận bằng mô phỏng vật lý riêng.
-
-**Hậu điều kiện:** Có trạng thái bi và thông tin gửi PHYSICS_DONE hoặc CLAIM_WIN.
-
-**Mã nguồn liên quan:** PhysicsEngine.checkPockets; Ball.startSinking; GameScene: kết thúc vật lý; GameRoom.endGame.
-
-### UC-G07 — Điều phối lượt và hết thời gian
-
-**Tác nhân:** Hai người chơi; GameRoom timer.
-
-**Tiền điều kiện:** Trận đã bắt đầu và chưa kết thúc.
-
-**Luồng chính:**
-
-1. Máy đánh gửi PHYSICS_DONE.
-2. Server giữ/đổi lượt.
-3. Client đếm 60 giây.
-4. Timer server 61,5 giây xử lý chưa đánh.
-
-**Ngoại lệ/giới hạn:** Timer bị hủy khi có cú đánh; chưa có timeout riêng chờ bản bàn và chưa có ACK hai client.
-
-**Hậu điều kiện:** Có quyền lượt mới hoặc giữ lượt theo thông tin nhận.
-
-**Mã nguồn liên quan:** GameRoom.onPhysicsDone/resetTurnTimer; GameScene.startGameLoop.
-
-### UC-G08 — Luyện tập solo
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Mở chế độ luyện tập từ sảnh.
-
-**Luồng chính:**
-
-1. Tạo GameScene isPractice.
-2. Đặt/ngắm/đánh và mô phỏng cục bộ.
-3. Hướng tới dọn bàn.
-4. Không tạo đối thủ mạng.
-
-**Ngoại lệ/giới hạn:** Chưa nghiệm thu mọi trường hợp dọn hết bàn; bố cục đối thủ bị ẩn và unmanaged.
-
-**Hậu điều kiện:** Người chơi luyện tập trong phiên cục bộ.
-
-**Mã nguồn liên quan:** SceneManager.showPractice; GameScene practice constructor.
-
-## 3.4. Biểu đồ UML của phân hệ
-
-### Biểu đồ 3.1 — Use Case
-
-Phạm vi: UC-G01, UC-G02, UC-G03, UC-G04, UC-G05, UC-G06, UC-G07, UC-G08.
-
-![Hình 3.1 — TV3 • Các use case thuộc phân hệ. Loại: Use Case; dựng từ mã nguồn 00bf1cc.](uml/g_usecase.png)
-
-### Biểu đồ 3.2 — Activity
-
-Phạm vi: UC-G02, UC-G03, UC-G04, UC-G05, UC-G06, UC-G07.
-
-![Hình 3.2 — TV3 • Một cú đánh và xử lý cuối lượt. Loại: Activity; dựng từ mã nguồn 00bf1cc.](uml/g_activity.png)
-
-### Biểu đồ 3.3 — Sequence
-
-Phạm vi: UC-G03, UC-G04, UC-G07.
-
-![Hình 3.3 — TV3 • Truyền cú đánh và đổi lượt hiện tại. Loại: Sequence; dựng từ mã nguồn 00bf1cc.](uml/g_sequence.png)
-
-## 3.5. Liên hệ triển khai và giới hạn
-
-Activity 3.2 mô tả đường đi từ quyền lượt tới mô phỏng và xử lý cuối cú đánh. Sequence 3.3 thể hiện rõ việc người đánh không chờ ACK từ server, server chỉ phát GAME_STATE cho đối thủ và không chốt snapshot cuối lượt.
-
-Giới hạn đã tái hiện ở kiểm tra trước: hai READY của một client có thể đủ mở trận; gói CUE_SHOT lặp được chuyển tiếp; góc NaN có thể được relay. Đó là nội dung cần hoàn thiện, không được lược bỏ để biến sơ đồ thành một thiết kế lý tưởng khác với mã hiện có. Solo UC-G08 là chế độ cục bộ và không cần đối thủ mạng.
-
-# PHẦN 4. TV4 — GIAO DIỆN & CÁ NHÂN HÓA
-
-Thành viên phụ trách: **TV4**. Họ tên/MSSV: [Bổ sung]. Phạm vi: **9 use case**, **4 biểu đồ**.
-
-## 4.1. Phạm vi và ranh giới trách nhiệm
-
-TV4 phụ trách tương tác, điều hướng, trình bày trạng thái và cá nhân hóa. Các lớp tiêu biểu gồm SceneManager, LoginScene, RegisterScene, LobbyScene, PreGameScene, GameScene, ResultScene, LeaderboardScene, SettingsDialog, AvatarManager, CueSkinManager và SoundManager. Giao diện tiêu thụ dữ liệu nghiệp vụ, không tự thay thế xác thực server hoặc cơ chế ghi bền vững.
-
-Lời mời thách đấu dùng popup có owner, modality và alwaysOnTop; thao tác Timeline được đưa về FX Application Thread. Kết quả lời mời dùng toast thay cho Alert chặn màn hình. Solo ẩn vsBadge, oppBox và oppBallsBox, đồng thời loại chúng khỏi bố cục bằng managed=false.
-
-Cá nhân hóa có hai đường xử lý: avatar/skin gửi SETTINGS_UPDATE tới server; âm thanh BGM/SFX/mute áp dụng cục bộ và lưu Preferences. VFX của gậy được điều khiển bằng cờ cục bộ. Không mô tả âm thanh hoặc VFX như packet gameplay mới nếu mã không gửi chúng.
-
-## 4.2. Danh mục use case
-
-| Mã | Tên use case | Tác nhân chính |
-| --- | --- | --- |
-| UC-UI01 | Điều hướng màn hình | Người chơi |
-| UC-UI02 | Hiển thị và kiểm tra form tài khoản | Người chơi |
-| UC-UI03 | Hiển thị sảnh và danh sách bạn bè | Người chơi |
-| UC-UI04 | Hiển thị hội thoại chat | Người chơi |
-| UC-UI05 | Hiển thị lời mời và màn hình trước trận | Người nhận lời mời hoặc người vừa ghép trận |
-| UC-UI06 | Hiển thị bàn chơi và HUD | Người chơi |
-| UC-UI07 | Hiển thị kết quả và bảng xếp hạng | Người chơi |
-| UC-UI08 | Chọn avatar và skin gậy | Người chơi |
-| UC-UI09 | Điều chỉnh âm thanh và hiệu ứng | Người chơi |
-
-## 4.3. Đặc tả use case
-
-### UC-UI01 — Điều hướng màn hình
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Ứng dụng JavaFX đã khởi tạo.
-
-**Luồng chính:**
-
-1. SceneManager đổi Scene theo đăng nhập, sảnh, tìm trận, trước trận, game và kết quả.
-
-**Ngoại lệ/giới hạn:** Callback đến muộn hoặc thay Scene cần quản lý vòng đời; chưa khẳng định mọi luồng chuyển cảnh đã kiểm thử.
-
-**Hậu điều kiện:** Người dùng ở màn hình phù hợp với thao tác/sự kiện.
-
-**Mã nguồn liên quan:** ClientMain; SceneManager.
-
-### UC-UI02 — Hiển thị và kiểm tra form tài khoản
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Đang ở LoginScene hoặc RegisterScene.
-
-**Luồng chính:**
-
-1. Nhập trường.
-2. Kiểm tra đủ dữ liệu, email, tên, mật khẩu xác nhận.
-3. Hiển thị lỗi hoặc gọi NetworkClient.
-
-**Ngoại lệ/giới hạn:** Regex email hiện chặn đuôi miền dài hơn 7 chữ cái; kiểm tra UI không thay kiểm tra server.
-
-**Hậu điều kiện:** Có thông báo hoặc yêu cầu đăng nhập/đăng ký được gửi.
-
-**Mã nguồn liên quan:** LoginScene; RegisterScene.doRegister.
-
-### UC-UI03 — Hiển thị sảnh và danh sách bạn bè
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Đã đăng nhập và mở LobbyScene.
-
-**Luồng chính:**
-
-1. Hiển thị hồ sơ.
-2. Refresh bạn bè 3,5 giây.
-3. Không dựng lại dữ liệu giống.
-4. Mở menu Nhắn tin/Thách đấu/Xóa bạn.
-
-**Ngoại lệ/giới hạn:** Đang mở menu: hoãn cập nhật; chuỗi A→B→A còn có thể áp dụng B cũ khi đóng.
-
-**Hậu điều kiện:** Sảnh/menu cập nhật theo callback; hạn chế hiện tại được ghi nhận.
-
-**Mã nguồn liên quan:** LobbyScene.updateFriendList/createFriendItem/startFriendAutoRefresh.
-
-### UC-UI04 — Hiển thị hội thoại chat
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Chọn một người để xem chat.
-
-**Luồng chính:**
-
-1. Mở panel, yêu cầu lịch sử.
-2. Hiển thị tin tự gửi và nhận.
-3. Cuộn xuống.
-4. Đối chiếu dòng khi lịch sử tới.
-
-**Ngoại lệ/giới hạn:** Hai tin giống nhau cùng phút có thể bị gộp; lịch sử trả muộn có thể vào sai cuộc trò chuyện.
-
-**Hậu điều kiện:** Có hội thoại hiển thị, chưa bảo đảm nhận diện mọi tin bằng ID.
-
-**Mã nguồn liên quan:** LobbyScene.showChatView/appendChatMessage/setupNetworkCallback.
-
-### UC-UI05 — Hiển thị lời mời và màn hình trước trận
-
-**Tác nhân:** Người nhận lời mời hoặc người vừa ghép trận.
-
-**Tiền điều kiện:** Có CHALLENGE_RECEIVE hoặc MATCH_FOUND.
-
-**Luồng chính:**
-
-1. Hiện popup nổi và đếm 10 giây.
-2. Gửi lựa chọn.
-3. Dùng toast cho kết quả.
-4. Khi MATCH_FOUND thì dừng refresh và chuyển PreGameScene.
-
-**Ngoại lệ/giới hạn:** Đếm hết tự từ chối; callback UI được chuyển về FX thread; server còn thời hạn riêng 15 giây.
-
-**Hậu điều kiện:** Popup đóng hoặc chuyển màn hình trước trận.
-
-**Mã nguồn liên quan:** LobbyScene.showChallengeReceivedDialog/showToast; PreGameScene.
-
-### UC-UI06 — Hiển thị bàn chơi và HUD
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Có GameScene đối kháng hoặc luyện tập.
-
-**Luồng chính:**
-
-1. Vẽ bàn/bi/gậy, lượt, lực, xoáy, thời gian và ping/FPS.
-2. Solo ẩn thông tin đối thủ và bỏ khung trống.
-
-**Ngoại lệ/giới hạn:** Số FPS/ping trên dữ liệu giả lập không phải benchmark; không tự quyết định luật từ thông tin hiển thị.
-
-**Hậu điều kiện:** Khung hình thể hiện trạng thái hiện có của client.
-
-**Mã nguồn liên quan:** GameScene.build/startGameLoop; Canvas; AvatarManager.
-
-### UC-UI07 — Hiển thị kết quả và bảng xếp hạng
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Có phản hồi GAME_OVER hoặc dữ liệu leaderboard.
-
-**Luồng chính:**
-
-1. Dựng kết quả thắng/thua/EXP.
-2. Hiển thị các dòng xếp hạng do server trả.
-3. Cho quay về màn hình tiếp theo.
-
-**Ngoại lệ/giới hạn:** Không có dữ liệu hoặc lỗi mạng cần thông báo; chưa có nghiệm thu toàn bộ UI bảng xếp hạng trong lần kiểm tra trước.
-
-**Hậu điều kiện:** Người dùng xem kết quả/xếp hạng từ dữ liệu server.
-
-**Mã nguồn liên quan:** ResultScene; LeaderboardScene; SceneManager.
-
-### UC-UI08 — Chọn avatar và skin gậy
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Mở SettingsDialog và có hồ sơ hiện tại.
-
-**Luồng chính:**
-
-1. Chọn avatar/skin.
-2. Xem preview và yêu cầu cấp độ.
-3. Lưu bằng SETTINGS_UPDATE.
-4. Chuyển việc ghi bền vững cho TV2.
-
-**Ngoại lệ/giới hạn:** Skin khóa bị hạn chế; server kiểm tra lại cấp; lỗi parser SETTINGS_RESPONSE có thể cản xác nhận thành công.
-
-**Hậu điều kiện:** Lựa chọn được gửi; trạng thái lưu thành công cần phản hồi đúng.
-
-**Mã nguồn liên quan:** SettingsDialog; AvatarManager; CueSkinManager; NetworkClient.sendSettingsUpdate.
-
-### UC-UI09 — Điều chỉnh âm thanh và hiệu ứng
-
-**Tác nhân:** Người chơi.
-
-**Tiền điều kiện:** Đang mở tab âm thanh/cài đặt.
-
-**Luồng chính:**
-
-1. Đổi BGM/SFX/mute.
-2. Thử âm thanh.
-3. Bật/tắt VFX gậy.
-4. SoundManager áp dụng và lưu các tùy chọn âm thanh vào Preferences.
-
-**Ngoại lệ/giới hạn:** Thiếu tài nguyên hoặc thiết bị âm thanh ảnh hưởng kết quả; VFX là cờ cục bộ, không khẳng định được lưu như âm thanh.
-
-**Hậu điều kiện:** Âm thanh/hiệu ứng thay đổi cục bộ, không tạo packet gameplay.
-
-**Mã nguồn liên quan:** SettingsDialog.buildAudioTab; SoundManager; CueSkinManager.setVfxEnabled.
-
-## 4.4. Biểu đồ UML của phân hệ
-
-### Biểu đồ 4.1 — Use Case
-
-Phạm vi: UC-UI01, UC-UI02, UC-UI03, UC-UI04, UC-UI05, UC-UI06, UC-UI07, UC-UI08, UC-UI09.
-
-![Hình 4.1 — TV4 • Các use case thuộc phân hệ. Loại: Use Case; dựng từ mã nguồn 00bf1cc.](uml/ui_usecase.png)
-
-### Biểu đồ 4.2 — Activity
-
-Phạm vi: UC-UI08, UC-UI09.
-
-![Hình 4.2 — TV4 • Cá nhân hóa avatar, gậy và âm thanh. Loại: Activity; dựng từ mã nguồn 00bf1cc.](uml/ui_activity.png)
-
-### Biểu đồ 4.3 — Sequence
-
-Phạm vi: UC-UI01, UC-UI03, UC-UI05.
-
-![Hình 4.3 — TV4 • Popup thách đấu, toast và chuyển cảnh. Loại: Sequence; dựng từ mã nguồn 00bf1cc.](uml/ui_sequence.png)
-
-### Biểu đồ 4.4 — Component
-
-Phạm vi: UC-UI01, UC-UI02, UC-UI03, UC-UI04, UC-UI05, UC-UI06, UC-UI07, UC-UI08, UC-UI09.
-
-![Hình 4.4 — TV4 • Thành phần giao diện và cá nhân hóa. Loại: Component; dựng từ mã nguồn 00bf1cc.](uml/ui_component.png)
-
-## 4.5. Liên hệ triển khai và giới hạn
-
-Component 4.4 là cách nhóm logic các lớp đang có; các hộp không đại diện microservice hoặc tiến trình triển khai riêng. NetworkClient là cầu nối với TV1; các thao tác lưu hồ sơ qua server thuộc TV2; GameScene đồng thời trình bày HUD và sử dụng logic TV3.
-
-Activity 4.2 phản ánh saveSettings hiện cập nhật session/callback cục bộ rồi đóng dialog, không đợi xác nhận DB. Phản hồi SETTINGS_RESPONSE hiện có lỗi đọc thừa string ở client. Vì vậy hậu điều kiện “đã hiển thị lựa chọn” không đồng nghĩa “đã lưu thành công và được xác nhận”. Sequence 4.3 tập trung popup, phản hồi, toast và chuyển cảnh trước trận.
-
-# TRIỂN KHAI VÀ HƯỚNG DẪN SỬ DỤNG
-
-## Môi trường và cấu trúc bàn giao
+## 5.1. Môi trường và cấu trúc bàn giao
 
 | Hạng mục | Cấu hình được mã/script sử dụng | Ghi chú triển khai |
 | --- | --- | --- |
@@ -1041,7 +249,7 @@ Activity 4.2 phản ánh saveSettings hiện cập nhật session/callback cục
 
 Thư mục client chứa giao diện, engine, protocol, assets và script build; server chứa phần kết nối, nghiệp vụ, dữ liệu và protocol; database chứa schema; reports chứa tài liệu và minh chứng. Các thư mục out/dist, SDK lớn và file EXE bị loại khỏi Git theo .gitignore hiện tại. Vì vậy, tải mã nguồn ZIP từ GitHub không đồng nghĩa đã tải được một bản EXE mới.
 
-## Chuẩn bị database và server
+## 5.2. Chuẩn bị database và server
 
 Với một môi trường phát triển mới, cài PostgreSQL và chạy schema bằng psql từ thư mục gốc dự án:
 
@@ -1055,7 +263,7 @@ Kiểm tra DB_URL, DB_USER và DB_PASSWORD trong DatabaseManager.java để kh�
 
 Mở Command Prompt tại thư mục server, chạy `compile.bat`, sau đó `run_server.bat`. Các script này dùng thư mục làm việc hiện tại và trỏ JDK tại `C:\Program Files\Java\jdk-17`. Người triển khai cần điều chỉnh đường dẫn nếu JDK nằm ở nơi khác. Giữ cửa sổ server để theo dõi lỗi trong quá trình thử nghiệm.
 
-## Biên dịch và đóng gói client EXE
+## 5.3. Biên dịch và đóng gói client EXE
 
 Máy phát triển cần đặt JavaFX Windows SDK đúng thư mục mà script yêu cầu. Từ thư mục client, có thể chạy `compile.bat` rồi `run_client.bat` để chẩn đoán trước khi đóng gói. Script chạy ưu tiên BilliardsClient.jar nếu file này tồn tại, nên phải build lại JAR khi cần kiểm tra mã mới; chỉ thay file .java không cập nhật binary đã có.
 
@@ -1068,7 +276,7 @@ Máy phát triển cần đặt JavaFX Windows SDK đúng thư mục mà script 
 
 Launcher giải nén dữ liệu vào `%LOCALAPPDATA%\BilliardsClubGame` rồi khởi chạy BilliardsClient.exe trong đó. Đường app-image cũng có thể dùng trực tiếp, nhưng cần giữ nguyên thư mục runtime, app và assets cùng launcher. Các bước trên là hướng dẫn từ script hiện có; lần viết báo cáo này không tạo hay phát hành EXE và chưa xác minh gói trên Windows sạch.
 
-## Quy trình sử dụng chung của hai người chơi
+## 5.4. Quy trình sử dụng chung của hai người chơi
 
 Hai máy mở cùng phiên bản client và chọn server. Khi thử hai client trên cùng một máy, có thể dùng localhost; khi thử hai máy khác nhau, client phải nhập IP LAN của máy chạy server. localhost ở máy thứ hai sẽ trỏ về chính máy đó. Nếu khám phá tự động không thấy server, kiểm tra IP, kết nối mạng và quyền truy cập cổng trước khi kết luận lỗi giao diện.
 
@@ -1078,53 +286,53 @@ Trên bàn chơi, người có lượt ngắm gậy, kéo lực và thả để 
 
 Avatar và skin được chỉnh qua SettingsDialog; skin còn phụ thuộc level được server kiểm tra. BGM, SFX và mute là tùy chọn cục bộ. Do lỗi parser SETTINGS_RESPONSE còn tồn tại, thao tác hiển thị thay đổi ngay tại client chưa đủ để kết luận hồ sơ đã được lưu và phản hồi hoàn tất; cần xác minh lại ở DB hoặc phiên đăng nhập sau trong đợt nghiệm thu.
 
-## Minh họa giao diện sản phẩm
+## 5.5. Minh họa giao diện sản phẩm
 
-Bảy hình dưới đây là ảnh JavaFX thực từ mã 00bf1cc, chụp ngày 26/10/2026 trên Linux/Xvfb. Tài khoản và nội dung là dữ liệu mẫu, transport dùng fixture để điều khiển callback. Chúng minh họa bố cục và phản hồi giao diện; không phải ảnh hai máy Windows thi đấu đầu cuối. Chỉ số ping/FPS trong ảnh không được dùng làm kết quả benchmark. Các ảnh được đánh số M1–M7 riêng với 14 biểu đồ UML.
+Bảy hình dưới đây là ảnh JavaFX thực từ mã 00bf1cc, chụp ngày 26/10/2026 trên Linux/Xvfb. Tài khoản và nội dung là dữ liệu mẫu, transport dùng fixture để điều khiển callback. Chúng minh họa bố cục và phản hồi giao diện; không phải ảnh hai máy Windows thi đấu đầu cuối. Chỉ số ping/FPS trong ảnh không được dùng làm kết quả benchmark. Các ảnh được đánh số theo chương; sơ đồ kỹ thuật được tập hợp tại Phụ lục B.
 
-### M1. Form đăng ký
+### Minh họa 5.1. Form đăng ký
 
-Form nhận thông tin tài khoản và phản hồi kiểm tra đầu vào, liên hệ UC-D01 và UC-UI02. Kiểm tra client hỗ trợ trải nghiệm nhập liệu nhưng không thay thế quy tắc xác thực đầu vào ở server.
+Form nhận thông tin tài khoản và phản hồi kiểm tra đầu vào. Kiểm tra client hỗ trợ trải nghiệm nhập liệu nhưng không thay thế quy tắc xác thực đầu vào ở server.
 
-![Hình M1 — Form đăng ký JavaFX; dữ liệu mẫu và transport giả lập, ngày 26/10/2026.](images/registration_actual.png)
+![Hình 5.1 — Form đăng ký JavaFX; dữ liệu mẫu và transport giả lập, ngày 26/10/2026.](images/registration_actual.png)
 
-### M2. Sảnh và menu bạn bè
+### Minh họa 5.2. Sảnh và menu bạn bè
 
-Menu bạn bè cung cấp ngữ cảnh thao tác trong sảnh, liên hệ UC-D06 và UC-UI03. Kịch bản kiểm tra có xác nhận menu được giữ khi refresh và cũng ghi nhận tình huống áp dụng dữ liệu chờ đã cũ.
+Menu bạn bè cung cấp ngữ cảnh thao tác trong sảnh. Kịch bản kiểm tra có xác nhận menu được giữ khi refresh và cũng ghi nhận tình huống áp dụng dữ liệu chờ đã cũ.
 
-![Hình M2 — Menu bạn bè trên giao diện thật; fixture dữ liệu, ngày 26/10/2026.](images/friend_menu_actual.png)
+![Hình 5.2 — Menu bạn bè trên giao diện thật; fixture dữ liệu, ngày 26/10/2026.](images/friend_menu_actual.png)
 
-### M3. Hội thoại chat
+### Minh họa 5.3. Hội thoại chat
 
-Giao diện hội thoại biểu diễn lịch sử và tin nhắn, liên hệ UC-D07 và UC-UI04. Ảnh thể hiện cách trình bày, không chứng minh việc nhận lịch sử bất đồng bộ đã đúng cho mọi lần chuyển bạn chat.
+Giao diện hội thoại biểu diễn lịch sử và tin nhắn. Ảnh thể hiện cách trình bày, không chứng minh việc nhận lịch sử bất đồng bộ đã đúng cho mọi lần chuyển bạn chat.
 
-![Hình M3 — Hội thoại với nội dung mẫu trên JavaFX, ngày 26/10/2026.](images/chat_actual.png)
+![Hình 5.3 — Hội thoại với nội dung mẫu trên JavaFX, ngày 26/10/2026.](images/chat_actual.png)
 
-### M4. Lời mời thách đấu
+### Minh họa 5.4. Lời mời thách đấu
 
-Popup lời mời nằm trên cửa sổ chủ và có bộ đếm; liên hệ UC-C06 và UC-UI05. Server và client có mốc timeout khác nhau, lần lượt 15 và 10 giây trong mã đối chiếu.
+Popup lời mời nằm trên cửa sổ chủ và có bộ đếm. Server và client có mốc timeout khác nhau, lần lượt 15 và 10 giây trong mã đối chiếu.
 
-![Hình M4 — Popup thách đấu trên cửa sổ chủ; callback giả lập, ngày 26/10/2026.](images/challenge_actual.png)
+![Hình 5.4 — Popup thách đấu trên cửa sổ chủ; callback giả lập, ngày 26/10/2026.](images/challenge_actual.png)
 
-### M5. Phản hồi bằng toast
+### Minh họa 5.5. Phản hồi bằng toast
 
-Kết quả lời mời dùng thông báo toast, giúp hiển thị phản hồi mà không mở thêm Alert chặn giao diện. Đây là minh họa cho nhánh phản hồi của UC-UI05.
+Kết quả lời mời dùng thông báo toast, giúp hiển thị phản hồi mà không mở thêm Alert chặn giao diện. Thông báo giúp người chơi biết kết quả và tiếp tục thao tác trong sảnh.
 
-![Hình M5 — Toast kết quả lời mời trên JavaFX, ngày 26/10/2026.](images/challenge_toast.png)
+![Hình 5.5 — Toast kết quả lời mời trên JavaFX, ngày 26/10/2026.](images/challenge_toast.png)
 
-### M6. Chế độ luyện tập
+### Minh họa 5.6. Chế độ luyện tập
 
-Solo ẩn và loại khung đối thủ khỏi bố cục, liên hệ UC-G08 và UC-UI06. Ảnh minh họa việc loại khoảng trống; chưa thay cho nghiệm thu toàn bộ quy tắc vật lý và kết thúc bài luyện tập.
+Solo ẩn và loại khung đối thủ khỏi bố cục. Ảnh minh họa việc loại khoảng trống; chưa thay cho nghiệm thu toàn bộ quy tắc vật lý và kết thúc bài luyện tập.
 
-![Hình M6 — Bàn luyện tập solo, không có khung đối thủ trống, ngày 26/10/2026.](images/practice_actual.png)
+![Hình 5.6 — Bàn luyện tập solo, không có khung đối thủ trống, ngày 26/10/2026.](images/practice_actual.png)
 
-### M7. Bàn chơi và hiển thị hướng gậy
+### Minh họa 5.7. Bàn chơi và hiển thị hướng gậy
 
-GameScene tiếp nhận mẫu CUE_AIM từ callback có kiểm soát và hiển thị trạng thái tương ứng, liên hệ UC-G03 và UC-UI06. Để nghiệm thu ngắm liên tục, vẫn cần hai client thật với mạng có độ trễ và thay đổi lượt, không chỉ callback đơn lẻ.
+GameScene tiếp nhận mẫu CUE_AIM từ callback có kiểm soát và hiển thị trạng thái tương ứng. Để nghiệm thu ngắm liên tục, vẫn cần hai client thật với mạng có độ trễ và thay đổi lượt, không chỉ callback đơn lẻ.
 
-![Hình M7 — GameScene nhận mẫu ngắm qua fixture; không phải phép đo đồng bộ hai máy, ngày 26/10/2026.](images/game_actual.png)
+![Hình 5.7 — GameScene nhận mẫu ngắm qua fixture; không phải phép đo đồng bộ hai máy, ngày 26/10/2026.](images/game_actual.png)
 
-## Các sự cố triển khai thường gặp
+## 5.6. Các sự cố triển khai thường gặp
 
 | Hiện tượng | Nội dung cần kiểm tra | Kết quả cần có trước khi tiếp tục |
 | --- | --- | --- |
@@ -1135,46 +343,46 @@ GameScene tiếp nhận mẫu CUE_AIM từ callback có kiểm soát và hiển 
 | Đăng ký/đăng nhập lỗi | Database, JDBC classpath, cấu hình và bảng dữ liệu | Server kết nối DB và có phản hồi xác thực |
 | Mã mới nhưng hành vi cũ | JAR/EXE chưa được build lại hoặc đang chạy gói khác | Ghi nhận phiên bản binary đang thử |
 
-# KIỂM THỬ VÀ ĐÁNH GIÁ CHUNG
+# CHƯƠNG 6. KIỂM THỬ VÀ ĐÁNH GIÁ
 
-## Phương pháp và môi trường kiểm chứng
+## 6.1. Phương pháp và môi trường kiểm chứng
 
 Bộ minh chứng được lưu tại reports/evidence/00bf1cc, thực thi ngày 26/10/2026 trên môi trường Linux. Biên dịch dùng JDK 21 với --release 17, gồm 9 file Java server và 26 file Java client; cả hai thành công. Kiểm tra giao thức dùng server thực và PostgreSQL phát triển cục bộ. Kiểm tra giao diện dùng các lớp JavaFX thật, Xvfb và transport giả lập.
 
-Báo cáo tổng ngày 28/10 kế thừa các log này theo đúng phiên bản và phạm vi; không công bố một lần kiểm thử ứng dụng mới. Kiểm tra tài liệu gồm tính đầy đủ của 31 mã UC, phân bố 14 UML, nguồn ảnh, các file xuất và bố cục. Mã thoát 0 của script mô tả hiện trạng chỉ có nghĩa các assertion đã hoàn tất; một assertion có thể cố ý xác nhận việc tái hiện lỗi.
+Bản báo cáo ngày 29/10/2026 kế thừa các log này theo đúng phiên bản và phạm vi. Các lần biên tập tài liệu không được tính là lần kiểm thử ứng dụng mới. Mã thoát 0 của script mô tả hiện trạng chỉ có nghĩa các assertion đã hoàn tất; một assertion có thể cố ý xác nhận việc tái hiện lỗi.
 
 Lần chạy giao thức đầu tiên dừng ở tình huống phản hồi sai tên vì chưa bảo đảm timer đã được tạo. Lần sau thêm khoảng chờ 250 ms và tái hiện trạng thái bận còn lưu. Cả log lần đầu và lần hoàn tất đều được giữ; không gộp chúng thành một lần chạy hoàn hảo.
 
-## Kết quả thực thi đã có
+## 6.2. Kết quả thực thi đã có
 
-| Mã | Trường hợp và nhóm UC | Quan sát thực tế | Đánh giá |
+| Mã | Trường hợp kiểm tra | Quan sát thực tế | Đánh giá |
 | --- | --- | --- | --- |
 | KT01 | Biên dịch client/server | 9 file server, 26 file client biên dịch thành công | Đạt bước build trong môi trường đã nêu |
-| KT02 | Đăng ký và đăng nhập, D01–D02 | Tài khoản tạm đăng ký và đăng nhập tên khác hoa/thường | Đạt luồng đã thử |
-| KT03 | Lời mời không hợp lệ, C06 | Từ chối tên rỗng, tự mời và offline | Đạt các trường hợp đã thử |
-| KT04 | Chấp nhận/từ chối lời mời, C06 | Tra tên trim/khác hoa thường, tạo phòng, loại người mời khỏi hàng chờ | Đạt luồng đã thử |
-| KT05 | Ngắm liên tục, C03/G03 | 60 mẫu 34 byte được chuyển cho đối thủ, không echo về người gửi | Đạt relay; chưa kết luận độ mượt hai UI |
-| KT06 | Kết thúc mô phỏng, G07 | PHYSICS_DONE chuyển lượt | Đạt chuyển lượt; không có chốt snapshot |
-| KT07 | Hết hạn/mất kết nối, C06–C07 | Hết hạn khoảng 15 giây; phản hồi thất bại khi đối tác rời | Đạt các nhánh được kích hoạt |
-| KT08 | Form và refresh, UI02–UI03 | Callback chạy đúng luồng ở các trường hợp đã thử | Có hành vi đúng, còn lỗi riêng bên dưới |
-| KT09 | Popup/toast, UI05 | Popup trên owner, đóng theo vòng đời; kết quả dùng toast | Đạt trong fixture JavaFX |
-| KT10 | Solo và nhận mẫu ngắm, UI06/G03/G08 | Không còn khung đối thủ trống; đọc mẫu ngắm hiện hành | Đạt kiểm tra UI có kiểm soát |
+| KT02 | Đăng ký và đăng nhập | Tài khoản tạm đăng ký và đăng nhập tên khác hoa/thường | Đạt luồng đã thử |
+| KT03 | Lời mời không hợp lệ | Từ chối tên rỗng, tự mời và offline | Đạt các trường hợp đã thử |
+| KT04 | Chấp nhận/từ chối lời mời | Tra tên trim/khác hoa thường, tạo phòng, loại người mời khỏi hàng chờ | Đạt luồng đã thử |
+| KT05 | Ngắm liên tục | 60 mẫu 34 byte được chuyển cho đối thủ, không echo về người gửi | Đạt relay; chưa kết luận độ mượt hai UI |
+| KT06 | Kết thúc mô phỏng | PHYSICS_DONE chuyển lượt | Đạt chuyển lượt; không có chốt snapshot |
+| KT07 | Hết hạn/mất kết nối | Hết hạn khoảng 15 giây; phản hồi thất bại khi đối tác rời | Đạt các nhánh được kích hoạt |
+| KT08 | Form và refresh | Callback chạy đúng luồng ở các trường hợp đã thử | Có hành vi đúng, còn lỗi riêng bên dưới |
+| KT09 | Popup/toast | Popup trên owner, đóng theo vòng đời; kết quả dùng toast | Đạt trong fixture JavaFX |
+| KT10 | Solo và nhận mẫu ngắm | Không còn khung đối thủ trống; đọc mẫu ngắm hiện hành | Đạt kiểm tra UI có kiểm soát |
 
-## Lỗi và giới hạn cần hoàn thiện
+## 6.3. Lỗi và giới hạn cần hoàn thiện
 
-| Mã | Hiện tượng | Tác động | Phối hợp xử lý |
+| Mã | Hiện tượng | Tác động | Hướng hoàn thiện |
 | --- | --- | --- | --- |
-| L01 | Hai READY từ cùng người có thể mở trận | Trận bắt đầu trước khi đối thủ thực sự sẵn sàng | TV1–TV3 |
-| L02 | Góc NaN được relay; cú đánh lặp tiếp tục được chuyển | Trạng thái bất hợp lệ hoặc áp dụng cú đánh nhiều lần | TV1–TV3 |
-| L03 | Phản hồi sai tên hủy timer nhưng còn currentChallenger | Lời mời có thể giữ trạng thái bận quá hạn | TV1, phản hồi UI của TV4 |
-| L04 | SETTINGS_RESPONSE server chỉ có boolean, client đọc thêm string | Luồng đọc không khớp; có thể chờ hoặc lỗi | TV1–TV2–TV4 |
-| L05 | Email sai định dạng được server nhận; UI từ chối TLD dài hợp lệ | Quy tắc hai đầu không thống nhất | TV2–TV4 |
-| L06 | Hai tin giống nhau trong cùng phút bị gộp; lịch sử cũ vào cuộc chat mới | Mất biểu diễn tin hoặc sai hội thoại | TV1–TV2–TV4 |
-| L07 | Refresh A→B→A khi menu mở áp dụng B lúc đóng | Danh sách hiển thị dữ liệu cũ | TV4 |
+| L01 | Hai READY từ cùng người có thể mở trận | Trận bắt đầu trước khi đối thủ thực sự sẵn sàng | Ghi nhận trạng thái sẵn sàng riêng cho từng người |
+| L02 | Góc NaN được relay; cú đánh lặp tiếp tục được chuyển | Trạng thái bất hợp lệ hoặc áp dụng cú đánh nhiều lần | Kiểm tra tham số và nhận diện lệnh đã xử lý |
+| L03 | Phản hồi sai tên hủy timer nhưng còn currentChallenger | Lời mời có thể giữ trạng thái bận quá hạn | Chỉ kết thúc timer khi phản hồi phù hợp với lời mời |
+| L04 | SETTINGS_RESPONSE server chỉ có boolean, client đọc thêm string | Luồng đọc không khớp; có thể chờ hoặc lỗi | Thống nhất payload giữa bộ ghi và bộ đọc |
+| L05 | Email sai định dạng được server nhận; UI từ chối TLD dài hợp lệ | Quy tắc hai đầu không thống nhất | Dùng quy tắc kiểm tra nhất quán ở hai đầu |
+| L06 | Hai tin giống nhau trong cùng phút bị gộp; lịch sử cũ vào cuộc chat mới | Mất biểu diễn tin hoặc sai hội thoại | Gắn định danh tin và hội thoại vào yêu cầu/phản hồi |
+| L07 | Refresh A→B→A khi menu mở áp dụng B lúc đóng | Danh sách hiển thị dữ liệu cũ | Áp dụng bản cập nhật mới nhất khi đóng menu |
 
 Các dòng trên là hiện tượng đã ghi trong log. Ngoài ra, đọc mã cho thấy ghi kết quả chưa có transaction toàn vẹn, DB dùng Connection chung, mô phỏng chưa có bước thời gian cố định và chưa có snapshot/ACK hai phía. Những nhận xét từ mã cần được tách khỏi khẳng định đã gây lỗi ở mọi điều kiện thực tế.
 
-## Kế hoạch nghiệm thu tích hợp còn lại
+## 6.4. Kế hoạch nghiệm thu tích hợp còn lại
 
 | Mã | Kịch bản cần chạy | Tiêu chí quan sát mong đợi | Trạng thái |
 | --- | --- | --- | --- |
@@ -1188,23 +396,23 @@ Các dòng trên là hiện tượng đã ghi trong log. Ngoài ra, đọc mã c
 
 Mỗi lần chạy cần lưu phiên bản mã và binary, hệ điều hành, cấu hình mạng, dữ liệu đầu vào, bước thao tác, kết quả mong đợi và thực tế. Với NT02–NT04, nên ghi cả thời điểm gửi/nhận và ảnh hai phía để phân biệt chậm hiển thị với sai trạng thái. Các tiêu chí này là kế hoạch kiểm tra, không được ghi là đã đạt chỉ vì tài liệu hoặc sơ đồ đã hoàn thành.
 
-## Đánh giá kết quả của nhóm
+## 6.5. Đánh giá kết quả của nhóm
 
-Dự án đã liên kết được các nhóm chức năng từ kết nối, tài khoản và sảnh đến bàn chơi, kết quả và cá nhân hóa trong một kiến trúc client–server. Các kiểm tra đã có cung cấp bằng chứng cho việc biên dịch, nhiều nhánh thách đấu, relay mẫu ngắm và một số phản hồi JavaFX. Việc chia bốn phân hệ giúp xác định nơi xử lý khi xuất hiện lỗi xuyên lớp, chẳng hạn sai payload nằm giữa giao thức, dữ liệu và giao diện.
+Dự án đã liên kết được các nhóm chức năng từ kết nối, tài khoản và sảnh đến bàn chơi, kết quả và cá nhân hóa trong một kiến trúc client–server. Các kiểm tra đã có cung cấp bằng chứng cho việc biên dịch, nhiều nhánh thách đấu, relay mẫu ngắm và một số phản hồi JavaFX. Các lỗi còn lại cho thấy chất lượng cần được đánh giá trên toàn bộ đường đi của một thao tác, từ yêu cầu mạng đến dữ liệu và phản hồi giao diện.
 
 Mức hoàn thiện còn giới hạn ở tính nhất quán trong các tình huống lặp, muộn hoặc sai trạng thái và ở phạm vi kiểm chứng trên Windows. Vì vậy, kết quả hiện tại phù hợp để trình bày sản phẩm đồ án cùng phân tích kỹ thuật và hướng hoàn thiện; chưa đủ cơ sở tuyên bố không còn lỗi bất đồng bộ hoặc bảo đảm hiệu năng trong mọi điều kiện mạng.
 
-# KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
+# CHƯƠNG 7. KẾT LUẬN VÀ HƯỚNG PHÁT TRIỂN
 
-## Kết luận
+## 7.1. Kết luận
 
 Đồ án xây dựng ứng dụng bi-a hai người qua mạng bằng Java/JavaFX, Socket và PostgreSQL, kết hợp nghiệp vụ tài khoản, tương tác xã hội, thi đấu và cá nhân hóa. Báo cáo tổng hợp toàn bộ phạm vi của nhóm, từ mục tiêu, kiến thức nền và kiến trúc đến đặc tả, triển khai, minh họa sản phẩm và đánh giá.
 
-Theo phân công, TV1 phụ trách kết nối và giao thức với 7 use case/3 biểu đồ; TV2 phụ trách xác thực và dữ liệu với 7 use case/4 biểu đồ; TV3 phụ trách gameplay và vật lý với 8 use case/3 biểu đồ; TV4 phụ trách giao diện và cá nhân hóa với 9 use case/4 biểu đồ. Tổng cộng 31 đặc tả và 14 UML được liên kết với mã nguồn; các phần cài đặt và kiểm thử được tổng hợp chung để thể hiện sản phẩm tích hợp của cả nhóm.
+Các chức năng tài khoản, sảnh, truyền thông, mô phỏng và hiển thị đã được kết nối thành một quy trình sử dụng chung. Giá trị của sản phẩm nằm ở sự phối hợp đó: người chơi có thể đi từ việc xác thực tới tìm đối thủ, thao tác trên bàn và xem kết quả trong cùng ứng dụng. Báo cáo mô tả quy trình này cùng các giới hạn hiện tại để làm cơ sở đánh giá và tiếp tục phát triển.
 
 Bài học kỹ thuật chính là giao thức cần được kiểm chứng đồng thời ở hai đầu, thao tác UI cần tuân thủ luồng JavaFX, và vận chuyển tin cậy chưa đủ để bảo đảm trạng thái trò chơi nhất quán. Các lỗi được ghi lại cung cấp đầu việc cụ thể cho giai đoạn hoàn thiện, thay vì suy luận chất lượng chỉ từ giao diện hoặc việc biên dịch thành công.
 
-## Hướng phát triển theo mức ưu tiên
+## 7.2. Hướng phát triển theo mức ưu tiên
 
 Ưu tiên trước hết là sửa những sai lệch đã tái hiện: thống nhất SETTINGS_RESPONSE; chống READY và cú đánh lặp; kiểm tra giá trị hữu hạn/phạm vi tham số; bảo vệ vòng đời lời mời; gắn phản hồi chat với đúng hội thoại và thống nhất kiểm tra email. Sau mỗi thay đổi cần tái lập trường hợp lỗi rồi chạy lại luồng bình thường liên quan.
 
@@ -1212,51 +420,559 @@ Bước tiếp theo là củng cố trạng thái trận bằng mã trận/lư�
 
 Về dữ liệu, cần transaction cho kết quả trận, quản lý kết nối phù hợp tải đồng thời và ràng buộc định danh nhất quán với cách tra cứu. Về triển khai, cần cấu hình ngoài mã, gói Windows có mã phiên bản rõ, kiểm tra trên máy sạch và quy trình phát hành riêng với source ZIP. TLS và thuật toán băm mật khẩu chuyên dụng cũng cần được xem xét trước khi mở rộng sử dụng.
 
-Sau khi nền tảng ổn định, nhóm có thể bổ sung tái kết nối, lịch sử trận chi tiết hoặc tính năng quan sát. Những chức năng này là định hướng tương lai và không nằm trong 31 use case hiện tại.
+Sau khi nền tảng ổn định, nhóm có thể bổ sung tái kết nối, lịch sử trận chi tiết hoặc tính năng quan sát. Những chức năng này là định hướng tương lai và nằm ngoài phạm vi chức năng hiện tại.
 
-# PHỤ LỤC BÀN GIAO VÀ THUẬT NGỮ
 
-## Thành phần bàn giao
+# PHỤ LỤC A. ĐẶC TẢ CHỨC NĂNG
 
-| Nhóm tài liệu/mã | Vị trí | Mục đích |
-| --- | --- | --- |
-| Báo cáo tổng | reports/Bao_cao_tong_hop_nhom_LTM.* | Word để chỉnh sửa, PDF để đọc/in, Markdown/HTML để tra cứu |
-| Báo cáo bốn phân hệ | reports/Bao_cao_LTM_4_phan.* | Bản chuyên sâu theo phân công đã chốt trước đó |
-| Đặc tả và biểu đồ | reports/uml_spec.json, uml_manifest.json, uml/ | 31 UC; 14 nguồn PlantUML và ảnh PNG/SVG |
-| Minh họa UI | reports/images/ | Ảnh thật có thông tin nguồn và giới hạn kiểm chứng |
-| Minh chứng | reports/evidence/00bf1cc/ | Script, README và log ngày 26/10/2026 |
-| Mã triển khai | client/, server/, database/ | Ứng dụng, script build và schema |
+Phụ lục tập hợp 31 đặc tả để đối chiếu khi cần kiểm tra một chức năng cụ thể. Các mã được giữ ổn định để tra cứu với sơ đồ; nội dung chính của báo cáo diễn giải các chức năng trong quy trình sử dụng ở Chương 4. Những nhóm dưới đây là nhóm chức năng của cùng hệ thống.
 
-Thông tin hành chính cần nhóm điền trước khi nộp gồm trường/khoa/lớp, giảng viên, tên nhóm, họ tên và MSSV tương ứng TV1–TV4. Các trường này được để trống có nhãn, không tự suy đoán danh tính hoặc mức đóng góp. Nếu trường có mẫu bìa hoặc quy định riêng, có thể chỉnh trong Word mà giữ nguyên số lượng và nội dung chuyên môn đã thống nhất.
+## Quản lý kết nối & Giao thức truyền tin
 
-## Thuật ngữ
+### UC-C01 — Thiết lập kết nối TCP
 
-| Thuật ngữ | Ý nghĩa trong báo cáo |
-| --- | --- |
-| UC | Use case, trường hợp sử dụng/chức năng trong phạm vi phân hệ |
-| UML | Ngôn ngữ mô hình hóa; báo cáo dùng bốn loại biểu đồ đã phân công |
-| RTT | Thời gian khứ hồi đo bằng PING và phản hồi |
-| Payload | Các trường dữ liệu theo sau mã loại packet |
-| HUD | Thông tin hiển thị trên màn hình chơi: người chơi, lượt và trạng thái |
-| Fixture | Dữ liệu/transport có kiểm soát phục vụ kiểm tra, không phải kết nối đầu cuối thực |
-| Snapshot/ACK | Ảnh chụp trạng thái và xác nhận; hướng hoàn thiện, chưa có trong giao thức hiện tại |
-| EXE app-image | Launcher và runtime/tài nguyên đi kèm do jpackage đóng gói trên Windows |
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Đã có địa chỉ/cổng server và mạng khả dụng.
+
+**Diễn tiến:** Nhập hoặc nạp địa chỉ. Mở socket với timeout kết nối 2,5 giây. Tạo stream. Khởi động luồng nhận và ping. Lưu địa chỉ.
+
+**Ngoại lệ và giới hạn:** Không kết nối được: báo lỗi; người chơi sửa cấu hình hoặc thử lại. Chưa có handshake phiên bản.
+
+**Kết quả:** Có kết nối TCP để thực hiện yêu cầu nghiệp vụ.
+
+**Liên hệ mã nguồn:** NetworkClient.connect; ServerConfigDialog; ServerMain.main.
+
+### UC-C02 — Khám phá server trong LAN
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Client và server cùng vùng mạng hỗ trợ discovery.
+
+**Diễn tiến:** Gửi BILLIARDS_DISCOVER qua UDP 12346. Nhận BILLIARDS_SERVER:12345. Sử dụng địa chỉ nhận để kết nối TCP.
+
+**Ngoại lệ và giới hạn:** Không có phản hồi: người chơi nhập địa chỉ thủ công; discovery không bảo đảm tìm server qua Internet.
+
+**Kết quả:** Xác định được địa chỉ server hoặc quay về nhập thủ công.
+
+**Liên hệ mã nguồn:** NetworkClient: UDP discovery; ServerMain.startUdpDiscoveryListener.
+
+### UC-C03 — Gửi và nhận packet nhị phân
+
+**Tác nhân:** Người chơi thông qua chức năng ứng dụng.
+
+**Điều kiện bắt đầu:** Socket đang mở; hai phía dùng định dạng tương thích.
+
+**Diễn tiến:** Ghi byte PacketType và các trường. Flush. Phía nhận đọc trọn payload theo loại rồi phân phối tới handler/callback.
+
+**Ngoại lệ và giới hạn:** Payload sai hoặc stream kết thúc có thể gây IOException; SETTINGS_RESPONSE hiện có lệch định dạng được ghi ở phụ lục kiểm chứng.
+
+**Kết quả:** Yêu cầu được chuyển đến đúng bộ phận khi đọc thành công.
+
+**Liên hệ mã nguồn:** NetworkClient.readPacketPayload; Packet; PacketType; ClientHandler.handlePacket.
+
+### UC-C04 — Đo độ trễ RTT
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Socket đang hoạt động.
+
+**Diễn tiến:** Client gửi PING kèm long timestamp ngay khi kết nối và định kỳ hai giây. Server trả timestamp. Client tính chênh lệch để hiển thị.
+
+**Ngoại lệ và giới hạn:** Không nhận lại ping: không có số đo mới; đây chưa phải chính sách timeout đọc 20 giây.
+
+**Kết quả:** Có giá trị RTT phục vụ hiển thị, không thay đổi luật chơi.
+
+**Liên hệ mã nguồn:** NetworkClient.sendPing/listenLoop; ClientHandler.handlePing.
+
+### UC-C05 — Ghép trận ngẫu nhiên
+
+**Tác nhân:** Người chơi và đối thủ.
+
+**Điều kiện bắt đầu:** Đã đăng nhập; chưa có phòng.
+
+**Diễn tiến:** Gửi FIND_MATCH. Đưa vào queue nếu chưa có. Khi đủ hai người, tạo GameRoom và gửi MATCH_FOUND cho cả hai.
+
+**Ngoại lệ và giới hạn:** CANCEL_FIND xóa khỏi queue; người đã có phòng hoặc đã nằm trong queue không được thêm lặp.
+
+**Kết quả:** Ghép được phòng hai người hoặc tiếp tục chờ/hủy tìm.
+
+**Liên hệ mã nguồn:** LobbyManager.addToQueue/removeFromQueue/createGame; MatchmakingScene.
+
+### UC-C06 — Thách đấu trực tiếp
+
+**Tác nhân:** Người mời và người nhận.
+
+**Điều kiện bắt đầu:** Người mời đăng nhập; có tên người nhận online.
+
+**Diễn tiến:** Gửi tên người nhận. Server trim và tra không phân biệt hoa thường. Phát lời mời. Nhận accept. Xóa queue và tạo phòng khi hợp lệ.
+
+**Ngoại lệ và giới hạn:** Tên rỗng/tự mời/offline/bận hoặc từ chối/hết hạn đều thất bại; client đếm 10 giây, server chờ 15 giây.
+
+**Kết quả:** Có MATCH_FOUND hoặc thông báo không tạo trận; trường hợp phản hồi sai tên còn lỗi vòng đời timer.
+
+**Liên hệ mã nguồn:** ClientHandler.handleChallengeRequest/handleChallengeResponse; LobbyManager.createGame.
+
+### UC-C07 — Ngắt kết nối và giải phóng phiên
+
+**Tác nhân:** Người chơi, hoặc kết nối bị gián đoạn.
+
+**Điều kiện bắt đầu:** Có socket hoặc phiên đang hoạt động.
+
+**Diễn tiến:** Người chơi ngắt hoặc server phát hiện kết thúc stream. Xóa online/queue. Hủy timer lời mời. Xử lý phòng và đóng socket.
+
+**Ngoại lệ và giới hạn:** Ngắt trong phòng: người còn lại thắng theo quy tắc hiện có; không có phục hồi ván cũ sau reconnect.
+
+**Kết quả:** Phiên được dọn theo logic cleanup; không khẳng định mọi lỗi mạng được phát hiện ngay.
+
+**Liên hệ mã nguồn:** NetworkClient.disconnect/listenLoop; ClientHandler.cleanup; GameRoom.handleDisconnect.
+
+## Xác thực & Quản lý dữ liệu
+
+### UC-D01 — Đăng ký tài khoản
+
+**Tác nhân:** Người chơi mới.
+
+**Điều kiện bắt đầu:** Kết nối server và PostgreSQL khả dụng.
+
+**Diễn tiến:** Nhận email, username, mật khẩu. Kiểm tra cơ bản. Băm cùng salt. Trim/chuyển thường email. Kiểm tra trùng và INSERT players.
+
+**Ngoại lệ và giới hạn:** Email/username trùng hoặc mật khẩu quá ngắn bị từ chối; server chưa kiểm tra định dạng email tương đương client.
+
+**Kết quả:** Tạo tài khoản với mật khẩu băm hoặc trả mã lỗi.
+
+**Liên hệ mã nguồn:** AuthManager.register/hashPassword; DatabaseManager.register.
+
+### UC-D02 — Đăng nhập bằng tên hoặc email
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Tài khoản đã tồn tại; server kết nối DB.
+
+**Diễn tiến:** Tra LOWER(username) hoặc LOWER(email). Xác minh hash với salt. Tạo thông tin phiên và trả hồ sơ.
+
+**Ngoại lệ và giới hạn:** Sai mật khẩu/không tìm thấy: trả thất bại; định danh trùng chéo username–email chưa được giải quyết tường minh.
+
+**Kết quả:** Có phiên xác thực khi thành công.
+
+**Liên hệ mã nguồn:** AuthManager.login/verifyPassword; DatabaseManager.getPlayerByUsername; ClientHandler.handleLogin.
+
+### UC-D03 — Lưu avatar và skin gậy
+
+**Tác nhân:** Người chơi đã đăng nhập.
+
+**Điều kiện bắt đầu:** Có phiên và lựa chọn tùy chỉnh.
+
+**Diễn tiến:** Nhận avatarId, cueColor/skinId. Kiểm tra điều kiện cấp độ bằng CueSkinConfig. Cập nhật DB và thông tin phiên. Trả boolean.
+
+**Ngoại lệ và giới hạn:** Không đủ cấp hoặc lỗi DB: trả false; client đang đọc thừa string trong SETTINGS_RESPONSE nên phản hồi có thể không được xử lý đúng.
+
+**Kết quả:** DB/phiên cập nhật khi thành công; không khẳng định UI đã xác nhận được.
+
+**Liên hệ mã nguồn:** ClientHandler.handleSettingsUpdate; CueSkinConfig; DatabaseManager.updateSettings.
+
+### UC-D04 — Ghi kết quả và cập nhật EXP/level
+
+**Tác nhân:** GameRoom (tác nhân hệ thống).
+
+**Điều kiện bắt đầu:** GameRoom đã chọn người thắng/thua.
+
+**Diễn tiến:** Đặt gameFinished. Cộng thắng và 100 EXP. Tính level=floor(EXP/200)+1. Tăng thua. INSERT match_history. Nạp lại hồ sơ.
+
+**Ngoại lệ và giới hạn:** DB lỗi giữa các câu lệnh có thể để cập nhật dở dang vì chưa có transaction bao trọn.
+
+**Kết quả:** Kết quả được ghi theo các câu lệnh thành công; cờ phòng hạn chế lặp trong phiên.
+
+**Liên hệ mã nguồn:** GameRoom.endGame/handleDisconnect; DatabaseManager.recordMatchResult.
+
+### UC-D05 — Truy vấn bảng xếp hạng
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Có dữ liệu players và kết nối DB.
+
+**Diễn tiến:** Nhận LEADERBOARD_REQUEST. Lấy người chơi theo exp giảm dần với giới hạn. Đóng gói chuỗi và trả client.
+
+**Ngoại lệ và giới hạn:** Lỗi DB hoặc chưa có dữ liệu: xử lý kết quả trống theo mã hiện tại; chưa kiểm thử tải lớn.
+
+**Kết quả:** Client nhận dữ liệu xếp hạng để dựng giao diện.
+
+**Liên hệ mã nguồn:** DatabaseManager.getLeaderboard; ClientHandler.handleLeaderboard.
+
+### UC-D06 — Quản lý quan hệ bạn bè
+
+**Tác nhân:** Người chơi và người được mời kết bạn.
+
+**Điều kiện bắt đầu:** Tài khoản hợp lệ; dữ liệu người nhận tồn tại.
+
+**Diễn tiến:** Tìm người chơi, tạo lời mời. Chấp nhận/từ chối. Đọc danh sách. Xóa quan hệ theo yêu cầu.
+
+**Ngoại lệ và giới hạn:** Người nhận không tồn tại hoặc quan hệ không phù hợp: trả trạng thái thất bại; status chưa có CHECK enum trong schema.
+
+**Kết quả:** Bảng friendships phản ánh thao tác được chấp nhận.
+
+**Liên hệ mã nguồn:** DatabaseManager: friendship methods; ClientHandler: friend handlers; schema.sql.
+
+### UC-D07 — Lưu và truy vấn tin nhắn
+
+**Tác nhân:** Người gửi và người nhận.
+
+**Điều kiện bắt đầu:** Hai tài khoản được xác định theo quy tắc hiện tại.
+
+**Diễn tiến:** Lưu tin vào messages. Chuyển thông báo tới client. Truy vấn lịch sử giới hạn và trả chuỗi dữ liệu.
+
+**Ngoại lệ và giới hạn:** Lịch sử truyền chưa có conversation ID/message ID phục vụ UI; không suy ra mọi phản hồi muộn được phân biệt.
+
+**Kết quả:** Tin nhắn được lưu hoặc lịch sử được trả theo khả năng DB.
+
+**Liên hệ mã nguồn:** DatabaseManager.getChatHistory và thao tác messages; ClientHandler.handleChatMessage/handleChatHistory.
+
+## Gameplay & Engine Vật lý
+
+### UC-G01 — Khởi tạo bàn và phân nhóm bi
+
+**Tác nhân:** Hai người chơi.
+
+**Điều kiện bắt đầu:** Client nhận GAME_START với chỉ số người chơi và seed.
+
+**Diễn tiến:** Tạo 16 bi. Xáo 14 bi mục tiêu khác bi 8 theo matchSeed. Chia hai nhóm bảy bi. Thiết lập người có lượt.
+
+**Ngoại lệ và giới hạn:** READY hiện đếm số packet, nên một người có thể gửi lặp để mở trận; cùng seed chưa bảo đảm mô phỏng luôn đồng nhất.
+
+**Kết quả:** Có bàn và nhóm mục tiêu; luật phân nhóm là biến thể của dự án.
+
+**Liên hệ mã nguồn:** GameRoom.playerReady/startGame; GameScene constructors.
+
+### UC-G02 — Đặt bi cái
+
+**Tác nhân:** Người đang có lượt.
+
+**Điều kiện bắt đầu:** Client cho phép khai cuộc hoặc ball-in-hand.
+
+**Diễn tiến:** Kéo/chọn vị trí. Client giới hạn vùng đặt. Gửi CUE_BALL_PLACED. Server kiểm tra người có lượt rồi chuyển tọa độ.
+
+**Ngoại lệ và giới hạn:** Không có quyền tại UI thì không đặt; server chưa có snapshot chuẩn để đối chiếu mọi vị trí.
+
+**Kết quả:** Client nhận cập nhật vị trí bi cái.
+
+**Liên hệ mã nguồn:** GameScene.repositionCueBall và thao tác chuột; GameRoom.processCueBallPlaced.
+
+### UC-G03 — Ngắm và kéo lực gậy
+
+**Tác nhân:** Người đang có lượt và người quan sát.
+
+**Điều kiện bắt đầu:** Bi chưa chạy; UI cho phép ngắm.
+
+**Diễn tiến:** Tính góc theo chuột và tỷ lệ kéo. Gửi CUE_AIM có điều tiết. Đối thủ nội suy góc/lực để hiển thị.
+
+**Ngoại lệ và giới hạn:** Không đúng lượt: server bỏ qua; dữ liệu NaN hiện vẫn được chuyển tiếp nếu gửi trực tiếp.
+
+**Kết quả:** Người quan sát thấy trạng thái ngắm; chưa có token/sequence.
+
+**Liên hệ mã nguồn:** GameScene.sendAimUpdateThrottled/startGameLoop; GameRoom.processCueAim.
+
+### UC-G04 — Chỉnh xoáy và thực hiện cú đánh
+
+**Tác nhân:** Người đang có lượt.
+
+**Điều kiện bắt đầu:** Có hướng/lực hợp lệ ở client và bi cái hoạt động.
+
+**Diễn tiến:** Chỉnh spinX/spinY. Thả chuột. Gửi sáu double CUE_SHOT. Chạy vật lý tại máy đánh. Server chuyển GAME_STATE cho đối thủ.
+
+**Ngoại lệ và giới hạn:** Cú kéo quá ngắn không tạo cú đánh; server chưa chặn cú đánh trùng trong cùng giai đoạn.
+
+**Kết quả:** Hai phía có thông số cú đánh; không có xác nhận server trước mô phỏng máy đánh.
+
+**Liên hệ mã nguồn:** GameScene.onMouseReleased/applyCueShot; NetworkClient.sendCueShot; GameRoom.processCueShot.
+
+### UC-G05 — Mô phỏng chuyển động và va chạm
+
+**Tác nhân:** GameScene (tác nhân hệ thống).
+
+**Điều kiện bắt đầu:** physicsRunning và danh sách bi đã khởi tạo.
+
+**Diễn tiến:** Mỗi khung hình gọi PhysicsEngine.update. Thực hiện 10 bước con, di chuyển, ma sát, va chạm băng và bi–bi.
+
+**Ngoại lệ và giới hạn:** Tốc độ khung hình khác nhau có thể thay đổi tiến độ; hiện không có tích lũy bước thời gian cố định.
+
+**Kết quả:** Vị trí/vận tốc và hiệu ứng va chạm được cập nhật.
+
+**Liên hệ mã nguồn:** PhysicsEngine.update/resolveWallCollision/resolveBallCollision; Ball.
+
+### UC-G06 — Xử lý bi vào lỗ và kết quả lượt
+
+**Tác nhân:** GameScene (tác nhân hệ thống).
+
+**Điều kiện bắt đầu:** Bi đang được mô phỏng hoặc vừa dừng.
+
+**Diễn tiến:** Kiểm tra sáu lỗ. Chạy hoạt ảnh chìm. Xác định active. Đánh giá phạm lỗi/giữ lượt và điều kiện bi 8 theo luật triển khai.
+
+**Ngoại lệ và giới hạn:** Client có thể phát CLAIM_WIN; server chưa kiểm chứng kết luận bằng mô phỏng vật lý riêng.
+
+**Kết quả:** Có trạng thái bi và thông tin gửi PHYSICS_DONE hoặc CLAIM_WIN.
+
+**Liên hệ mã nguồn:** PhysicsEngine.checkPockets; Ball.startSinking; GameScene: kết thúc vật lý; GameRoom.endGame.
+
+### UC-G07 — Điều phối lượt và hết thời gian
+
+**Tác nhân:** Hai người chơi; GameRoom timer.
+
+**Điều kiện bắt đầu:** Trận đã bắt đầu và chưa kết thúc.
+
+**Diễn tiến:** Máy đánh gửi PHYSICS_DONE. Server giữ/đổi lượt. Client đếm 60 giây. Timer server 61,5 giây xử lý chưa đánh.
+
+**Ngoại lệ và giới hạn:** Timer bị hủy khi có cú đánh; chưa có timeout riêng chờ bản bàn và chưa có ACK hai client.
+
+**Kết quả:** Có quyền lượt mới hoặc giữ lượt theo thông tin nhận.
+
+**Liên hệ mã nguồn:** GameRoom.onPhysicsDone/resetTurnTimer; GameScene.startGameLoop.
+
+### UC-G08 — Luyện tập solo
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Mở chế độ luyện tập từ sảnh.
+
+**Diễn tiến:** Tạo GameScene isPractice. Đặt/ngắm/đánh và mô phỏng cục bộ. Hướng tới dọn bàn. Không tạo đối thủ mạng.
+
+**Ngoại lệ và giới hạn:** Chưa nghiệm thu mọi trường hợp dọn hết bàn; bố cục đối thủ bị ẩn và unmanaged.
+
+**Kết quả:** Người chơi luyện tập trong phiên cục bộ.
+
+**Liên hệ mã nguồn:** SceneManager.showPractice; GameScene practice constructor.
+
+## Giao diện & Cá nhân hóa
+
+### UC-UI01 — Điều hướng màn hình
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Ứng dụng JavaFX đã khởi tạo.
+
+**Diễn tiến:** SceneManager đổi Scene theo đăng nhập, sảnh, tìm trận, trước trận, game và kết quả.
+
+**Ngoại lệ và giới hạn:** Callback đến muộn hoặc thay Scene cần quản lý vòng đời; chưa khẳng định mọi luồng chuyển cảnh đã kiểm thử.
+
+**Kết quả:** Người dùng ở màn hình phù hợp với thao tác/sự kiện.
+
+**Liên hệ mã nguồn:** ClientMain; SceneManager.
+
+### UC-UI02 — Hiển thị và kiểm tra form tài khoản
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Đang ở LoginScene hoặc RegisterScene.
+
+**Diễn tiến:** Nhập trường. Kiểm tra đủ dữ liệu, email, tên, mật khẩu xác nhận. Hiển thị lỗi hoặc gọi NetworkClient.
+
+**Ngoại lệ và giới hạn:** Regex email hiện chặn đuôi miền dài hơn 7 chữ cái; kiểm tra UI không thay kiểm tra server.
+
+**Kết quả:** Có thông báo hoặc yêu cầu đăng nhập/đăng ký được gửi.
+
+**Liên hệ mã nguồn:** LoginScene; RegisterScene.doRegister.
+
+### UC-UI03 — Hiển thị sảnh và danh sách bạn bè
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Đã đăng nhập và mở LobbyScene.
+
+**Diễn tiến:** Hiển thị hồ sơ. Refresh bạn bè 3,5 giây. Không dựng lại dữ liệu giống. Mở menu Nhắn tin/Thách đấu/Xóa bạn.
+
+**Ngoại lệ và giới hạn:** Đang mở menu: hoãn cập nhật; chuỗi A→B→A còn có thể áp dụng B cũ khi đóng.
+
+**Kết quả:** Sảnh/menu cập nhật theo callback; hạn chế hiện tại được ghi nhận.
+
+**Liên hệ mã nguồn:** LobbyScene.updateFriendList/createFriendItem/startFriendAutoRefresh.
+
+### UC-UI04 — Hiển thị hội thoại chat
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Chọn một người để xem chat.
+
+**Diễn tiến:** Mở panel, yêu cầu lịch sử. Hiển thị tin tự gửi và nhận. Cuộn xuống. Đối chiếu dòng khi lịch sử tới.
+
+**Ngoại lệ và giới hạn:** Hai tin giống nhau cùng phút có thể bị gộp; lịch sử trả muộn có thể vào sai cuộc trò chuyện.
+
+**Kết quả:** Có hội thoại hiển thị, chưa bảo đảm nhận diện mọi tin bằng ID.
+
+**Liên hệ mã nguồn:** LobbyScene.showChatView/appendChatMessage/setupNetworkCallback.
+
+### UC-UI05 — Hiển thị lời mời và màn hình trước trận
+
+**Tác nhân:** Người nhận lời mời hoặc người vừa ghép trận.
+
+**Điều kiện bắt đầu:** Có CHALLENGE_RECEIVE hoặc MATCH_FOUND.
+
+**Diễn tiến:** Hiện popup nổi và đếm 10 giây. Gửi lựa chọn. Dùng toast cho kết quả. Khi MATCH_FOUND thì dừng refresh và chuyển PreGameScene.
+
+**Ngoại lệ và giới hạn:** Đếm hết tự từ chối; callback UI được chuyển về FX thread; server còn thời hạn riêng 15 giây.
+
+**Kết quả:** Popup đóng hoặc chuyển màn hình trước trận.
+
+**Liên hệ mã nguồn:** LobbyScene.showChallengeReceivedDialog/showToast; PreGameScene.
+
+### UC-UI06 — Hiển thị bàn chơi và HUD
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Có GameScene đối kháng hoặc luyện tập.
+
+**Diễn tiến:** Vẽ bàn/bi/gậy, lượt, lực, xoáy, thời gian và ping/FPS. Solo ẩn thông tin đối thủ và bỏ khung trống.
+
+**Ngoại lệ và giới hạn:** Số FPS/ping trên dữ liệu giả lập không phải benchmark; không tự quyết định luật từ thông tin hiển thị.
+
+**Kết quả:** Khung hình thể hiện trạng thái hiện có của client.
+
+**Liên hệ mã nguồn:** GameScene.build/startGameLoop; Canvas; AvatarManager.
+
+### UC-UI07 — Hiển thị kết quả và bảng xếp hạng
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Có phản hồi GAME_OVER hoặc dữ liệu leaderboard.
+
+**Diễn tiến:** Dựng kết quả thắng/thua/EXP. Hiển thị các dòng xếp hạng do server trả. Cho quay về màn hình tiếp theo.
+
+**Ngoại lệ và giới hạn:** Không có dữ liệu hoặc lỗi mạng cần thông báo; chưa có nghiệm thu toàn bộ UI bảng xếp hạng trong lần kiểm tra trước.
+
+**Kết quả:** Người dùng xem kết quả/xếp hạng từ dữ liệu server.
+
+**Liên hệ mã nguồn:** ResultScene; LeaderboardScene; SceneManager.
+
+### UC-UI08 — Chọn avatar và skin gậy
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Mở SettingsDialog và có hồ sơ hiện tại.
+
+**Diễn tiến:** Chọn avatar/skin. Xem preview và yêu cầu cấp độ. Lưu bằng SETTINGS_UPDATE. Server kiểm tra quyền và ghi dữ liệu.
+
+**Ngoại lệ và giới hạn:** Skin khóa bị hạn chế; server kiểm tra lại cấp; lỗi parser SETTINGS_RESPONSE có thể cản xác nhận thành công.
+
+**Kết quả:** Lựa chọn được gửi; trạng thái lưu thành công cần phản hồi đúng.
+
+**Liên hệ mã nguồn:** SettingsDialog; AvatarManager; CueSkinManager; NetworkClient.sendSettingsUpdate.
+
+### UC-UI09 — Điều chỉnh âm thanh và hiệu ứng
+
+**Tác nhân:** Người chơi.
+
+**Điều kiện bắt đầu:** Đang mở tab âm thanh/cài đặt.
+
+**Diễn tiến:** Đổi BGM/SFX/mute. Thử âm thanh. Bật/tắt VFX gậy. SoundManager áp dụng và lưu các tùy chọn âm thanh vào Preferences.
+
+**Ngoại lệ và giới hạn:** Thiếu tài nguyên hoặc thiết bị âm thanh ảnh hưởng kết quả; VFX là cờ cục bộ, không khẳng định được lưu như âm thanh.
+
+**Kết quả:** Âm thanh/hiệu ứng thay đổi cục bộ, không tạo packet gameplay.
+
+**Liên hệ mã nguồn:** SettingsDialog.buildAudioTab; SoundManager; CueSkinManager.setVfxEnabled.
+
+# PHỤ LỤC B. BIỂU ĐỒ PHÂN TÍCH VÀ THIẾT KẾ
+
+Các sơ đồ hỗ trợ giải thích những luồng đã trình bày trong báo cáo. Use Case thể hiện phạm vi chức năng; Activity mô tả các bước và nhánh điều kiện; Sequence làm rõ tương tác theo thời gian; Component biểu diễn phụ thuộc giữa các thành phần. Chú thích và nhánh lỗi phản ánh mã hiện tại, không được hiểu là những cải tiến đã hoàn thành.
+
+## B.1. Chức năng quản lý kết nối & giao thức truyền tin
+
+Loại sơ đồ: Use Case. Đối chiếu Phụ lục A: UC-C01, UC-C02, UC-C03, UC-C04, UC-C05, UC-C06, UC-C07.
+
+![Hình B.1 — Chức năng quản lý kết nối & giao thức truyền tin; Use Case, đối chiếu mã 00bf1cc.](uml_unified/c_usecase.png)
+
+## B.2. Kết nối TCP và trao đổi PING
+
+Loại sơ đồ: Sequence. Đối chiếu Phụ lục A: UC-C01, UC-C03, UC-C04.
+
+![Hình B.2 — Kết nối TCP và trao đổi PING; Sequence, đối chiếu mã 00bf1cc.](uml_unified/c_sequence.png)
+
+## B.3. Điều phối thách đấu trực tiếp
+
+Loại sơ đồ: Activity. Đối chiếu Phụ lục A: UC-C06, UC-C07.
+
+![Hình B.3 — Điều phối thách đấu trực tiếp; Activity, đối chiếu mã 00bf1cc.](uml_unified/c_activity.png)
+
+## B.4. Chức năng xác thực & quản lý dữ liệu
+
+Loại sơ đồ: Use Case. Đối chiếu Phụ lục A: UC-D01, UC-D02, UC-D03, UC-D04, UC-D05, UC-D06, UC-D07.
+
+![Hình B.4 — Chức năng xác thực & quản lý dữ liệu; Use Case, đối chiếu mã 00bf1cc.](uml_unified/d_usecase.png)
+
+## B.5. Đăng ký và lưu tài khoản
+
+Loại sơ đồ: Activity. Đối chiếu Phụ lục A: UC-D01.
+
+![Hình B.5 — Đăng ký và lưu tài khoản; Activity, đối chiếu mã 00bf1cc.](uml_unified/d_register_activity.png)
+
+## B.6. Ghi kết quả, EXP và lịch sử
+
+Loại sơ đồ: Activity. Đối chiếu Phụ lục A: UC-D04.
+
+![Hình B.6 — Ghi kết quả, EXP và lịch sử; Activity, đối chiếu mã 00bf1cc.](uml_unified/d_result_activity.png)
+
+## B.7. Đăng nhập bằng username hoặc email
+
+Loại sơ đồ: Sequence. Đối chiếu Phụ lục A: UC-D02.
+
+![Hình B.7 — Đăng nhập bằng username hoặc email; Sequence, đối chiếu mã 00bf1cc.](uml_unified/d_login_sequence.png)
+
+## B.8. Chức năng gameplay & engine vật lý
+
+Loại sơ đồ: Use Case. Đối chiếu Phụ lục A: UC-G01, UC-G02, UC-G03, UC-G04, UC-G05, UC-G06, UC-G07, UC-G08.
+
+![Hình B.8 — Chức năng gameplay & engine vật lý; Use Case, đối chiếu mã 00bf1cc.](uml_unified/g_usecase.png)
+
+## B.9. Một cú đánh và xử lý cuối lượt
+
+Loại sơ đồ: Activity. Đối chiếu Phụ lục A: UC-G02, UC-G03, UC-G04, UC-G05, UC-G06, UC-G07.
+
+![Hình B.9 — Một cú đánh và xử lý cuối lượt; Activity, đối chiếu mã 00bf1cc.](uml_unified/g_activity.png)
+
+## B.10. Truyền cú đánh và đổi lượt hiện tại
+
+Loại sơ đồ: Sequence. Đối chiếu Phụ lục A: UC-G03, UC-G04, UC-G07.
+
+![Hình B.10 — Truyền cú đánh và đổi lượt hiện tại; Sequence, đối chiếu mã 00bf1cc.](uml_unified/g_sequence.png)
+
+## B.11. Chức năng giao diện & cá nhân hóa
+
+Loại sơ đồ: Use Case. Đối chiếu Phụ lục A: UC-UI01, UC-UI02, UC-UI03, UC-UI04, UC-UI05, UC-UI06, UC-UI07, UC-UI08, UC-UI09.
+
+![Hình B.11 — Chức năng giao diện & cá nhân hóa; Use Case, đối chiếu mã 00bf1cc.](uml_unified/ui_usecase.png)
+
+## B.12. Cá nhân hóa avatar, gậy và âm thanh
+
+Loại sơ đồ: Activity. Đối chiếu Phụ lục A: UC-UI08, UC-UI09.
+
+![Hình B.12 — Cá nhân hóa avatar, gậy và âm thanh; Activity, đối chiếu mã 00bf1cc.](uml_unified/ui_activity.png)
+
+## B.13. Popup thách đấu, toast và chuyển cảnh
+
+Loại sơ đồ: Sequence. Đối chiếu Phụ lục A: UC-UI01, UC-UI03, UC-UI05.
+
+![Hình B.13 — Popup thách đấu, toast và chuyển cảnh; Sequence, đối chiếu mã 00bf1cc.](uml_unified/ui_sequence.png)
+
+## B.14. Thành phần giao diện và cá nhân hóa
+
+Loại sơ đồ: Component. Đối chiếu Phụ lục A: UC-UI01, UC-UI02, UC-UI03, UC-UI04, UC-UI05, UC-UI06, UC-UI07, UC-UI08, UC-UI09.
+
+![Hình B.14 — Thành phần giao diện và cá nhân hóa; Component, đối chiếu mã 00bf1cc.](uml_unified/ui_component.png)
 
 
 # TÀI LIỆU THAM KHẢO
 
 
-[1] Phân công nhóm được thống nhất ngày 28/10/2026: TV1 7 UC/3 biểu đồ; TV2 7 UC/4 biểu đồ; TV3 8 UC/3 biểu đồ; TV4 9 UC/4 biểu đồ. Tổng cộng 31 use case và 14 biểu đồ UML.
 
-[2] Mã nguồn ứng dụng: https://github.com/LocMixi2-5/LTM/tree/00bf1ccaf8df2cdd54b79cb75ca188ae9c38627e . Lần lấy main ngày 28/10 không có thay đổi Java sau phiên bản này.
+[1] Hồ sơ yêu cầu của đồ án trò chơi bi-a hai người qua mạng: kết nối và giao thức, tài khoản và dữ liệu, gameplay và vật lý, giao diện và cá nhân hóa.
+
+[2] Mã nguồn ứng dụng: https://github.com/LocMixi2-5/LTM/tree/00bf1ccaf8df2cdd54b79cb75ca188ae9c38627e . Lần kiểm tra main ngày 29/10/2026 không có thay đổi mã ứng dụng sau phiên bản này.
 
 [3] Client: client/src/com/billiards/client/NetworkClient.java; scenes/{SceneManager, ServerConfigDialog, LoginScene, RegisterScene, LobbyScene, PreGameScene, GameScene, SettingsDialog, ResultScene, LeaderboardScene}.java; game/{Ball, PhysicsEngine, CueSkinManager}.java; AvatarManager.java; audio/SoundManager.java.
 
 [4] Server: server/src/com/billiards/server/{ServerMain, ClientHandler, GameRoom, LobbyManager, AuthManager, DatabaseManager}.java; protocol/{Packet, PacketType, CueSkinConfig}.java; database/schema.sql.
 
-[5] Danh mục và đặc tả: reports/uml_spec.json. Ánh xạ 14 biểu đồ: reports/uml_manifest.json. Nguồn hình: reports/uml/*.puml,  bản PNG và SVG tương ứng. PlantUML 1.2025.2 dùng để kết xuất UML.
+[5] Đặc tả chức năng: reports/uml_spec.json. Biểu đồ dùng trong báo cáo: reports/uml_unified/manifest.json và các nguồn PlantUML, PNG, SVG cùng thư mục. Kết xuất bằng PlantUML 1.2025.2.
 
-[6] Minh chứng thực thi kế thừa: reports/evidence/00bf1cc/README.md và các nhật ký/script cùng thư mục. Các ảnh chụp UI ngày 26/10 vẫn được giữ để tham khảo,  không tính vào 14 biểu đồ UML của bản phân công mới.
+[6] Minh chứng thực thi: reports/evidence/00bf1cc/README.md cùng nhật ký và script ngày 26/10/2026. Bảy ảnh JavaFX của đợt kiểm tra này được dùng làm minh họa ở Chương 5, có ghi rõ điều kiện chụp và phạm vi áp dụng.
 
 [7] Oracle. Java SE 17 API: Socket, ServerSocket, DataInputStream, DataOutputStream. Tài liệu nền về kết nối và đọc/ghi dữ liệu: https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/net/Socket.html và https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/io/DataInputStream.html .
 

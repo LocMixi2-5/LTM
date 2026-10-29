@@ -1,0 +1,47 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+title Một cú đánh và xử lý cuối lượt
+
+start
+if (Chưa đến lượt / bi đang chạy\nhoặc trận đã kết thúc?) then (Có)
+ :Chỉ quan sát / chờ lượt;
+ stop
+endif
+:Đặt bi nếu được phép,\nngắm, kéo lực và chỉnh xoáy;
+if (Kéo quá ngắn hoặc bi cái không hoạt động?) then (Có)
+ :Không áp dụng cú đánh;
+ stop
+endif
+:Gửi CUE_SHOT nếu chơi mạng,\náp dụng cú đánh ngay tại máy đánh;
+repeat
+ :PhysicsEngine.update: 10 bước con,\nma sát, va chạm và kiểm tra lỗ;
+repeat while (Còn bi chuyển động/chìm?) is (Có) not (Không)
+:Đánh giá bi vào lỗ, lỗi\nvà điều kiện kết thúc;
+if (Có kết quả trận theo client?) then (Có)
+ :Gửi CLAIM_WIN nếu chơi mạng;
+else (Không)
+ :Gửi PHYSICS_DONE nếu chơi mạng,\nchờ TURN_CHANGE từ server;
+endif
+stop
+@enduml

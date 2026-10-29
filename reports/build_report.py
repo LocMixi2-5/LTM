@@ -13,6 +13,7 @@ stem='Bao_cao_tong_hop_nhom_LTM' if full else 'Bao_cao_LTM_4_phan'
 title='Báo cáo tổng hợp đồ án — Trò chơi bi-a hai người qua mạng' if full else 'Báo cáo LTM — 31 use case và 14 biểu đồ UML'
 figure_count=21 if full else 14
 front_titles=['TÓM TẮT','PHÂN CÔNG MỚI VÀ QUY ƯỚC','PHÂN CÔNG VÀ QUY ƯỚC','DANH MỤC 14 BIỂU ĐỒ','DANH MỤC ẢNH MINH HỌA GIAO DIỆN','TÀI LIỆU VÀ NGUỒN ĐỐI CHIẾU']
+if full:front_titles=['TÓM TẮT','DANH MỤC HÌNH']
 p=base/(stem+'.docx')
 subprocess.run([sys.executable,str(base/('write_group_report.py' if full else 'write_uml_report.py'))],check=True)
 subprocess.run(['pandoc',str(base/(stem+'.md')),'--resource-path',str(base),'-o',str(p)],check=True)
@@ -24,7 +25,7 @@ for s in d.sections:
  s.header_distance=Cm(1);s.footer_distance=Cm(1)
  s.different_first_page_header_footer=True
  h=s.header.paragraphs[0];h.alignment=Align.RIGHT
- r=h.add_run('LẬP TRÌNH MẠNG • 8-BALL POOL • 31 USE CASE • 14 UML');r.font.size=Pt(8);r.font.color.rgb=RGBColor.from_string('666666')
+ r=h.add_run('LẬP TRÌNH MẠNG • 8-BALL POOL');r.font.size=Pt(8);r.font.color.rgb=RGBColor.from_string('666666')
  f=s.footer.paragraphs[0];f.alignment=Align.CENTER
  f.add_run('Trang ')
  field=OxmlElement('w:fldSimple');field.set(qn('w:instr'),'PAGE');f._p.append(field)
@@ -105,10 +106,10 @@ for section_title in ([] if full else [
  'Phần 4. TV4 — Giao diện & Cá nhân hóa']):
  anchor.insert_paragraph_before(section_title)
 d.core_properties.title=title
-d.core_properties.subject='Phân công TV1–TV4 ngày 28/10/2026, đối chiếu mã 00bf1cc'
+d.core_properties.subject='Báo cáo hệ thống thống nhất ngày 29/10/2026, đối chiếu mã 00bf1cc' if full else 'Phân công TV1–TV4 ngày 28/10/2026, đối chiếu mã 00bf1cc'
 d.core_properties.author='Nhóm đồ án LTM'
-d.core_properties.keywords='LTM, JavaFX, TCP, PostgreSQL, đồng bộ, phân công'
-d.core_properties.comments='Phân công mới: 7/7/8/9 use case và 3/4/3/4 biểu đồ. Mã ứng dụng 00bf1cc.'
+d.core_properties.keywords='LTM, JavaFX, TCP, PostgreSQL, trò chơi qua mạng'
+d.core_properties.comments='Nội dung theo quy trình sử dụng; đặc tả và UML ở phụ lục. Mã ứng dụng 00bf1cc.' if full else 'Phân công mới: 7/7/8/9 use case và 3/4/3/4 biểu đồ. Mã ứng dụng 00bf1cc.'
 # Keep figures inside the printable area and captions with their picture.
 for shape in d.inline_shapes:
  scale=min(1.0,int(Cm(15.3))/shape.width,int(Cm(20.5))/shape.height)
@@ -128,14 +129,14 @@ if full:
   if current._p.xpath('.//w:drawing'):previous.paragraph_format.keep_with_next=True
 d.save(p)
 r=Document(p)
-parts=[x.text for x in r.paragraphs if x.style.name=='Heading 1' and x.text.startswith('PHẦN ')]
-assert len(parts)==4,parts
+parts=[x.text for x in r.paragraphs if x.style.name=='Heading 1' and x.text.startswith('CHƯƠNG ' if full else 'PHẦN ')]
+assert len(parts)==(7 if full else 4),parts
 assert len(r.inline_shapes)==figure_count
 assert len(r.tables)>=7,len(r.tables)
 body='\n'.join(x.text for x in r.paragraphs)
-for name in ['TV1','TV2','TV3','TV4']:assert name in body
+for name in ['TV1','TV2','TV3','TV4']:assert (name not in body) if full else (name in body)
 assert 'không cần tạo ảnh' not in body
-print('PASS: 4 assigned subsystems; 14 embedded UML diagrams;',figure_count-14,'UI figures.')
+print('PASS:',len(parts),'main sections; 14 UML diagrams;',figure_count-14,'UI figures.')
 print('Paragraphs:',len(r.paragraphs),'Figures:',len(r.inline_shapes))
 print('DOCX size:',p.stat().st_size)
 print('Markdown words:',len((base/(stem+'.md')).read_text().split()))

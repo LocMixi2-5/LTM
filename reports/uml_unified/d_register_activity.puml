@@ -1,0 +1,51 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+title Đăng ký và lưu tài khoản
+
+start
+:Nhận email, username, password;
+if (Email/tên không trống\nvà password ít nhất 6 ký tự?) then (Có)
+ :Sinh salt 16 byte, băm SHA-256;
+ :DB manager trim email/username,\nchuyển email về chữ thường;
+ if (Email đã tồn tại theo LOWER?) then (Có)
+  :Trả EMAIL_EXISTS;
+ else (Không)
+  if (Username đã tồn tại theo LOWER?) then (Có)
+   :Trả USERNAME_EXISTS;
+  else (Không)
+   :INSERT players bằng PreparedStatement;
+   if (INSERT thành công?) then (Có)
+    :Trả OK;
+   else (Không)
+    :Phân loại lỗi SQL và trả lỗi;
+   endif
+  endif
+ endif
+else (Không)
+ :Trả ERROR;
+endif
+:Gửi REGISTER_RESPONSE;
+note right: Đây là kiểm tra server hiện có.\nChưa xác minh email/OTP hoặc kiểm tra\nđịnh dạng tương đương client.
+stop
+@enduml

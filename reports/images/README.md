@@ -1,6 +1,6 @@
 # Hình bổ sung của bản 26/10/2026 — nguồn 00bf1cc
 
-Bản chuyên sâu bốn phân hệ ngày 28/10 nhúng **14 UML** tại [thư mục UML](../uml/README.md). **[Báo cáo tổng hợp nhóm](../Bao_cao_tong_hop_nhom_LTM.md)** dùng thêm 7 ảnh JavaFX bên dưới, đánh số M1–M7; ảnh giao diện không tính vào định mức UML. Các sơ đồ Graphviz của bản trước được giữ làm tư liệu, không nhúng thêm vào bản tổng.
+Bản chuyên sâu bốn phân hệ ngày 28/10 nhúng **14 UML** tại [thư mục UML](../uml/README.md). **[Báo cáo tổng hợp nhóm](../Bao_cao_tong_hop_nhom_LTM.md)** dùng thêm 7 ảnh JavaFX bên dưới, đánh số 5.1–5.7; ảnh giao diện không tính vào định mức UML. Các sơ đồ Graphviz của bản trước được giữ làm tư liệu, không nhúng thêm vào bản tổng.
 
 Bản báo cáo ngày 26/10/2026 từng nhúng 11 hình: 4 sơ đồ kỹ thuật và 7 ảnh chụp JavaFX của mã nguồn `00bf1cc`, ngày 26/10/2026. Không dùng ảnh v2 cũ để mô tả gameplay hiện tại.
 

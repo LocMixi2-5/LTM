@@ -1,0 +1,190 @@
+[
+  {
+    "id": "c_usecase",
+    "type": "Use Case",
+    "title": "Chức năng quản lý kết nối & giao thức truyền tin",
+    "number": "B.1",
+    "use_cases": [
+      "UC-C01",
+      "UC-C02",
+      "UC-C03",
+      "UC-C04",
+      "UC-C05",
+      "UC-C06",
+      "UC-C07"
+    ],
+    "path": "uml_unified/c_usecase.png"
+  },
+  {
+    "id": "c_sequence",
+    "type": "Sequence",
+    "title": "Kết nối TCP và trao đổi PING",
+    "number": "B.2",
+    "use_cases": [
+      "UC-C01",
+      "UC-C03",
+      "UC-C04"
+    ],
+    "path": "uml_unified/c_sequence.png"
+  },
+  {
+    "id": "c_activity",
+    "type": "Activity",
+    "title": "Điều phối thách đấu trực tiếp",
+    "number": "B.3",
+    "use_cases": [
+      "UC-C06",
+      "UC-C07"
+    ],
+    "path": "uml_unified/c_activity.png"
+  },
+  {
+    "id": "d_usecase",
+    "type": "Use Case",
+    "title": "Chức năng xác thực & quản lý dữ liệu",
+    "number": "B.4",
+    "use_cases": [
+      "UC-D01",
+      "UC-D02",
+      "UC-D03",
+      "UC-D04",
+      "UC-D05",
+      "UC-D06",
+      "UC-D07"
+    ],
+    "path": "uml_unified/d_usecase.png"
+  },
+  {
+    "id": "d_register_activity",
+    "type": "Activity",
+    "title": "Đăng ký và lưu tài khoản",
+    "number": "B.5",
+    "use_cases": [
+      "UC-D01"
+    ],
+    "path": "uml_unified/d_register_activity.png"
+  },
+  {
+    "id": "d_result_activity",
+    "type": "Activity",
+    "title": "Ghi kết quả, EXP và lịch sử",
+    "number": "B.6",
+    "use_cases": [
+      "UC-D04"
+    ],
+    "path": "uml_unified/d_result_activity.png"
+  },
+  {
+    "id": "d_login_sequence",
+    "type": "Sequence",
+    "title": "Đăng nhập bằng username hoặc email",
+    "number": "B.7",
+    "use_cases": [
+      "UC-D02"
+    ],
+    "path": "uml_unified/d_login_sequence.png"
+  },
+  {
+    "id": "g_usecase",
+    "type": "Use Case",
+    "title": "Chức năng gameplay & engine vật lý",
+    "number": "B.8",
+    "use_cases": [
+      "UC-G01",
+      "UC-G02",
+      "UC-G03",
+      "UC-G04",
+      "UC-G05",
+      "UC-G06",
+      "UC-G07",
+      "UC-G08"
+    ],
+    "path": "uml_unified/g_usecase.png"
+  },
+  {
+    "id": "g_activity",
+    "type": "Activity",
+    "title": "Một cú đánh và xử lý cuối lượt",
+    "number": "B.9",
+    "use_cases": [
+      "UC-G02",
+      "UC-G03",
+      "UC-G04",
+      "UC-G05",
+      "UC-G06",
+      "UC-G07"
+    ],
+    "path": "uml_unified/g_activity.png"
+  },
+  {
+    "id": "g_sequence",
+    "type": "Sequence",
+    "title": "Truyền cú đánh và đổi lượt hiện tại",
+    "number": "B.10",
+    "use_cases": [
+      "UC-G03",
+      "UC-G04",
+      "UC-G07"
+    ],
+    "path": "uml_unified/g_sequence.png"
+  },
+  {
+    "id": "ui_usecase",
+    "type": "Use Case",
+    "title": "Chức năng giao diện & cá nhân hóa",
+    "number": "B.11",
+    "use_cases": [
+      "UC-UI01",
+      "UC-UI02",
+      "UC-UI03",
+      "UC-UI04",
+      "UC-UI05",
+      "UC-UI06",
+      "UC-UI07",
+      "UC-UI08",
+      "UC-UI09"
+    ],
+    "path": "uml_unified/ui_usecase.png"
+  },
+  {
+    "id": "ui_activity",
+    "type": "Activity",
+    "title": "Cá nhân hóa avatar, gậy và âm thanh",
+    "number": "B.12",
+    "use_cases": [
+      "UC-UI08",
+      "UC-UI09"
+    ],
+    "path": "uml_unified/ui_activity.png"
+  },
+  {
+    "id": "ui_sequence",
+    "type": "Sequence",
+    "title": "Popup thách đấu, toast và chuyển cảnh",
+    "number": "B.13",
+    "use_cases": [
+      "UC-UI01",
+      "UC-UI03",
+      "UC-UI05"
+    ],
+    "path": "uml_unified/ui_sequence.png"
+  },
+  {
+    "id": "ui_component",
+    "type": "Component",
+    "title": "Thành phần giao diện và cá nhân hóa",
+    "number": "B.14",
+    "use_cases": [
+      "UC-UI01",
+      "UC-UI02",
+      "UC-UI03",
+      "UC-UI04",
+      "UC-UI05",
+      "UC-UI06",
+      "UC-UI07",
+      "UC-UI08",
+      "UC-UI09"
+    ],
+    "path": "uml_unified/ui_component.png"
+  }
+]
