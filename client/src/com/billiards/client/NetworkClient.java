@@ -408,12 +408,16 @@ public class NetworkClient {
                 }
             }
             case REGISTER_RESPONSE, ADD_FRIEND_RESPONSE, FRIEND_ACCEPT_RESPONSE,
-                 FRIEND_DECLINE_RESPONSE, REMOVE_FRIEND_RESPONSE, SETTINGS_RESPONSE,
+                 FRIEND_DECLINE_RESPONSE, REMOVE_FRIEND_RESPONSE,
                  CHALLENGE_RESULT -> {
                 boolean success = Packet.readBoolean(in);
                 String msg = Packet.readString(in);
                 Packet.writeBoolean(dos, success);
                 Packet.writeString(dos, msg);
+            }
+            case SETTINGS_RESPONSE -> {
+                boolean success = Packet.readBoolean(in);
+                Packet.writeBoolean(dos, success);
             }
             case MATCH_FOUND -> {
                 String oppName = Packet.readString(in);
@@ -470,8 +474,14 @@ public class NetworkClient {
                 Packet.writeInt(dos, exp);
             }
             case LEADERBOARD_RESPONSE, SEARCH_PLAYERS_RESPONSE, PENDING_REQUESTS_RESPONSE,
-                 FRIEND_LIST_RESPONSE, CHAT_HISTORY_RESPONSE, CHALLENGE_RECEIVE -> {
+                 FRIEND_LIST_RESPONSE, CHALLENGE_RECEIVE -> {
                 String data = Packet.readString(in);
+                Packet.writeString(dos, data);
+            }
+            case CHAT_HISTORY_RESPONSE -> {
+                String friendUsername = Packet.readString(in);
+                String data = Packet.readString(in);
+                Packet.writeString(dos, friendUsername);
                 Packet.writeString(dos, data);
             }
             case CHAT_MESSAGE_RESPONSE -> {
@@ -540,6 +550,12 @@ public class NetworkClient {
     }
 
     public synchronized void sendCueShot(double angle, double force, double cueX, double cueY, double spinX, double spinY) {
+        if (!Double.isFinite(angle) || !Double.isFinite(force)
+                || !Double.isFinite(cueX) || !Double.isFinite(cueY)
+                || !Double.isFinite(spinX) || !Double.isFinite(spinY)) {
+            System.err.println("[Network] Bỏ qua sendCueShot vì tham số không hợp lệ (NaN/Infinity).");
+            return;
+        }
         try {
             Packet.writeType(out, PacketType.CUE_SHOT);
             Packet.writeDouble(out, angle);
@@ -554,6 +570,7 @@ public class NetworkClient {
 
     /** Gửi tọa độ bi cái vừa đặt (sau khi thả bi cái trên bàn) để đối thủ thấy trước khi bắn */
     public synchronized void sendCueBallPlaced(double cueX, double cueY) {
+        if (!Double.isFinite(cueX) || !Double.isFinite(cueY)) return;
         try {
             Packet.writeType(out, PacketType.CUE_BALL_PLACED);
             Packet.writeDouble(out, cueX);
@@ -564,6 +581,8 @@ public class NetworkClient {
 
     /** Gửi trạng thái ngắm cơ và kéo lực thời gian thực để đối thủ nhìn thấy */
     public synchronized void sendCueAim(boolean isAiming, double angle, double forceRatio, double spinX, double spinY) {
+        if (!Double.isFinite(angle) || !Double.isFinite(forceRatio)
+                || !Double.isFinite(spinX) || !Double.isFinite(spinY)) return;
         try {
             Packet.writeType(out, PacketType.CUE_AIM);
             Packet.writeBoolean(out, isAiming);

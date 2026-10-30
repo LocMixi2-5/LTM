@@ -142,41 +142,45 @@ public class PhysicsEngine {
         double speed = Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy);
 
         // Cạnh trái
-        if (ball.x - r < tableX) {
+        if (ball.x - r < tableX && ball.vx < 0) {
             ball.x  = tableX + r;
             ball.vx = -ball.vx * WALL_RESTITUTION;
+            ball.vy = ball.vy * WALL_RESTITUTION;
             if (ball.isCue() && ball.spinX != 0) {
-                ball.vy += ball.spinX * 1.5;
+                ball.vy += ball.spinX * (speed * 0.18);
                 ball.spinX *= 0.5;
             }
             hitWall = true;
         }
         // Cạnh phải
-        else if (ball.x + r > tableX + tableW) {
+        else if (ball.x + r > tableX + tableW && ball.vx > 0) {
             ball.x  = tableX + tableW - r;
             ball.vx = -ball.vx * WALL_RESTITUTION;
+            ball.vy = ball.vy * WALL_RESTITUTION;
             if (ball.isCue() && ball.spinX != 0) {
-                ball.vy -= ball.spinX * 1.5;
+                ball.vy -= ball.spinX * (speed * 0.18);
                 ball.spinX *= 0.5;
             }
             hitWall = true;
         }
         // Cạnh trên
-        if (ball.y - r < tableY) {
+        if (ball.y - r < tableY && ball.vy < 0) {
             ball.y  = tableY + r;
             ball.vy = -ball.vy * WALL_RESTITUTION;
+            ball.vx = ball.vx * WALL_RESTITUTION;
             if (ball.isCue() && ball.spinX != 0) {
-                ball.vx -= ball.spinX * 1.5;
+                ball.vx += ball.spinX * (speed * 0.18);
                 ball.spinX *= 0.5;
             }
             hitWall = true;
         }
         // Cạnh dưới
-        else if (ball.y + r > tableY + tableH) {
+        else if (ball.y + r > tableY + tableH && ball.vy > 0) {
             ball.y  = tableY + tableH - r;
             ball.vy = -ball.vy * WALL_RESTITUTION;
+            ball.vx = ball.vx * WALL_RESTITUTION;
             if (ball.isCue() && ball.spinX != 0) {
-                ball.vx -= ball.spinX * 1.5;
+                ball.vx -= ball.spinX * (speed * 0.18);
                 ball.spinX *= 0.5;
             }
             hitWall = true;

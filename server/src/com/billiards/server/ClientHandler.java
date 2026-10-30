@@ -182,6 +182,10 @@ public class ClientHandler implements Runnable {
                     Packet.writeString(out, "Đăng ký thành công! Vui lòng đăng nhập.");
                     System.out.println("[Handler] Đăng ký thành công: " + username);
                 }
+                case "INVALID_EMAIL" -> {
+                    Packet.writeBoolean(out, false);
+                    Packet.writeString(out, "Định dạng email không hợp lệ!");
+                }
                 case "EMAIL_EXISTS" -> {
                     Packet.writeBoolean(out, false);
                     Packet.writeString(out, "Email này đã được sử dụng!");
@@ -560,6 +564,7 @@ public class ClientHandler implements Runnable {
         
         synchronized (out) {
             Packet.writeType(out, PacketType.CHAT_HISTORY_RESPONSE);
+            Packet.writeString(out, friendUsername);
             Packet.writeString(out, history);
             Packet.flush(out);
         }
@@ -666,14 +671,20 @@ public class ClientHandler implements Runnable {
         String challengerUsername = Packet.readString(in);
         boolean accept = Packet.readBoolean(in);
         
+        // Chỉ xử lý và hủy timer nếu phản hồi khớp với lời thách đấu hiện tại (L03)
+        if (currentChallenger == null || challengerUsername == null
+                || (!challengerUsername.trim().equalsIgnoreCase(currentChallenger.trim()) && !challengerUsername.equals(currentChallenger))) {
+            return;
+        }
+        
         if (challengeTimer != null) {
             challengeTimer.cancel();
             challengeTimer = null;
         }
         
-        if (currentChallenger != null && (challengerUsername.trim().equalsIgnoreCase(currentChallenger.trim()) || challengerUsername.equals(currentChallenger))) {
-            currentChallenger = null;
-            ClientHandler challenger = getOnlinePlayer(challengerUsername);
+        String validChallenger = currentChallenger;
+        currentChallenger = null;
+        ClientHandler challenger = getOnlinePlayer(validChallenger);
             
             if (challenger == null) {
                 sendChallengeResult(false, "Người thách đấu đã ngắt kết nối.");
@@ -693,7 +704,6 @@ public class ClientHandler implements Runnable {
             lobbyManager.removeFromQueue(challenger);
             lobbyManager.removeFromQueue(this);
             lobbyManager.createGame(challenger, this);
-        }
     }
 
     public void sendChallengeResult(boolean success, String message) {

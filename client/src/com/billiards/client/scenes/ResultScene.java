@@ -117,53 +117,7 @@ public class ResultScene {
             }
         });
 
-        // Kiểm tra xem có skin gậy nào vừa mở khóa sau trận đấu không
-        NetworkClient.PlayerSession currentSess = (network != null) ? network.getSession() : null;
-        int oldLevel = (currentSess != null) ? currentSess.level : 1;
-        int newExp = (currentSess != null) ? (currentSess.exp + (youWin ? expGained : 0)) : expGained;
-        int newLevel = (newExp / 200) + 1;
-
-        java.util.List<com.billiards.client.game.CueSkin> newSkins = new java.util.ArrayList<>();
-        if (newLevel > oldLevel) {
-            for (com.billiards.client.game.CueSkin skin : com.billiards.client.game.CueSkinManager.getAllSkins()) {
-                if (skin.requiredLevel > oldLevel && skin.requiredLevel <= newLevel) {
-                    newSkins.add(skin);
-                }
-            }
-        }
-
-        // Hộp thông báo mở khóa skin mới (nếu có)
-        if (!newSkins.isEmpty()) {
-            VBox unlockContent = new VBox(6);
-            unlockContent.setAlignment(Pos.CENTER);
-            unlockContent.setPadding(new Insets(10, 16, 10, 16));
-
-            Label unlockTitle = new Label("🎉 MỞ KHÓA SKIN GẬY MỚI (CẤP " + newLevel + ")!");
-            unlockTitle.setFont(Font.font(Theme.FONT_FAMILY, FontWeight.BOLD, 12));
-            unlockTitle.setTextFill(Color.web(Theme.HEX_BRONZE));
-
-            unlockContent.getChildren().add(unlockTitle);
-            for (com.billiards.client.game.CueSkin s : newSkins) {
-                Label skinNameLbl = new Label("• [" + s.tierName + "] " + s.name + " (" + s.beetleName + ")");
-                skinNameLbl.setFont(Font.font(Theme.FONT_FAMILY, FontWeight.BOLD, 13));
-                skinNameLbl.setTextFill(Color.web(s.tierColorHex));
-                unlockContent.getChildren().add(skinNameLbl);
-            }
-
-            Button viewColBtn = Theme.btnSecondary("Xem bộ sưu tập", 160, 30);
-            viewColBtn.setOnAction(e -> {
-                SettingsDialog dialog = new SettingsDialog(sceneManager.getPrimaryStage(), network, (newAv, newCue) -> {});
-                dialog.show();
-            });
-            unlockContent.getChildren().add(viewColBtn);
-
-            SilverCornerPane unlockBox = new SilverCornerPane(8, 1.5, unlockContent);
-            unlockBox.setCustomBackground("#182520", Theme.HEX_BRONZE);
-            unlockBox.setPrefWidth(320);
-            cardContent.getChildren().addAll(statusIcon, resultLabel, matchBox, expBox, unlockBox, lobbyBtn);
-        } else {
-            cardContent.getChildren().addAll(statusIcon, resultLabel, matchBox, expBox, lobbyBtn);
-        }
+        cardContent.getChildren().addAll(statusIcon, resultLabel, matchBox, expBox, lobbyBtn);
 
         root.getChildren().addAll(bg, card);
 

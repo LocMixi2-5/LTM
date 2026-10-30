@@ -31,7 +31,7 @@ public class RegisterScene {
     private Scene scene;
 
     private static final java.util.regex.Pattern EMAIL_PATTERN =
-        java.util.regex.Pattern.compile("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,7}$");
+        java.util.regex.Pattern.compile("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}$");
 
     private TextField     emailField;
     private TextField     usernameField;

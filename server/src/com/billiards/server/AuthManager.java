@@ -16,6 +16,9 @@ public class AuthManager {
 
     private final DatabaseManager db;
 
+    private static final java.util.regex.Pattern EMAIL_PATTERN =
+        java.util.regex.Pattern.compile("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}$");
+
     public AuthManager(DatabaseManager db) {
         this.db = db;
     }
@@ -28,13 +31,16 @@ public class AuthManager {
      * Xử lý yêu cầu đăng ký tài khoản mới.
      * 
      * @return "OK" nếu thành công
+     *         "INVALID_EMAIL" nếu định dạng email không hợp lệ
      *         "EMAIL_EXISTS" nếu email đã dùng
      *         "USERNAME_EXISTS" nếu username đã dùng
      *         "ERROR" nếu có lỗi hệ thống
      */
     public String register(String email, String username, String plainPassword) {
         // Validate đầu vào cơ bản
-        if (email == null || email.isBlank())         return "ERROR";
+        if (email == null || email.isBlank() || !EMAIL_PATTERN.matcher(email.trim()).matches()) {
+            return "INVALID_EMAIL";
+        }
         if (username == null || username.isBlank())   return "ERROR";
         if (plainPassword == null || plainPassword.length() < 6) return "ERROR";
 

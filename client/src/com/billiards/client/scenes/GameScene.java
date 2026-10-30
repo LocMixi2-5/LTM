@@ -1103,7 +1103,7 @@ public class GameScene {
         double cueBack = 12 + forceRatio * 55 + Math.sin(cueIdleTimer * 4.0) * 1.8;
 
         // Tâm căn hướng xa áp dụng cho mọi tài khoản không điều kiện level
-        drawExtendedAim(gc, cueBall.x, cueBall.y, nx, ny);
+        drawExtendedAim(gc, cueBall.x, cueBall.y, nx, ny, cueSpinX);
 
         // Vẽ cây gậy theo Skin và Animation đã trang bị
         CueSkin mySkin = CueSkinManager.getSkin(myCueColor);
@@ -1129,7 +1129,7 @@ public class GameScene {
         double cueBack = 12 + oppRenderForceRatio * 55 + Math.sin(cueIdleTimer * 4.0) * 1.8;
 
         // Tâm căn hướng xa áp dụng cho mọi tài khoản không điều kiện level
-        drawExtendedAim(gc, cueBall.x, cueBall.y, nx, ny);
+        drawExtendedAim(gc, cueBall.x, cueBall.y, nx, ny, oppSpinX);
 
         // Vẽ cây gậy theo Skin và Animation của đối thủ đã trang bị
         CueSkin oppSkin = CueSkinManager.getSkin(oppCueColor != null ? oppCueColor : CueSkinManager.ID_DEFAULT);
@@ -1147,11 +1147,12 @@ public class GameScene {
         }
     }
 
-    private void drawExtendedAim(GraphicsContext gc, double startX, double startY, double nx, double ny) {
+    private void drawExtendedAim(GraphicsContext gc, double startX, double startY, double nx, double ny, double spinX) {
         double currentX = startX;
         double currentY = startY;
         double dirX = nx;
         double dirY = ny;
+        double currentSpinX = spinX;
 
         gc.setStroke(Color.web("#38bdf8", 0.85));
         gc.setLineWidth(1.8);
@@ -1167,11 +1168,14 @@ public class GameScene {
             double tX = Double.MAX_VALUE;
             double tY = Double.MAX_VALUE;
 
-            if (dirX > 0) tX = (right - currentX) / dirX;
-            else if (dirX < 0) tX = (left - currentX) / dirX;
+            if (dirX > 0.0001) tX = (right - currentX) / dirX;
+            else if (dirX < -0.0001) tX = (left - currentX) / dirX;
 
-            if (dirY > 0) tY = (bottom - currentY) / dirY;
-            else if (dirY < 0) tY = (top - currentY) / dirY;
+            if (dirY > 0.0001) tY = (bottom - currentY) / dirY;
+            else if (dirY < -0.0001) tY = (top - currentY) / dirY;
+
+            if (tX < 0.0001) tX = Double.MAX_VALUE;
+            if (tY < 0.0001) tY = Double.MAX_VALUE;
 
             double t = Math.min(tX, tY);
             if (t <= 0 || t == Double.MAX_VALUE) break;
@@ -1223,11 +1227,11 @@ public class GameScene {
                     // Tính khoảng cách tới băng để kéo dài toàn bộ mặt bàn
                     double twX = Double.MAX_VALUE;
                     double twY = Double.MAX_VALUE;
-                    if (targetDirX > 0) twX = (right - firstHitBall.x) / targetDirX;
-                    else if (targetDirX < 0) twX = (left - firstHitBall.x) / targetDirX;
+                    if (targetDirX > 0.0001) twX = (right - firstHitBall.x) / targetDirX;
+                    else if (targetDirX < -0.0001) twX = (left - firstHitBall.x) / targetDirX;
 
-                    if (targetDirY > 0) twY = (bottom - firstHitBall.y) / targetDirY;
-                    else if (targetDirY < 0) twY = (top - firstHitBall.y) / targetDirY;
+                    if (targetDirY > 0.0001) twY = (bottom - firstHitBall.y) / targetDirY;
+                    else if (targetDirY < -0.0001) twY = (top - firstHitBall.y) / targetDirY;
 
                     double tTarget = Math.min(twX, twY);
                     if (tTarget > 0 && tTarget != Double.MAX_VALUE) {
@@ -1258,8 +1262,27 @@ public class GameScene {
 
             currentX = hitX;
             currentY = hitY;
-            if (t == tX) dirX = -dirX;
-            if (t == tY) dirY = -dirY;
+            if (t == tX) {
+                dirX = -dirX;
+                if (currentSpinX != 0) {
+                    if (dirX > 0) dirY += currentSpinX * 0.18;
+                    else dirY -= currentSpinX * 0.18;
+                    currentSpinX *= 0.5;
+                }
+            }
+            if (t == tY) {
+                dirY = -dirY;
+                if (currentSpinX != 0) {
+                    if (dirY > 0) dirX += currentSpinX * 0.18;
+                    else dirX -= currentSpinX * 0.18;
+                    currentSpinX *= 0.5;
+                }
+            }
+            double dLen = Math.hypot(dirX, dirY);
+            if (dLen > 0.001) {
+                dirX /= dLen;
+                dirY /= dLen;
+            }
         }
         gc.setLineDashes();
     }
@@ -1505,6 +1528,12 @@ public class GameScene {
         aimAngle = Math.atan2(dy, dx);
         double ratio = Math.min(dist / MAX_AIM_DIST, 1.0);
         aimForce = ratio * MAX_FORCE;
+
+        if (!Double.isFinite(aimAngle) || !Double.isFinite(aimForce)
+                || !Double.isFinite(cueBall.x) || !Double.isFinite(cueBall.y)
+                || !Double.isFinite(cueSpinX) || !Double.isFinite(cueSpinY)) {
+            return;
+        }
         
         ballInHand = false;
         isBreakPlacement = false;
@@ -1919,9 +1948,16 @@ public class GameScene {
                         double cueY  = pkt.readDouble();
                         double sX    = pkt.readDouble();
                         double sY    = pkt.readDouble();
+                        if (!Double.isFinite(angle) || !Double.isFinite(force)
+                                || !Double.isFinite(cueX) || !Double.isFinite(cueY)
+                                || !Double.isFinite(sX) || !Double.isFinite(sY)) {
+                            System.err.println("[GameScene] Bỏ qua GAME_STATE vì chứa tham số không hợp lệ (NaN/Infinity).");
+                            break;
+                        }
                         Platform.runLater(() -> {
-                            // Người vừa bắn không áp dụng lại GAME_STATE để tránh bắn 2 lần
-                            if (!iWasShooterThisTurn) {
+                            // Người vừa bắn không áp dụng lại GAME_STATE để tránh bắn 2 lần.
+                            // Đồng thời bỏ qua nếu physics đang chạy hoặc đã có cú đánh đang chờ để chống cú đánh lặp.
+                            if (!iWasShooterThisTurn && !physicsRunning && !pendingShot) {
                                 pendingAngle = angle;
                                 pendingForce = force;
                                 pendingCueX  = cueX;
@@ -1935,6 +1971,7 @@ public class GameScene {
                     case CUE_BALL_PLACED -> {
                         double cueX = pkt.readDouble();
                         double cueY = pkt.readDouble();
+                        if (!Double.isFinite(cueX) || !Double.isFinite(cueY)) break;
                         Platform.runLater(() -> {
                             Ball cue = balls.get(0);
                             cue.active = true;
@@ -1950,6 +1987,8 @@ public class GameScene {
                         double forceRatio = pkt.readDouble();
                         double sX = pkt.readDouble();
                         double sY = pkt.readDouble();
+                        if (!Double.isFinite(angle) || !Double.isFinite(forceRatio)
+                                || !Double.isFinite(sX) || !Double.isFinite(sY)) break;
                         Platform.runLater(() -> {
                             if (!isMyTurn) {
                                 if (isAim && !oppIsAiming) {

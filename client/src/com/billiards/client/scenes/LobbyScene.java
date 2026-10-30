@@ -597,17 +597,6 @@ public class LobbyScene {
     }
 
     private void appendChatMessage(String sender, String time, String message, boolean isMe) {
-        // Chặn trùng lặp nếu tin nhắn cuối cùng hiển thị có cùng người gửi, thời gian và nội dung
-        if (!chatMessagesBox.getChildren().isEmpty()) {
-            Node lastNode = chatMessagesBox.getChildren().get(chatMessagesBox.getChildren().size() - 1);
-            if (lastNode.getUserData() != null) {
-                String lastData = (String) lastNode.getUserData();
-                if (lastData.equals(sender + "|" + time + "|" + message)) {
-                    return;
-                }
-            }
-        }
-
         HBox wrapper = new HBox();
         wrapper.setUserData(sender + "|" + time + "|" + message);
         wrapper.setAlignment(isMe ? Pos.CENTER_RIGHT : Pos.CENTER_LEFT);
@@ -655,17 +644,23 @@ public class LobbyScene {
 
     private void updateFriendList(String data) {
         Platform.runLater(() -> {
+            // Nếu người dùng đang mở menu thao tác của bạn bè, hoãn vẽ lại để không làm mất menu (L07)
+            if (activeFriendMenu != null && activeFriendMenu.isShowing()) {
+                if (data != null && data.equals(lastFriendListData)) {
+                    // Dữ liệu mới nhất lại trùng với dữ liệu đang hiển thị -> không cần cập nhật gì khi đóng menu
+                    pendingFriendListData = null;
+                } else {
+                    pendingFriendListData = data;
+                }
+                return;
+            }
+
             // Không vẽ lại nếu dữ liệu giống hệt lần cập nhật trước
             if (data != null && data.equals(lastFriendListData)) {
                 return;
             }
 
-            // Nếu người dùng đang mở menu thao tác của bạn bè, hoãn vẽ lại để không làm mất menu
-            if (activeFriendMenu != null && activeFriendMenu.isShowing()) {
-                pendingFriendListData = data;
-                return;
-            }
-
+            pendingFriendListData = null;
             lastFriendListData = data;
             friendListBox.getChildren().clear();
 
@@ -1173,8 +1168,14 @@ public class LobbyScene {
                         });
                     }
                     case CHAT_HISTORY_RESPONSE -> {
+                        String friendUsername = pkt.readString();
                         String historyData = pkt.readString();
                         Platform.runLater(() -> {
+                            // Chỉ áp dụng lịch sử nếu đúng là cuộc trò chuyện đang mở hiện tại (L06)
+                            if (currentChatFriend == null || !currentChatFriend.equals(friendUsername)) {
+                                return;
+                            }
+
                             // Lưu giữ các tin nhắn do mình vừa gõ gửi trong lúc đợi history phản hồi
                             List<String> unsavedMyMessages = new ArrayList<>();
                             for (Node child : chatMessagesBox.getChildren()) {
@@ -1199,7 +1200,12 @@ public class LobbyScene {
                                         boolean isMe = sender.equals(username);
                                         appendChatMessage(isMe ? "Bạn" : sender, time, content, isMe);
                                         if (isMe) {
-                                            unsavedMyMessages.removeIf(u -> u.endsWith("|" + content));
+                                            for (int i = 0; i < unsavedMyMessages.size(); i++) {
+                                                if (unsavedMyMessages.get(i).endsWith("|" + content)) {
+                                                    unsavedMyMessages.remove(i);
+                                                    break;
+                                                }
+                                            }
                                         }
                                     }
                                 }

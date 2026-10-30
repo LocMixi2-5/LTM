@@ -76,14 +76,17 @@ public class DatabaseManager {
     // ĐĂNG KÝ
     // ============================================================
 
+    private static final java.util.regex.Pattern EMAIL_PATTERN =
+        java.util.regex.Pattern.compile("^[a-zA-Z0-9_+&*-]+(?:\\.[a-zA-Z0-9_+&*-]+)*@(?:[a-zA-Z0-9-]+\\.)+[a-zA-Z]{2,}$");
+
     /**
      * Tạo tài khoản mới.
-     * @return "OK" nếu thành công, "EMAIL_EXISTS", "USERNAME_EXISTS", hoặc "ERROR"
+     * @return "OK" nếu thành công, "INVALID_EMAIL", "EMAIL_EXISTS", "USERNAME_EXISTS", hoặc "ERROR"
      */
     public String register(String email, String username, String passwordHash) {
         if (!isConnected()) return "ERROR";
 
-        if (email == null || email.isBlank()) return "ERROR";
+        if (email == null || email.isBlank() || !EMAIL_PATTERN.matcher(email.trim()).matches()) return "INVALID_EMAIL";
         email = email.trim().toLowerCase();
         username = username != null ? username.trim() : "";
 

@@ -1,5 +1,7 @@
 package com.billiards.server;
 
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
@@ -39,8 +41,11 @@ public class GameRoom {
     private final ScheduledExecutorService turnScheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> turnTimeoutFuture;
 
-    // Đếm số người đã nhấn "Sẵn sàng" trong pre-game
-    private int readyCount = 0;
+    // Danh sách người chơi đã gửi PREGAME_READY (ngăn 1 người gửi 2 lần mở trận)
+    private final Set<ClientHandler> readyPlayers = new HashSet<>();
+
+    // Trạng thái đang diễn ra cú đánh (chặn gửi lặp lại cú đánh trong cùng 1 lượt)
+    private boolean shotInProgress = false;
 
     public GameRoom(ClientHandler player1, ClientHandler player2, DatabaseManager db) {
         this.player1 = player1;
@@ -53,16 +58,19 @@ public class GameRoom {
     // ============================================================
 
     /**
-     * Được gọi khi một người nhấn "Bắt Đầu Ngay".
-     * Khi cả 2 sẵn sàng hoặc hết 13s (client tự handle) → startGame()
+     * Được gọi khi một người nhấn "Bắt Đầu Ngay" (hoặc timeout đếm ngược ở client).
+     * Chỉ bắt đầu trận khi CẢ 2 người chơi hợp lệ trong phòng đều đã sẵn sàng.
      */
     public synchronized void playerReady(ClientHandler client) {
         if (gameStarted) return;
-        readyCount++;
-        System.out.println("[Room] " + client.getPlayerInfo().username + " đã sẵn sàng. ("
-                + readyCount + "/2)");
+        if (client != player1 && client != player2) return;
 
-        if (readyCount >= 2) {
+        if (readyPlayers.add(client)) {
+            System.out.println("[Room] " + client.getPlayerInfo().username + " đã sẵn sàng. ("
+                    + readyPlayers.size() + "/2)");
+        }
+
+        if (readyPlayers.size() >= 2) {
             startGame();
         }
     }
@@ -79,6 +87,7 @@ public class GameRoom {
     public void startGame() {
         if (gameStarted) return;
         gameStarted = true;
+        shotInProgress = false;
         currentTurnIndex.set(0); // player1 đi trước
 
         long matchSeed = System.nanoTime() ^ ((long) (Math.random() * 1_000_000_000L) << 32);
@@ -105,6 +114,16 @@ public class GameRoom {
     public synchronized void processCueShot(ClientHandler shooter, double angle, double force, double cueX, double cueY, double spinX, double spinY) {
         if (!gameStarted || gameFinished) return;
 
+        // Kiểm tra hợp lệ các thông số số thực (chặn NaN / Infinity tránh lỗi mô phỏng vật lý)
+        if (!Double.isFinite(angle) || !Double.isFinite(force)
+                || !Double.isFinite(cueX) || !Double.isFinite(cueY)
+                || !Double.isFinite(spinX) || !Double.isFinite(spinY)) {
+            System.err.println("[Room] " + shooter.getPlayerInfo().username
+                    + " gửi tham số cú đánh không hợp lệ (NaN/Infinity). Bỏ qua.");
+            return;
+        }
+        if (force < 0) return;
+
         // Kiem tra dung luot chua
         ClientHandler currentPlayer = currentTurnIndex.get() == 0 ? player1 : player2;
         if (shooter != currentPlayer) {
@@ -112,6 +131,14 @@ public class GameRoom {
                     + " danh khong dung luot, bo qua.");
             return;
         }
+
+        // Chặn gửi nhiều cú đánh lặp lại trong khi cú đánh trước đang diễn ra
+        if (shotInProgress) {
+            System.out.println("[Room] " + shooter.getPlayerInfo().username
+                    + " gửi cú đánh lặp khi cú đánh trước chưa xong. Bỏ qua.");
+            return;
+        }
+        shotInProgress = true;
 
         System.out.println("[Room] " + shooter.getPlayerInfo().username
                 + " danh: angle=" + String.format("%.2f", angle)
@@ -133,7 +160,8 @@ public class GameRoom {
      * Chuyển tiếp tọa độ này sang cho đối thủ xem trước khi bắn.
      */
     public synchronized void processCueBallPlaced(ClientHandler sender, double cueX, double cueY) {
-        if (!gameStarted || gameFinished) return;
+        if (!gameStarted || gameFinished || shotInProgress) return;
+        if (!Double.isFinite(cueX) || !Double.isFinite(cueY)) return;
 
         // Chỉ cho phép người đang có lượt đặt bi
         ClientHandler currentPlayer = currentTurnIndex.get() == 0 ? player1 : player2;
@@ -148,7 +176,9 @@ public class GameRoom {
      * Chuyển tiếp ngay lập tức tới đối thủ để render animation gậy và đường ngắm y hệt.
      */
     public synchronized void processCueAim(ClientHandler sender, boolean isAiming, double angle, double forceRatio, double spinX, double spinY) {
-        if (!gameStarted || gameFinished) return;
+        if (!gameStarted || gameFinished || shotInProgress) return;
+        if (!Double.isFinite(angle) || !Double.isFinite(forceRatio)
+                || !Double.isFinite(spinX) || !Double.isFinite(spinY)) return;
 
         // Chỉ cho phép người đang có lượt gửi trạng thái ngắm
         ClientHandler currentPlayer = currentTurnIndex.get() == 0 ? player1 : player2;
@@ -162,6 +192,7 @@ public class GameRoom {
 
     /** Chuyen luot danh */
     private void switchTurn(boolean isFoul, String reason) {
+        shotInProgress = false;
         int newTurn = currentTurnIndex.get() == 0 ? 1 : 0;
         currentTurnIndex.set(newTurn);
 
@@ -186,6 +217,8 @@ public class GameRoom {
 
         ClientHandler currentPlayer = currentTurnIndex.get() == 0 ? player1 : player2;
         if (sender != currentPlayer) return; // Bo qua neu sai nguoi
+
+        shotInProgress = false;
 
         if (keepTurn) {
             System.out.println("[Room] Physics xong - " + sender.getPlayerInfo().username + " danh vao bi, tiep tuc luot.");
@@ -276,6 +309,7 @@ public class GameRoom {
     }
 
     private void cleanupRoom() {
+        shotInProgress = false;
         cancelTurnTimer();
         try {
             turnScheduler.shutdownNow();
