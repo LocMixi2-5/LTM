@@ -1,0 +1,46 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+left to right direction
+actor "Người chơi" as Player
+actor "Người chơi khác" as Other
+rectangle "Quản lý kết nối & Giao thức truyền tin" {
+usecase "UC-C01\nThiết lập kết nối TCP" as U1
+usecase "UC-C02\nKhám phá server trong LAN" as U2
+usecase "UC-C03\nGửi và nhận packet nhị phân" as U3
+usecase "UC-C04\nĐo độ trễ RTT" as U4
+usecase "UC-C05\nGhép trận ngẫu nhiên" as U5
+usecase "UC-C06\nThách đấu trực tiếp" as U6
+usecase "UC-C07\nNgắt kết nối\nvà giải phóng phiên" as U7
+}
+Player -- U1
+Player -- U2
+Player -- U3
+Player -- U4
+Player -- U5
+Player -- U6
+Player -- U7
+Other -- U5
+Other -- U6
+
+@enduml

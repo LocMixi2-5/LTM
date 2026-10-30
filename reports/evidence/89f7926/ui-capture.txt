@@ -1,0 +1,31 @@
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+
+(java:282158): dconf-CRITICAL **: 06:08:47.225: unable to create directory '/home/agent/.cache/dconf': Read-only file system.  dconf will not work properly.
+
+(java:282158): dconf-CRITICAL **: 06:08:47.225: unable to create directory '/home/agent/.cache/dconf': Read-only file system.  dconf will not work properly.
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Fontconfig error: No writable cache directories
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+CAPTURE login.png
+CAPTURE server_config.png
+Oct 30, 2026 6:08:48 AM java.util.prefs.FileSystemPreferences$1 run
+WARNING: Couldn't create user preferences directory. User preferences are unusable.
+Oct 30, 2026 6:08:48 AM java.util.prefs.FileSystemPreferences$1 run
+WARNING: java.io.IOException: No such file or directory
+CAPTURE lobby.png
+CAPTURE friend_search.png
+
+(java:282158): dconf-CRITICAL **: 06:08:50.239: unable to create directory '/home/agent/.cache/dconf': Read-only file system.  dconf will not work properly.
+CAPTURE settings_cues.png
+CAPTURE settings_avatar.png
+CAPTURE settings_audio.png
+CAPTURE leaderboard.png
+CAPTURE matchmaking.png
+CAPTURE pregame.png
+CAPTURE result_win.png
+CAPTURE result_loss.png
+Complete: source 89f7926 production scenes/dialogs, JavaFX Linux/Xvfb, synthetic data. Screenshots do not establish end-to-end correctness.

@@ -1,0 +1,142 @@
+[
+  {
+    "figure": "8.1",
+    "title": "Đăng nhập",
+    "file": "login.png",
+    "description": "Màn hình mở đầu nhận tên đăng nhập hoặc email và mật khẩu. Người dùng có thể chuyển sang đăng ký hoặc mở cấu hình kết nối trước khi vào sảnh.",
+    "source_class": "LoginScene"
+  },
+  {
+    "figure": "8.2",
+    "title": "Cấu hình kết nối server",
+    "file": "server_config.png",
+    "description": "Hộp thoại cho phép nhập địa chỉ server và cổng kết nối. Đây là bước cấu hình đầu vào khi hai máy client cần kết nối đến cùng một server.",
+    "source_class": "ServerConfigDialog"
+  },
+  {
+    "figure": "8.3",
+    "title": "Đăng ký tài khoản",
+    "file": "registration_actual.png",
+    "description": "Form gồm email, tên đăng nhập, mật khẩu và xác nhận mật khẩu. Dữ liệu hợp lệ mới được gửi đi; server tiếp tục kiểm tra cú pháp và thông tin trùng lặp.",
+    "source_class": "RegisterScene"
+  },
+  {
+    "figure": "8.4",
+    "title": "Phản hồi dữ liệu đăng ký không hợp lệ",
+    "file": "registration_validation.png",
+    "description": "Thông báo lỗi xuất hiện ngay trên form khi email sai cú pháp. Trạng thái này giúp người dùng sửa đầu vào mà không cần rời màn hình đăng ký.",
+    "source_class": "RegisterScene"
+  },
+  {
+    "figure": "8.5",
+    "title": "Sảnh chính",
+    "file": "lobby.png",
+    "description": "Sảnh tập trung thông tin tài khoản, điểm kinh nghiệm, cấp độ và danh sách bạn. Từ đây người dùng truy cập tìm trận, luyện tập, bảng xếp hạng và cài đặt.",
+    "source_class": "LobbyScene"
+  },
+  {
+    "figure": "8.6",
+    "title": "Menu thao tác với bạn bè",
+    "file": "friend_menu_actual.png",
+    "description": "Menu cạnh tên bạn cung cấp các thao tác tương tác. Giao diện giữ menu đang mở khi danh sách tự cập nhật và áp dụng dữ liệu mới sau khi đóng.",
+    "source_class": "LobbyScene"
+  },
+  {
+    "figure": "8.7",
+    "title": "Tìm người chơi và lời mời kết bạn",
+    "file": "friend_search.png",
+    "description": "Phần trên hiển thị kết quả tìm kiếm và trạng thái đã là bạn hoặc nút kết bạn. Phần dưới tổng hợp lời mời đang chờ với nút đồng ý và từ chối.",
+    "source_class": "FriendSearchDialog"
+  },
+  {
+    "figure": "8.8",
+    "title": "Hội thoại với bạn bè",
+    "file": "chat_actual.png",
+    "description": "Khung hội thoại hiển thị người nhận, lịch sử, nội dung tin và thời gian. Bản hiện tại kiểm tra tên người nhận trước khi áp dụng lịch sử và giữ các tin cố ý giống nội dung.",
+    "source_class": "LobbyScene"
+  },
+  {
+    "figure": "8.9",
+    "title": "Nhận lời mời thách đấu",
+    "file": "challenge_actual.png",
+    "description": "Popup hiển thị người mời, lựa chọn phản hồi và thời gian chờ. Bộ đếm giao diện là 10 giây; thời hạn lời mời phía server là 15 giây.",
+    "source_class": "LobbyScene"
+  },
+  {
+    "figure": "8.10",
+    "title": "Thông báo kết quả lời mời",
+    "file": "challenge_toast.png",
+    "description": "Thông báo ngắn trên sảnh phản hồi kết quả lời mời. Toast không mở thêm hộp thoại buộc người dùng đóng trước khi tiếp tục thao tác.",
+    "source_class": "LobbyScene"
+  },
+  {
+    "figure": "8.11",
+    "title": "Tìm trận",
+    "file": "matchmaking.png",
+    "description": "Màn hình thể hiện trạng thái chờ ghép đối thủ và cung cấp nút hủy. Khi nhận thông tin ghép trận, client chuyển sang màn hình chuẩn bị.",
+    "source_class": "MatchmakingScene"
+  },
+  {
+    "figure": "8.12",
+    "title": "Chuẩn bị vào trận",
+    "file": "pregame.png",
+    "description": "Hai người chơi được trình bày đối diện nhau cùng thông tin cấp độ và trạng thái chuẩn bị. Client gửi tín hiệu sẵn sàng; server yêu cầu hai người hợp lệ cùng sẵn sàng để bắt đầu.",
+    "source_class": "PreGameScene"
+  },
+  {
+    "figure": "8.13",
+    "title": "Bàn chơi với đối thủ",
+    "file": "game_actual.png",
+    "description": "Màn hình gồm bàn bi, thông tin hai người chơi, lượt, thời gian, nhóm bi và bộ điều khiển xoáy. Hình minh họa client nhận mẫu ngắm của đối thủ; không dùng ảnh đơn để kết luận độ mượt đồng bộ hai máy.",
+    "source_class": "GameScene"
+  },
+  {
+    "figure": "8.14",
+    "title": "Bàn luyện tập",
+    "file": "practice_actual.png",
+    "description": "Chế độ luyện tập dùng bàn chơi và cơ chế điều khiển tương tự thi đấu nhưng ẩn phần thông tin đối thủ. Người chơi có thể luyện đặt bi, ngắm và đánh bi trước khi tham gia trận.",
+    "source_class": "GameScene"
+  },
+  {
+    "figure": "8.15",
+    "title": "Cài đặt avatar",
+    "file": "settings_avatar.png",
+    "description": "Tab Avatar cho phép xem trước và chọn hình đại diện. Các nút đóng và lưu nằm ở cuối hộp thoại; thay đổi hình đại diện được dùng khi hiển thị người chơi.",
+    "source_class": "SettingsDialog"
+  },
+  {
+    "figure": "8.16",
+    "title": "Bộ sưu tập gậy",
+    "file": "settings_cues.png",
+    "description": "Tab bộ sưu tập hiển thị các gậy, vùng xem trước và điều kiện sử dụng theo cấp độ. Người chơi xem trước hoặc trang bị gậy đủ điều kiện; server kiểm tra lại cấp khi nhận cập nhật.",
+    "source_class": "SettingsDialog"
+  },
+  {
+    "figure": "8.17",
+    "title": "Âm thanh và đồ họa",
+    "file": "settings_audio.png",
+    "description": "Tab tập hợp các điều khiển âm thanh và hiệu ứng đang có trong ứng dụng. Người dùng điều chỉnh trải nghiệm nghe và hiển thị trong cùng hộp thoại cài đặt.",
+    "source_class": "SettingsDialog"
+  },
+  {
+    "figure": "8.18",
+    "title": "Bảng xếp hạng",
+    "file": "leaderboard.png",
+    "description": "Bảng hiển thị thứ hạng, tên, cấp độ, kinh nghiệm, số trận thắng và thua; hàng của người đang đăng nhập được phân biệt. Dữ liệu trong ảnh là dữ liệu minh họa có kiểm soát.",
+    "source_class": "LeaderboardScene"
+  },
+  {
+    "figure": "8.19",
+    "title": "Kết quả chiến thắng",
+    "file": "result_win.png",
+    "description": "Màn hình thông báo chiến thắng, cặp đấu và kinh nghiệm nhận được, kèm nút trở về sảnh. Bản 89f7926 không còn khung thông báo mở khóa skin trong màn hình này.",
+    "source_class": "ResultScene"
+  },
+  {
+    "figure": "8.20",
+    "title": "Kết quả thất bại",
+    "file": "result_loss.png",
+    "description": "Nhánh thất bại dùng cùng bố cục kết quả, thay đổi nội dung và điểm nhận được. Hai ảnh kết quả được mở trực tiếp bằng dữ liệu minh họa, không phải kết quả của một ván đầu cuối đã nghiệm thu.",
+    "source_class": "ResultScene"
+  }
+]

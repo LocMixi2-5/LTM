@@ -1,0 +1,16 @@
+PASS registration and mixed-case username login
+PASS invalid challenge rejection and case-insensitive decline
+PASS accepted challenge creates room; inviter removed from queue
+PASS duplicate READY from one player does not start game; distinct second player starts it
+PASS 60 consecutive 34-byte aim samples relayed; no echo; not a two-UI benchmark
+PASS non-finite aim/shot angles and negative shot force rejected in tested inputs
+PASS duplicate shot and aim during active shot rejected
+PASS PHYSICS_DONE switches turn; no board snapshot/ACK
+PASS boolean SETTINGS_RESPONSE and CHAT_HISTORY_RESPONSE friend+history wire format
+FINDING current player can send PHYSICS_DONE before any shot and change turn
+FINDING finite force 1000 above client UI maximum 25 is relayed; finite validation is not range validation
+PASS unanswered challenge expires after 15.00 seconds
+PASS mismatched reply preserves expiry; target can receive next invitation
+PASS pending challenge cleanup on recipient/challenger disconnect
+PASS server rejects malformed email and accepts long valid TLD with email login
+Temporary test accounts and related rows removed

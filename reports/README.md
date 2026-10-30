@@ -1,6 +1,10 @@
 # Báo cáo tổng hợp
 
-**Bản mới nhất — sửa trực tiếp file Word người dùng gửi, giữ bố cục:** [Word](Bao_cao_tong_hop_nhom_LTM_chinh_sua.docx) · [PDF 61 trang](Bao_cao_tong_hop_nhom_LTM_chinh_sua.pdf). Đã viết lại các đoạn nhắc TV1–TV4 theo chức năng, bỏ tiêu đề và nhãn thành viên trong hình. [Chi tiết thay đổi và cách tái tạo](CHINH_SUA_BAN_GUI.md).
+**Cập nhật 30/10/2026, đối chiếu mã ứng dụng `89f7926`: [Word đã sửa](Bao_Cao_LTM_cap_nhat_89f7926.docx) · [PDF](Bao_Cao_LTM_cap_nhat_89f7926.pdf).** Giữ bố cục 10 phần của file “Bao Cao LTM.docx”; cập nhật nội dung theo GitHub, kết quả kiểm tra mới, 14 UML và 20 ảnh giao diện hiện hành. [Biên bản đối chiếu](reviews/Doi_chieu_GitHub_2026-10-30.md) · [Minh chứng](evidence/89f7926/README.md) · [Danh mục ảnh](images_89f7926/README.md).
+
+Các phiên bản phía dưới là tài liệu lịch sử, không phải bản hiện hành.
+
+**Bản sửa trước ngày 30/10 — giữ bố cục file người dùng gửi:** [Word](Bao_cao_tong_hop_nhom_LTM_chinh_sua.docx) · [PDF 61 trang](Bao_cao_tong_hop_nhom_LTM_chinh_sua.pdf). Đã viết lại các đoạn nhắc TV1–TV4 theo chức năng, bỏ tiêu đề và nhãn thành viên trong hình. [Chi tiết thay đổi và cách tái tạo](CHINH_SUA_BAN_GUI.md).
 
 ## Rà soát phần kiểm thử của bản Word mới nhất
 

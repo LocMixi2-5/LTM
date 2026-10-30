@@ -1,0 +1,4 @@
+2026-10-30 Asia/Saigon; source 89f7926c13345bcd21fbaccaf7d8e13fe3fdb562
+PASS clean compile server: 9 Java files
+PASS clean compile client: 26 Java files
+JDK 21; --release 17; JavaFX Linux; no Windows EXE execution.

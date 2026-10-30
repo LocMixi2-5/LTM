@@ -1,0 +1,54 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+
+top to bottom direction
+skinparam componentStyle uml2
+package "Client JavaFX" {
+ component "Điều hướng\nClientMain / SceneManager" as Nav
+ component "Các màn hình nghiệp vụ\nLogin / Register / Lobby\nPreGame / Result / Leaderboard" as Views
+ component "GameScene\nCanvas / HUD" as Game
+ component "SettingsDialog" as Settings
+ component "Hiển thị và cá nhân hóa\nAvatarManager / CueSkinManager\nTheme / SilverCornerPane / VFX" as Visual
+ component "SoundManager" as Sound
+ component "NetworkClient\nPacket callbacks" as Net
+}
+component "Server\nXử lý nghiệp vụ" as Server
+Nav --> Views : điều hướng
+Nav --> Game : điều hướng
+Views --> Settings : mở dialog
+Settings --> Visual : preview
+Game --> Visual : render
+Settings --> Sound : cấu hình
+Game --> Sound : sự kiện
+Views ..> Visual : style
+Views --> Net : nghiệp vụ
+Game --> Net : gameplay
+Settings --> Net : lưu hồ sơ
+Net --> Server : TCP
+note bottom of Nav
+ Nhóm logic các lớp hiện có,
+ không phải các dịch vụ độc lập.
+end note
+
+@enduml

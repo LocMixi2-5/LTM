@@ -1,0 +1,31 @@
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+
+(java:280997): dconf-CRITICAL **: 05:55:11.354: unable to create directory '/home/agent/.cache/dconf': Read-only file system.  dconf will not work properly.
+
+(java:280997): dconf-CRITICAL **: 05:55:11.355: unable to create directory '/home/agent/.cache/dconf': Read-only file system.  dconf will not work properly.
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Fontconfig error: No writable cache directories
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+Can not create cache at /home/agent/.openjfx/cache/17.0.13
+PASS JavaFX explicit email submission and malformed-email validation (fixture transport)
+PASS JavaFX accepts long valid TLD: player@example.technology
+Oct 30, 2026 5:55:12 AM java.util.prefs.FileSystemPreferences$1 run
+WARNING: Couldn't create user preferences directory. User preferences are unusable.
+Oct 30, 2026 5:55:12 AM java.util.prefs.FileSystemPreferences$1 run
+WARNING: java.io.IOException: No such file or directory
+
+(java:280997): dconf-CRITICAL **: 05:55:14.368: unable to create directory '/home/agent/.cache/dconf': Read-only file system.  dconf will not work properly.
+PASS friend menu remains open during refresh; unchanged data skips redraw; deferred data applied on close
+PASS friend list A->B->A retains latest A after menu closes
+PASS two intentional equal messages in same minute render as two rows
+PASS wrong-friend history ignored and matching-friend history applied (fixture transport)
+PASS friend refresh start/stop called from worker thread uses JavaFX thread
+PASS challenge popup shown above owner and closes through JavaFX lifecycle
+PASS challenge result shows toast without modal alert
+PASS solo practice hides opponent layout and removes empty slot
+PASS current 34-byte aim frame decoded by GameScene (fixture callback)
+PASS SETTINGS_RESPONSE parser reads one boolean and preserves next packet boundary
+UI checks: source 89f7926, actual JavaFX classes, fixture transport; not Windows or end-to-end gameplay.

@@ -1,0 +1,54 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+
+actor "Người chơi" as P
+participant "NetworkClient" as N
+participant "LobbyScene" as L
+participant "FX Application Thread" as FX
+participant "Popup / Timeline" as POP
+participant "SceneManager" as SM
+N -> L : CHALLENGE_RECEIVE(challenger)
+L -> FX : Platform.runLater(...)
+FX -> POP : show, alwaysOnTop, toFront, focus\nđịnh vị và chạy đếm 10 giây
+POP --> P : Hiển thị lời mời
+alt Người chơi chọn trước hết hạn
+ P -> POP : Đồng ý / Từ chối
+ POP -> L : closeActiveChallengeDialog
+ L -> N : sendChallengeResponse(name, accept)
+else Hết 10 giây
+ POP -> L : Đóng lời mời và hiện toast
+ L -> N : sendChallengeResponse(name, false)
+end
+alt Nhận MATCH_FOUND
+ N -> L : Thông tin đối thủ
+ L -> FX : Platform.runLater(...)
+ FX -> L : Dừng refresh, đóng popup/toast
+ FX -> SM : showPreGame(...)
+else Nhận CHALLENGE_RESULT
+ N -> L : success, message
+ L -> FX : Platform.runLater(...)
+ FX -> L : Đóng popup; showToast(message)
+end
+
+@enduml

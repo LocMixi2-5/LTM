@@ -1,0 +1,50 @@
+@startuml
+skinparam backgroundColor white
+skinparam defaultFontName DejaVu Sans
+skinparam defaultFontSize 15
+skinparam shadowing false
+skinparam dpi 180
+skinparam ArrowColor #3D5E78
+skinparam ArrowFontSize 13
+skinparam roundcorner 12
+skinparam sequenceMessageAlign center
+skinparam maxMessageSize 46
+skinparam ParticipantPadding 12
+skinparam BoxPadding 10
+skinparam usecaseBackgroundColor #EDF4FA
+skinparam usecaseBorderColor #3D5E78
+skinparam activityBackgroundColor #EDF4FA
+skinparam activityBorderColor #3D5E78
+skinparam activityDiamondBackgroundColor #FFF1D6
+skinparam componentBackgroundColor #E8F3ED
+skinparam componentBorderColor #3D5E78
+skinparam NoteBackgroundColor #FFF5DC
+skinparam NoteBorderColor #A58842
+hide footbox
+left to right direction
+actor "Người chơi" as Player
+actor "Người chơi khác" as Other
+rectangle "Giao diện & Cá nhân hóa" {
+usecase "UC-UI01\nĐiều hướng màn hình" as U1
+usecase "UC-UI02\nHiển thị và kiểm\ntra form tài khoản" as U2
+usecase "UC-UI03\nHiển thị sảnh và\ndanh sách bạn bè" as U3
+usecase "UC-UI04\nHiển thị hội thoại chat" as U4
+usecase "UC-UI05\nHiển thị lời mời\nvà màn hình trước trận" as U5
+usecase "UC-UI06\nHiển thị bàn chơi và HUD" as U6
+usecase "UC-UI07\nHiển thị kết quả\nvà bảng xếp hạng" as U7
+usecase "UC-UI08\nChọn avatar và skin gậy" as U8
+usecase "UC-UI09\nĐiều chỉnh âm\nthanh và hiệu ứng" as U9
+}
+Player -- U1
+Player -- U2
+Player -- U3
+Player -- U4
+Player -- U5
+Player -- U6
+Player -- U7
+Player -- U8
+Player -- U9
+Other -- U4
+Other -- U5
+
+@enduml
