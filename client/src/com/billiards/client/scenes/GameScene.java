@@ -62,12 +62,7 @@ public class GameScene {
     private static final double POCKET_R  = 23.0;
 
     // ────── CẤU HÌNH SỐ LƯỢNG BI MỤC TIÊU CỦA MỖI BÊN ────────────
-    // BẠN CHỈ CẦN ĐỔI DUY NHẤT CON SỐ NÀY (từ 1 đến 7 bi):
-    // 1: Mỗi người 1 bi (bàn 3 bi) - Trận đấu siêu tốc!
-    // 3: Mỗi người 3 bi (bàn 7 bi) - Trận đấu nhanh gọn!
-    // 4: Mỗi người 4 bi (bàn 9 bi) - Chuẩn 9-Ball!
-    // 7: Mỗi người 7 bi (bàn 15 bi) - Chuẩn 8-Ball gốc!
-    public static final int BALLS_PER_PLAYER = 7;
+    public static final int BALLS_PER_PLAYER = 3;
 
     // ────── Tham chiếu ──────────────────────────────────────────
     private final NetworkClient network;
@@ -379,24 +374,21 @@ public class GameScene {
         this.isMyTurn      = isFirstTurn;
         this.isPractice    = false;
         
-        // 14 bi mục tiêu (1-7 và 9-15) được xáo ngẫu nhiên hoàn toàn theo matchSeed
-        List<Integer> allTargetBalls = new ArrayList<>();
-        for (int i = 1; i <= 15; i++) {
-            if (i == 8) continue;
-            allTargetBalls.add(i);
-        }
-        Collections.shuffle(allTargetBalls, new Random(matchSeed));
-        
+        // Phân nhóm bi chuẩn xác: Player 0 là Bi Trơn (Solids), Player 1 là Bi Sọc (Stripes)
         int targetCount = Math.max(1, Math.min(BALLS_PER_PLAYER, 7));
-        List<Integer> group1 = new ArrayList<>(allTargetBalls.subList(0, targetCount));
-        List<Integer> group2 = new ArrayList<>(allTargetBalls.subList(targetCount, targetCount * 2));
+        List<Integer> solidGroup = new ArrayList<>();
+        List<Integer> stripeGroup = new ArrayList<>();
+        for (int i = 1; i <= targetCount; i++) {
+            solidGroup.add(i);       // Bi Trơn: 1..targetCount
+            stripeGroup.add(i + 8);   // Bi Sọc: 9..9+targetCount-1
+        }
         
         if (playerIndex == 0) {
-            myTargetBalls = group1;
-            oppTargetBalls = group2;
+            myTargetBalls = solidGroup;
+            oppTargetBalls = stripeGroup;
         } else {
-            myTargetBalls = group2;
-            oppTargetBalls = group1;
+            myTargetBalls = stripeGroup;
+            oppTargetBalls = solidGroup;
         }
         
         this.turnStartTime = System.currentTimeMillis();
@@ -437,10 +429,11 @@ public class GameScene {
         long practiceSeed = System.nanoTime() ^ ((long) (Math.random() * 1_000_000_000L) << 32);
         
         // Chế độ luyện tập: Dọn sạch các bi mục tiêu theo cấu hình
-        int practiceTargetCount = Math.max(1, Math.min(BALLS_PER_PLAYER * 2, 14));
+        int practiceTargetCount = Math.max(1, Math.min(BALLS_PER_PLAYER, 7));
         myTargetBalls = new ArrayList<>();
         for (int i = 1; i <= practiceTargetCount; i++) {
-            myTargetBalls.add(i == 8 ? 15 : i);
+            myTargetBalls.add(i);     // Bi Trơn
+            myTargetBalls.add(i + 8); // Bi Sọc
         }
         oppTargetBalls = null;
 
@@ -467,18 +460,16 @@ public class GameScene {
         balls.add(new Ball(0, cx - TABLE_W / 4, cy));
 
         List<Integer> rackBalls = new ArrayList<>();
-        if (!isPractice) {
-            // Trận Online: Lấy đúng số bi của 2 người chơi và chèn bi 8 vào giữa
-            if (myTargetBalls != null) rackBalls.addAll(myTargetBalls);
-            if (oppTargetBalls != null) rackBalls.addAll(oppTargetBalls);
-            Collections.shuffle(rackBalls, new Random(seed));
-            rackBalls.add(rackBalls.size() / 2, 8);
-        } else {
-            // Luyện tập: Lấy các bi mục tiêu và chèn bi 8 vào giữa
-            if (myTargetBalls != null) rackBalls.addAll(myTargetBalls);
-            Collections.shuffle(rackBalls, new Random(seed));
-            rackBalls.add(rackBalls.size() / 2, 8);
+        int targetCount = Math.max(1, Math.min(BALLS_PER_PLAYER, 7));
+        // Luôn nạp các bi theo thứ tự chuẩn [1, 9, 2, 10, ...] cố định trên CẢ 2 CLIENT để chống desync
+        for (int i = 1; i <= targetCount; i++) {
+            rackBalls.add(i);       // Bi Trơn (Solids)
+            rackBalls.add(i + 8);   // Bi Sọc (Stripes)
         }
+        // Xáo ngẫu nhiên vị trí các bi theo cùng matchSeed giữa 2 máy
+        Collections.shuffle(rackBalls, new Random(seed));
+        // Đặt bi số 8 vào vị trí giữa chùm bi
+        rackBalls.add(rackBalls.size() / 2, 8);
 
         // Tự động xếp các bi thành hình tam giác cân đối theo đúng số lượng bi thực tế
         double tipX = cx + TABLE_W / 4;
@@ -2162,6 +2153,7 @@ public class GameScene {
                 myBallsBox.getChildren().add(createBallIcon(num));
             }
             int myRemaining = myRemainingList.size();
+            boolean isMySolid = (myTargetBalls != null && !myTargetBalls.isEmpty() && myTargetBalls.get(0) <= 7);
 
             if (oppBallsBox != null) {
                 oppBallsBox.getChildren().clear();
@@ -2186,9 +2178,11 @@ public class GameScene {
                 }
                 int oppRemaining = oppRemainingList.size();
 
+                boolean isOppSolid = (oppTargetBalls != null && !oppTargetBalls.isEmpty() && oppTargetBalls.get(0) <= 7);
+
                 if (oppGroupLabel != null) {
                     if (oppRemaining > 0) {
-                        oppGroupLabel.setText("Đối thủ: Còn " + oppRemaining + " bi");
+                        oppGroupLabel.setText((isOppSolid ? "Bi Trơn" : "Bi Sọc") + ": Còn " + oppRemaining + " bi");
                     } else {
                         oppGroupLabel.setText("Đang ngắm bi số 8!");
                     }
@@ -2196,7 +2190,7 @@ public class GameScene {
             }
 
             if (myRemaining > 0) {
-                myGroupLabel.setText("Mục tiêu: Còn " + myRemaining + " bi");
+                myGroupLabel.setText((isMySolid ? "Bi Trơn" : "Bi Sọc") + ": Còn " + myRemaining + " bi");
             } else {
                 myGroupLabel.setText("Ăn bi số 8 để thắng!");
             }
