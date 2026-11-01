@@ -61,6 +61,14 @@ public class GameScene {
     private static final double TABLE_H   = 424;
     private static final double POCKET_R  = 23.0;
 
+    // ────── CẤU HÌNH SỐ LƯỢNG BI MỤC TIÊU CỦA MỖI BÊN ────────────
+    // BẠN CHỈ CẦN ĐỔI DUY NHẤT CON SỐ NÀY (từ 1 đến 7 bi):
+    // 1: Mỗi người 1 bi (bàn 3 bi) - Trận đấu siêu tốc!
+    // 3: Mỗi người 3 bi (bàn 7 bi) - Trận đấu nhanh gọn!
+    // 4: Mỗi người 4 bi (bàn 9 bi) - Chuẩn 9-Ball!
+    // 7: Mỗi người 7 bi (bàn 15 bi) - Chuẩn 8-Ball gốc!
+    public static final int BALLS_PER_PLAYER = 7;
+
     // ────── Tham chiếu ──────────────────────────────────────────
     private final NetworkClient network;
     private final SceneManager  sceneManager;
@@ -379,8 +387,9 @@ public class GameScene {
         }
         Collections.shuffle(allTargetBalls, new Random(matchSeed));
         
-        List<Integer> group1 = new ArrayList<>(allTargetBalls.subList(0, 7));
-        List<Integer> group2 = new ArrayList<>(allTargetBalls.subList(7, 14));
+        int targetCount = Math.max(1, Math.min(BALLS_PER_PLAYER, 7));
+        List<Integer> group1 = new ArrayList<>(allTargetBalls.subList(0, targetCount));
+        List<Integer> group2 = new ArrayList<>(allTargetBalls.subList(targetCount, targetCount * 2));
         
         if (playerIndex == 0) {
             myTargetBalls = group1;
@@ -427,10 +436,11 @@ public class GameScene {
         // Mỗi lần luyện tập tạo seed ngẫu nhiên độc lập hoàn toàn
         long practiceSeed = System.nanoTime() ^ ((long) (Math.random() * 1_000_000_000L) << 32);
         
-        // Chế độ luyện tập: Dọn sạch toàn bộ 15 bi mục tiêu trên bàn
+        // Chế độ luyện tập: Dọn sạch các bi mục tiêu theo cấu hình
+        int practiceTargetCount = Math.max(1, Math.min(BALLS_PER_PLAYER * 2, 14));
         myTargetBalls = new ArrayList<>();
-        for (int i = 1; i <= 15; i++) {
-            myTargetBalls.add(i);
+        for (int i = 1; i <= practiceTargetCount; i++) {
+            myTargetBalls.add(i == 8 ? 15 : i);
         }
         oppTargetBalls = null;
 
@@ -442,7 +452,7 @@ public class GameScene {
         build();
         startGameLoop();
         updateGroupLabels();
-        showTurnToast("🎱 LUYỆN TẬP: Đặt bi cái tự do và dọn sạch 15 bi trên bàn!", Color.web("#00d2ff"));
+        showTurnToast("🎱 LUYỆN TẬP: Đặt bi cái tự do và dọn sạch " + (myTargetBalls.size() + 1) + " bi trên bàn!", Color.web("#00d2ff"));
     }
 
     // ============================================================
@@ -456,28 +466,37 @@ public class GameScene {
         // Cue ball (bi trắng)
         balls.add(new Ball(0, cx - TABLE_W / 4, cy));
 
-        // 14 bi mục tiêu được xáo ngẫu nhiên theo seed, bi 8 luôn ở trung tâm hình tam giác (vị trí index 4)
         List<Integer> rackBalls = new ArrayList<>();
-        for (int i = 1; i <= 15; i++) {
-            if (i == 8) continue;
-            rackBalls.add(i);
+        if (!isPractice) {
+            // Trận Online: Lấy đúng số bi của 2 người chơi và chèn bi 8 vào giữa
+            if (myTargetBalls != null) rackBalls.addAll(myTargetBalls);
+            if (oppTargetBalls != null) rackBalls.addAll(oppTargetBalls);
+            Collections.shuffle(rackBalls, new Random(seed));
+            rackBalls.add(rackBalls.size() / 2, 8);
+        } else {
+            // Luyện tập: Lấy các bi mục tiêu và chèn bi 8 vào giữa
+            if (myTargetBalls != null) rackBalls.addAll(myTargetBalls);
+            Collections.shuffle(rackBalls, new Random(seed));
+            rackBalls.add(rackBalls.size() / 2, 8);
         }
-        Collections.shuffle(rackBalls, new Random(seed));
 
-        // Chèn bi 8 vào vị trí trung tâm tam giác (hàng 3, chính giữa - index 4 của 15 bi)
-        rackBalls.add(4, 8);
-
+        // Tự động xếp các bi thành hình tam giác cân đối theo đúng số lượng bi thực tế
         double tipX = cx + TABLE_W / 4;
         double tipY = cy;
         double r    = Ball.RADIUS * 2 + 0.6;
 
+        int total = rackBalls.size();
         int idx = 0;
-        for (int row = 0; row < 5; row++) {
-            for (int col = 0; col <= row; col++) {
+        int row = 0;
+
+        while (idx < total) {
+            int ballsInThisRow = Math.min(row + 1, total - idx);
+            for (int col = 0; col < ballsInThisRow; col++) {
                 double bx = tipX + row * r * Math.cos(Math.toRadians(30));
-                double by = tipY - row * r / 2.0 + col * r;
+                double by = tipY - (ballsInThisRow - 1) * r / 2.0 + col * r;
                 balls.add(new Ball(rackBalls.get(idx++), bx, by));
             }
+            row++;
         }
     }
 
@@ -1753,7 +1772,7 @@ public class GameScene {
                 for (int i = 0; i < 90; i++) {
                     confettiList.add(new ConfettiParticle(TABLE_X + TABLE_W / 2, TABLE_Y + 50));
                 }
-                showTurnToast("🎉 XUẤT SẮC! BẠN ĐÃ DỌN SẠCH TOÀN BỘ 15 BI!", Color.web("#22c55e"));
+                showTurnToast("🎉 XUẤT SẮC! BẠN ĐÃ DỌN SẠCH TOÀN BỘ BÀN BI!", Color.web("#22c55e"));
                 new java.util.Timer().schedule(
                     new java.util.TimerTask() {
                         @Override
