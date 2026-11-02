@@ -62,7 +62,7 @@ public class GameScene {
     private static final double POCKET_R  = 23.0;
 
     // ────── CẤU HÌNH SỐ LƯỢNG BI MỤC TIÊU CỦA MỖI BÊN ────────────
-    public static final int BALLS_PER_PLAYER = 3;
+    public static final int BALLS_PER_PLAYER = 7;
 
     // ────── Tham chiếu ──────────────────────────────────────────
     private final NetworkClient network;
@@ -374,31 +374,29 @@ public class GameScene {
         this.isMyTurn      = isFirstTurn;
         this.isPractice    = false;
         
-        // Phân nhóm bi chuẩn xác: Player 0 là Bi Trơn (Solids: 1-7), Player 1 là Bi Sọc (Stripes: 9-15)
-        // Bốc ngẫu nhiên các quả bi từ tập 1-7 và 9-15 dựa trên matchSeed để mỗi trận đều mới lạ & đồng bộ 100%
+        // Phân nhóm bi ngẫu nhiên: Bốc ngẫu nhiên targetCount bi cho mỗi người từ 14 quả bi mục tiêu (1-15, trừ bi 8)
+        // Không ai bị cố định chỉ ăn Bi Trơn hay Bi Sọc
         int targetCount = Math.max(1, Math.min(BALLS_PER_PLAYER, 7));
-        List<Integer> allSolids = new ArrayList<>();
-        List<Integer> allStripes = new ArrayList<>();
-        for (int i = 1; i <= 7; i++) {
-            allSolids.add(i);
-            allStripes.add(i + 8);
+        List<Integer> allTargetBalls = new ArrayList<>();
+        for (int i = 1; i <= 15; i++) {
+            if (i != 8) {
+                allTargetBalls.add(i);
+            }
         }
 
-        Random matchRng = new Random(matchSeed);
-        Collections.shuffle(allSolids, matchRng);
-        Collections.shuffle(allStripes, matchRng);
+        Collections.shuffle(allTargetBalls, new Random(matchSeed));
 
-        List<Integer> solidGroup = new ArrayList<>(allSolids.subList(0, targetCount));
-        List<Integer> stripeGroup = new ArrayList<>(allStripes.subList(0, targetCount));
-        Collections.sort(solidGroup);
-        Collections.sort(stripeGroup);
+        List<Integer> group1 = new ArrayList<>(allTargetBalls.subList(0, targetCount));
+        List<Integer> group2 = new ArrayList<>(allTargetBalls.subList(targetCount, targetCount * 2));
+        Collections.sort(group1);
+        Collections.sort(group2);
         
         if (playerIndex == 0) {
-            myTargetBalls = solidGroup;
-            oppTargetBalls = stripeGroup;
+            myTargetBalls = group1;
+            oppTargetBalls = group2;
         } else {
-            myTargetBalls = stripeGroup;
-            oppTargetBalls = solidGroup;
+            myTargetBalls = group2;
+            oppTargetBalls = group1;
         }
         
         this.turnStartTime = System.currentTimeMillis();
@@ -411,7 +409,7 @@ public class GameScene {
             showTurnToast("⏳ ĐỐI THỦ PHÁ BI (Đặt bi sau vạch)...", Color.web("#f39c12"));
         }
 
-        initBalls(matchSeed, solidGroup, stripeGroup);
+        initBalls(matchSeed, group1, group2);
         initPhysics();
         build();
         startGameLoop();
@@ -439,32 +437,23 @@ public class GameScene {
         long practiceSeed = System.nanoTime() ^ ((long) (Math.random() * 1_000_000_000L) << 32);
         
         // Chế độ luyện tập: Dọn sạch các bi mục tiêu theo cấu hình
-        int practiceTargetCount = Math.max(1, Math.min(BALLS_PER_PLAYER, 7));
-        List<Integer> allSolids = new ArrayList<>();
-        List<Integer> allStripes = new ArrayList<>();
-        for (int i = 1; i <= 7; i++) {
-            allSolids.add(i);
-            allStripes.add(i + 8);
+        int practiceTargetCount = Math.max(1, Math.min(BALLS_PER_PLAYER * 2, 14));
+        List<Integer> allTargetBalls = new ArrayList<>();
+        for (int i = 1; i <= 15; i++) {
+            if (i != 8) {
+                allTargetBalls.add(i);
+            }
         }
-        Random prRng = new Random(practiceSeed);
-        Collections.shuffle(allSolids, prRng);
-        Collections.shuffle(allStripes, prRng);
+        Collections.shuffle(allTargetBalls, new Random(practiceSeed));
 
-        List<Integer> solidGroup = new ArrayList<>(allSolids.subList(0, practiceTargetCount));
-        List<Integer> stripeGroup = new ArrayList<>(allStripes.subList(0, practiceTargetCount));
-        Collections.sort(solidGroup);
-        Collections.sort(stripeGroup);
-
-        myTargetBalls = new ArrayList<>();
-        myTargetBalls.addAll(solidGroup);
-        myTargetBalls.addAll(stripeGroup);
+        myTargetBalls = new ArrayList<>(allTargetBalls.subList(0, practiceTargetCount));
         Collections.sort(myTargetBalls);
         oppTargetBalls = null;
 
         this.isBreakPlacement = true;
         this.ballInHand = true;
 
-        initBalls(practiceSeed, solidGroup, stripeGroup);
+        initBalls(practiceSeed, myTargetBalls, Collections.emptyList());
         initPhysics();
         build();
         startGameLoop();
@@ -475,7 +464,7 @@ public class GameScene {
     // ============================================================
     // KHỞI TẠO BI & VẬT LÝ
     // ============================================================
-    private void initBalls(long seed, List<Integer> solids, List<Integer> stripes) {
+    private void initBalls(long seed, List<Integer> group1, List<Integer> group2) {
         balls = new ArrayList<>();
         double cx = TABLE_X + TABLE_W / 2;
         double cy = TABLE_Y + TABLE_H / 2;
@@ -484,9 +473,9 @@ public class GameScene {
         balls.add(new Ball(0, cx - TABLE_W / 4, cy));
 
         List<Integer> rackBalls = new ArrayList<>();
-        // Nạp các bi theo thứ tự xác định (Solids trước, Stripes sau) trên CẢ 2 CLIENT để chống desync
-        rackBalls.addAll(solids);
-        rackBalls.addAll(stripes);
+        // Nạp các bi theo thứ tự xác định trên CẢ 2 CLIENT để chống desync
+        if (group1 != null) rackBalls.addAll(group1);
+        if (group2 != null) rackBalls.addAll(group2);
 
         // Xáo ngẫu nhiên vị trí các bi theo cùng matchSeed giữa 2 máy
         Collections.shuffle(rackBalls, new Random(seed));
@@ -550,7 +539,7 @@ public class GameScene {
         myLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
         myLabel.setTextFill(Color.web("#EDF1E8"));
 
-        myGroupLabel = new Label("Nhóm: ...");
+        myGroupLabel = new Label("Mục tiêu: ...");
         myGroupLabel.setFont(Font.font("Segoe UI", 11));
         myGroupLabel.setTextFill(Color.web("#A5B1A8"));
 
@@ -587,7 +576,7 @@ public class GameScene {
             oppLabel.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
             oppLabel.setTextFill(Color.web("#EDF1E8"));
 
-            oppGroupLabel = new Label("Nhóm: ...");
+            oppGroupLabel = new Label("Mục tiêu: ...");
             oppGroupLabel.setFont(Font.font("Segoe UI", 11));
             oppGroupLabel.setTextFill(Color.web("#A5B1A8"));
 
@@ -2175,7 +2164,6 @@ public class GameScene {
                 myBallsBox.getChildren().add(createBallIcon(num));
             }
             int myRemaining = myRemainingList.size();
-            boolean isMySolid = (myTargetBalls != null && !myTargetBalls.isEmpty() && myTargetBalls.get(0) <= 7);
 
             if (oppBallsBox != null) {
                 oppBallsBox.getChildren().clear();
@@ -2200,11 +2188,9 @@ public class GameScene {
                 }
                 int oppRemaining = oppRemainingList.size();
 
-                boolean isOppSolid = (oppTargetBalls != null && !oppTargetBalls.isEmpty() && oppTargetBalls.get(0) <= 7);
-
                 if (oppGroupLabel != null) {
                     if (oppRemaining > 0) {
-                        oppGroupLabel.setText((isOppSolid ? "Bi Trơn" : "Bi Sọc") + ": Còn " + oppRemaining + " bi");
+                        oppGroupLabel.setText("Đối thủ: Còn " + oppRemaining + " bi");
                     } else {
                         oppGroupLabel.setText("Đang ngắm bi số 8!");
                     }
@@ -2212,7 +2198,7 @@ public class GameScene {
             }
 
             if (myRemaining > 0) {
-                myGroupLabel.setText((isMySolid ? "Bi Trơn" : "Bi Sọc") + ": Còn " + myRemaining + " bi");
+                myGroupLabel.setText("Mục tiêu: Còn " + myRemaining + " bi");
             } else {
                 myGroupLabel.setText("Ăn bi số 8 để thắng!");
             }
