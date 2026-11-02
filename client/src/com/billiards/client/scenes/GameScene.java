@@ -62,7 +62,7 @@ public class GameScene {
     private static final double POCKET_R  = 23.0;
 
     // ────── CẤU HÌNH SỐ LƯỢNG BI MỤC TIÊU CỦA MỖI BÊN ────────────
-    public static final int BALLS_PER_PLAYER = 7;
+    public static final int BALLS_PER_PLAYER = 3;
 
     // ────── Tham chiếu ──────────────────────────────────────────
     private final NetworkClient network;
