@@ -35,6 +35,7 @@ public class ClientHandler implements Runnable {
     public ClientHandler(Socket socket, AuthManager authManager,
                          LobbyManager lobbyManager, DatabaseManager db) throws IOException {
         this.socket       = socket;
+        this.socket.setSoTimeout(8000); // Heartbeat watchdog: tu dong ngat ket noi neu mat tin hieu > 8s (lo 4 nhip Ping)
         this.authManager  = authManager;
         this.lobbyManager = lobbyManager;
         this.db           = db;
@@ -54,6 +55,8 @@ public class ClientHandler implements Runnable {
                 PacketType type = Packet.readType(in);
                 handlePacket(type);
             }
+        } catch (java.net.SocketTimeoutException e) {
+            System.out.println("[Handler] Timeout mat tin hieu (Heartbeat > 8s): " + (playerInfo != null ? playerInfo.username : socket.getRemoteSocketAddress()));
         } catch (EOFException | java.net.SocketException e) {
             // Client ngắt kết nối bình thường
         } catch (IOException e) {
