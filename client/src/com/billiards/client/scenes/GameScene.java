@@ -374,14 +374,24 @@ public class GameScene {
         this.isMyTurn      = isFirstTurn;
         this.isPractice    = false;
         
-        // Phân nhóm bi chuẩn xác: Player 0 là Bi Trơn (Solids), Player 1 là Bi Sọc (Stripes)
+        // Phân nhóm bi chuẩn xác: Player 0 là Bi Trơn (Solids: 1-7), Player 1 là Bi Sọc (Stripes: 9-15)
+        // Bốc ngẫu nhiên các quả bi từ tập 1-7 và 9-15 dựa trên matchSeed để mỗi trận đều mới lạ & đồng bộ 100%
         int targetCount = Math.max(1, Math.min(BALLS_PER_PLAYER, 7));
-        List<Integer> solidGroup = new ArrayList<>();
-        List<Integer> stripeGroup = new ArrayList<>();
-        for (int i = 1; i <= targetCount; i++) {
-            solidGroup.add(i);       // Bi Trơn: 1..targetCount
-            stripeGroup.add(i + 8);   // Bi Sọc: 9..9+targetCount-1
+        List<Integer> allSolids = new ArrayList<>();
+        List<Integer> allStripes = new ArrayList<>();
+        for (int i = 1; i <= 7; i++) {
+            allSolids.add(i);
+            allStripes.add(i + 8);
         }
+
+        Random matchRng = new Random(matchSeed);
+        Collections.shuffle(allSolids, matchRng);
+        Collections.shuffle(allStripes, matchRng);
+
+        List<Integer> solidGroup = new ArrayList<>(allSolids.subList(0, targetCount));
+        List<Integer> stripeGroup = new ArrayList<>(allStripes.subList(0, targetCount));
+        Collections.sort(solidGroup);
+        Collections.sort(stripeGroup);
         
         if (playerIndex == 0) {
             myTargetBalls = solidGroup;
@@ -401,7 +411,7 @@ public class GameScene {
             showTurnToast("⏳ ĐỐI THỦ PHÁ BI (Đặt bi sau vạch)...", Color.web("#f39c12"));
         }
 
-        initBalls(matchSeed);
+        initBalls(matchSeed, solidGroup, stripeGroup);
         initPhysics();
         build();
         startGameLoop();
@@ -430,17 +440,31 @@ public class GameScene {
         
         // Chế độ luyện tập: Dọn sạch các bi mục tiêu theo cấu hình
         int practiceTargetCount = Math.max(1, Math.min(BALLS_PER_PLAYER, 7));
-        myTargetBalls = new ArrayList<>();
-        for (int i = 1; i <= practiceTargetCount; i++) {
-            myTargetBalls.add(i);     // Bi Trơn
-            myTargetBalls.add(i + 8); // Bi Sọc
+        List<Integer> allSolids = new ArrayList<>();
+        List<Integer> allStripes = new ArrayList<>();
+        for (int i = 1; i <= 7; i++) {
+            allSolids.add(i);
+            allStripes.add(i + 8);
         }
+        Random prRng = new Random(practiceSeed);
+        Collections.shuffle(allSolids, prRng);
+        Collections.shuffle(allStripes, prRng);
+
+        List<Integer> solidGroup = new ArrayList<>(allSolids.subList(0, practiceTargetCount));
+        List<Integer> stripeGroup = new ArrayList<>(allStripes.subList(0, practiceTargetCount));
+        Collections.sort(solidGroup);
+        Collections.sort(stripeGroup);
+
+        myTargetBalls = new ArrayList<>();
+        myTargetBalls.addAll(solidGroup);
+        myTargetBalls.addAll(stripeGroup);
+        Collections.sort(myTargetBalls);
         oppTargetBalls = null;
 
         this.isBreakPlacement = true;
         this.ballInHand = true;
 
-        initBalls(practiceSeed);
+        initBalls(practiceSeed, solidGroup, stripeGroup);
         initPhysics();
         build();
         startGameLoop();
@@ -451,7 +475,7 @@ public class GameScene {
     // ============================================================
     // KHỞI TẠO BI & VẬT LÝ
     // ============================================================
-    private void initBalls(long seed) {
+    private void initBalls(long seed, List<Integer> solids, List<Integer> stripes) {
         balls = new ArrayList<>();
         double cx = TABLE_X + TABLE_W / 2;
         double cy = TABLE_Y + TABLE_H / 2;
@@ -460,12 +484,10 @@ public class GameScene {
         balls.add(new Ball(0, cx - TABLE_W / 4, cy));
 
         List<Integer> rackBalls = new ArrayList<>();
-        int targetCount = Math.max(1, Math.min(BALLS_PER_PLAYER, 7));
-        // Luôn nạp các bi theo thứ tự chuẩn [1, 9, 2, 10, ...] cố định trên CẢ 2 CLIENT để chống desync
-        for (int i = 1; i <= targetCount; i++) {
-            rackBalls.add(i);       // Bi Trơn (Solids)
-            rackBalls.add(i + 8);   // Bi Sọc (Stripes)
-        }
+        // Nạp các bi theo thứ tự xác định (Solids trước, Stripes sau) trên CẢ 2 CLIENT để chống desync
+        rackBalls.addAll(solids);
+        rackBalls.addAll(stripes);
+
         // Xáo ngẫu nhiên vị trí các bi theo cùng matchSeed giữa 2 máy
         Collections.shuffle(rackBalls, new Random(seed));
         // Đặt bi số 8 vào vị trí giữa chùm bi
